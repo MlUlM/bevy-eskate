@@ -1,7 +1,9 @@
 use bevy::asset::{AssetServer, Handle};
 use bevy::math::Vec2;
-use bevy::prelude::{Bundle, Commands, default, Image, Transform};
+use bevy::prelude::{Bundle, Commands, default, Image, Sprite, Transform};
 use bevy::sprite::SpriteBundle;
+
+use crate::gimmick::GIMMICK_SIZE;
 
 #[derive(Bundle, Clone)]
 pub struct FloorBundle {
@@ -16,6 +18,10 @@ impl FloorBundle {
     ) -> Self {
         Self {
             sprite: SpriteBundle {
+                sprite: Sprite {
+                    custom_size: Some(GIMMICK_SIZE),
+                    ..default()
+                },
                 texture,
                 transform: Transform::from_xyz(pos.x, pos.y, 0.),
                 ..default()

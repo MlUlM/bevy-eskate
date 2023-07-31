@@ -19,7 +19,7 @@ pub fn spawn(commands: &mut Commands) {
                 color: Color::WHITE,
                 ..default()
             },
-            transform: Transform::from_xyz(0., 0., 0.),
+            transform: Transform::from_xyz(0., 0., 1.),
             ..default()
         })
         .insert((Movable, Gimmick, Idle));

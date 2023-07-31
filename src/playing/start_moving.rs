@@ -2,8 +2,9 @@ use bevy::math::Vec3;
 use bevy::prelude::{Commands, Component, Entity, EventReader, Query, Transform, With, Without};
 use bevy_trait_query::One;
 use bevy_tweening::TweenCompleted;
+use itertools::Itertools;
 
-use crate::gimmick::{GIMMICK_SIZE, PlayerControllable};
+use crate::gimmick::{GIMMICK_SIZE_VEC3, PlayerControllable};
 use crate::gimmick::player::{Movable, Moving};
 use crate::playing::idle::Idle;
 
@@ -15,7 +16,6 @@ pub enum MoveDirection {
     Down,
 }
 
-
 impl MoveDirection {
     #[inline]
     pub fn reverse(&self) -> Self {
@@ -23,10 +23,9 @@ impl MoveDirection {
             MoveDirection::Left => MoveDirection::Right,
             MoveDirection::Right => MoveDirection::Left,
             MoveDirection::Up => MoveDirection::Down,
-            MoveDirection::Down => MoveDirection::Up
+            MoveDirection::Down => MoveDirection::Up,
         }
     }
-
 
     #[inline]
     pub fn vec3_unit(&self) -> Vec3 {
@@ -38,17 +37,14 @@ impl MoveDirection {
         }
     }
 
-
     #[inline]
     pub fn vec3(&self) -> Vec3 {
-        self.vec3_unit() * GIMMICK_SIZE
+        self.vec3_unit() * GIMMICK_SIZE_VEC3
     }
 }
 
-
 #[derive(Component, Copy, Clone, Debug)]
 pub struct StartMoving(pub MoveDirection);
-
 
 impl StartMoving {
     #[inline]
@@ -61,12 +57,10 @@ impl StartMoving {
         Self(MoveDirection::Up)
     }
 
-
     #[inline]
     pub const fn right() -> Self {
         Self(MoveDirection::Right)
     }
-
 
     #[inline]
     pub const fn down() -> Self {
@@ -74,24 +68,60 @@ impl StartMoving {
     }
 }
 
-
 pub fn update_start_moving(
     mut commands: Commands,
     mut players: Query<(Entity, &mut Transform, &StartMoving), (With<Movable>, With<StartMoving>)>,
     mut controllers: Query<(One<&dyn PlayerControllable>, &mut Transform), Without<Movable>>,
 ) {
-    for (player, mut target, StartMoving(move_direction)) in players.iter_mut() {
-        for (controller, mut transform) in controllers.iter_mut() {
+    for (player, mut player_transform, StartMoving(move_direction)) in players.iter_mut() {
+        if let Some((controller, mut controller_transform)) = controllers
+            .iter_mut()
+            .filter(|(_, transform)| {
+                filter_move_direction(&player_transform, &transform, &move_direction)
+            })
+            .sorted_by(|(_, prev), (_, next)| {
+                distance(&player_transform, &prev, &move_direction).partial_cmp(&distance(&player_transform, &next, &move_direction)).unwrap()
+            })
+            .next()
+        {
             controller.move_player(
                 &mut commands.get_entity(player).unwrap(),
-                &mut transform,
-                &mut target,
+                &mut controller_transform,
+                &mut player_transform,
                 move_direction,
             );
         }
     }
 }
 
+fn filter_move_direction(
+    player_transform: &Transform,
+    controller_transform: &Transform,
+    direction: &MoveDirection,
+) -> bool {
+    match direction {
+        MoveDirection::Left => controller_transform.translation.x < player_transform.translation.x && controller_transform.translation.y == player_transform.translation.y,
+        MoveDirection::Right => player_transform.translation.x < controller_transform.translation.x && controller_transform.translation.y == player_transform.translation.y,
+        MoveDirection::Up => player_transform.translation.y < controller_transform.translation.y && controller_transform.translation.x == player_transform.translation.x,
+        MoveDirection::Down => controller_transform.translation.y < player_transform.translation.y && controller_transform.translation.x == player_transform.translation.x,
+    }
+}
+
+
+fn distance(
+    player_transform: &Transform,
+    controller_transform: &Transform,
+    direction: &MoveDirection,
+) -> f32 {
+    match direction {
+        MoveDirection::Left | MoveDirection::Right => {
+            (controller_transform.translation.x - player_transform.translation.x).abs()
+        }
+        MoveDirection::Up | MoveDirection::Down => {
+            (player_transform.translation.y - controller_transform.translation.y).abs()
+        }
+    }
+}
 
 pub fn on_move_completed(
     mut commands: Commands,

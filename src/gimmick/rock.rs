@@ -1,7 +1,7 @@
 use bevy::asset::{AssetServer, Handle};
 use bevy::math::Vec2;
 use bevy::prelude::{Bundle, Commands, default, Image, Transform};
-use bevy::sprite::SpriteBundle;
+use bevy::sprite::{Sprite, SpriteBundle};
 
 use crate::gimmick::GimmickCollide;
 
@@ -19,11 +19,15 @@ impl RockBundle {
     ) -> Self {
         Self {
             sprite: SpriteBundle {
+                sprite: Sprite {
+                    custom_size: Some(Vec2::new(50., 50.)),
+                    ..default()
+                },
                 texture,
                 transform: Transform::from_xyz(pos.x, pos.y, 0.),
                 ..default()
             },
-            collide: GimmickCollide
+            collide: GimmickCollide,
         }
     }
 }

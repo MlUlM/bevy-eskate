@@ -1,5 +1,5 @@
 use bevy::ecs::system::EntityCommands;
-use bevy::math::Vec3;
+use bevy::math::{Vec2, Vec3};
 use bevy::prelude::{Component, Transform};
 use bevy_tweening::{Animator, EaseMethod, Tween};
 use bevy_tweening::lens::TransformPositionLens;
@@ -14,8 +14,8 @@ pub mod rock;
 
 pub const GIMMICK_WIDTH: f32 = 50.;
 pub const GIMMICK_HEIGHT: f32 = 50.;
-pub const GIMMICK_SIZE: Vec3 = Vec3::new(GIMMICK_WIDTH, GIMMICK_HEIGHT, 0.);
-
+pub const GIMMICK_SIZE_VEC3: Vec3 = Vec3::new(GIMMICK_WIDTH, GIMMICK_HEIGHT, 0.);
+pub const GIMMICK_SIZE: Vec2 = Vec2::new(GIMMICK_WIDTH, GIMMICK_HEIGHT);
 
 #[derive(Default, Copy, Clone, Component)]
 pub struct Gimmick;
@@ -25,9 +25,9 @@ pub struct Gimmick;
 pub trait PlayerControllable {
     fn move_player(
         &self,
-        entity: &mut EntityCommands,
-        transform: &mut Transform,
-        target: &mut Transform,
+        controller_entity: &mut EntityCommands,
+        controller_transform: &mut Transform,
+        player_transform: &mut Transform,
         direction: &MoveDirection,
     );
 }
@@ -40,23 +40,23 @@ pub struct GimmickCollide;
 impl PlayerControllable for GimmickCollide {
     fn move_player(
         &self,
-        entity: &mut EntityCommands,
-        transform: &mut Transform,
-        target: &mut Transform,
+        controller_entity: &mut EntityCommands,
+        controller_transform: &mut Transform,
+        player_transform: &mut Transform,
         direction: &MoveDirection,
     ) {
         let tween = Tween::new(
             EaseMethod::Linear,
             std::time::Duration::from_secs(1),
             TransformPositionLens {
-                start: transform.translation,
-                end: target.translation + direction.vec3(),
+                start: player_transform.translation,
+                end: controller_transform.translation + direction.reverse().vec3() + Vec3::new(0., 0., 1.),
             },
         )
             .with_completed_event(0);
 
-        entity.insert(Animator::new(tween));
-        entity.insert(Moving);
-        entity.remove::<StartMoving>();
+        controller_entity.insert(Animator::new(tween));
+        controller_entity.insert(Moving);
+        controller_entity.remove::<StartMoving>();
     }
 }
