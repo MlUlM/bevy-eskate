@@ -11,14 +11,17 @@ pub struct Idle;
 pub fn update_move_input_handle(
     mut commands: Commands,
     keys: Res<Input<KeyCode>>,
-    players: Query<Entity, (With<Movable>, With<Idle>)>,
+    players: Query<Entity, With<Movable>>,
+    idle: Query<Entity, With<Idle>>,
 ) {
     let mut emit = |start_moving: StartMoving| {
         for player in players.iter() {
             let mut entity = commands.entity(player);
-            entity.remove::<Idle>();
             entity.insert(start_moving);
         }
+        let mut idle = commands.entity(idle.single());
+        idle.remove::<Idle>();
+        idle.insert(start_moving);
     };
 
     if keys.pressed(KeyCode::Left) {

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
-use crate::gimmick::Gimmick;
-use crate::playing::idle::Idle;
+use crate::gimmick::{Gimmick, GimmickItem};
+use crate::playing::PageIndex;
 
 #[derive(Default, Clone, Copy, Component)]
 pub struct Movable;
@@ -22,7 +22,8 @@ pub fn spawn(commands: &mut Commands) {
             transform: Transform::from_xyz(0., 0., 1.),
             ..default()
         })
-        .insert((Movable, Gimmick, Idle));
+        .insert((Movable, Gimmick, GimmickItem))
+        .insert(PageIndex::new(1));
 }
 
 

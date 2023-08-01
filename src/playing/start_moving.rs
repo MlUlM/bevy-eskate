@@ -4,7 +4,7 @@ use bevy_trait_query::One;
 use bevy_tweening::TweenCompleted;
 use itertools::Itertools;
 
-use crate::gimmick::{GIMMICK_SIZE_VEC3, PlayerControllable};
+use crate::gimmick::{FALL_DOWN_CODE, GIMMICK_SIZE_VEC3, PlayerControllable};
 use crate::gimmick::player::{Movable, Moving};
 use crate::playing::idle::Idle;
 
@@ -70,20 +70,25 @@ impl StartMoving {
 
 pub fn update_start_moving(
     mut commands: Commands,
-    mut players: Query<(Entity, &mut Transform, &StartMoving), (With<Movable>, With<StartMoving>)>,
+    mut players: Query<(Entity, &mut Transform, &StartMoving), With<Movable>>,
     mut controllers: Query<(One<&dyn PlayerControllable>, &mut Transform), Without<Movable>>,
+    status: Query<Entity, With<StartMoving>>,
 ) {
     for (player, mut player_transform, StartMoving(move_direction)) in players.iter_mut() {
         if let Some((controller, mut controller_transform)) = controllers
             .iter_mut()
             .filter(|(_, transform)| {
-                filter_move_direction(&player_transform, &transform, &move_direction)
+                filter_move_direction(&player_transform, transform, move_direction)
             })
             .sorted_by(|(_, prev), (_, next)| {
-                distance(&player_transform, &prev, &move_direction).partial_cmp(&distance(&player_transform, &next, &move_direction)).unwrap()
+                distance(&player_transform, prev, move_direction).partial_cmp(&distance(&player_transform, &next, &move_direction)).unwrap()
             })
             .next()
         {
+            let mut status = commands.entity(status.single());
+            status.remove::<Idle>();
+            status.insert(Moving);
+
             controller.move_player(
                 &mut commands.get_entity(player).unwrap(),
                 &mut controller_transform,
@@ -93,6 +98,30 @@ pub fn update_start_moving(
         }
     }
 }
+
+
+pub fn on_move_completed(
+    mut commands: Commands,
+    mut reader: EventReader<TweenCompleted>,
+    status: Query<Entity, With<Moving>>,
+) {
+    for TweenCompleted { entity, user_data } in reader.iter() {
+        let mut entity = commands.entity(*entity);
+        let mut status = commands.entity(status.single());
+
+        match *user_data {
+            FALL_DOWN_CODE => {
+                status.remove::<Moving>();
+                status.insert(Idle);
+            }
+            _ => {
+                status.remove::<Moving>();
+                status.insert(Idle);
+            }
+        }
+    }
+}
+
 
 fn filter_move_direction(
     player_transform: &Transform,
@@ -119,20 +148,6 @@ fn distance(
         }
         MoveDirection::Up | MoveDirection::Down => {
             (player_transform.translation.y - controller_transform.translation.y).abs()
-        }
-    }
-}
-
-pub fn on_move_completed(
-    mut commands: Commands,
-    reader: EventReader<TweenCompleted>,
-    players: Query<Entity, With<Moving>>,
-) {
-    if !reader.is_empty() {
-        for player in players.iter() {
-            let mut entity = commands.entity(player);
-            entity.remove::<Moving>();
-            entity.insert(Idle);
         }
     }
 }

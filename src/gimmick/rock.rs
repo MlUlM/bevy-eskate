@@ -1,43 +1,42 @@
 use bevy::asset::{AssetServer, Handle};
 use bevy::math::Vec2;
-use bevy::prelude::{Bundle, Commands, default, Image, Transform};
-use bevy::sprite::{Sprite, SpriteBundle};
+use bevy::prelude::{Bundle, Commands, Image};
+use bevy::sprite::SpriteBundle;
 
-use crate::gimmick::GimmickCollide;
+use crate::gimmick::{create_front_gimmick_sprite_bundle, GimmickCollide};
+use crate::playing::PageIndex;
 
 #[derive(Bundle, Clone)]
 pub struct RockBundle {
     sprite: SpriteBundle,
     collide: GimmickCollide,
+    page_index: PageIndex,
 }
 
 
 impl RockBundle {
+    #[inline]
     pub fn new(
         texture: Handle<Image>,
         pos: Vec2,
+        page_index: PageIndex,
     ) -> Self {
         Self {
-            sprite: SpriteBundle {
-                sprite: Sprite {
-                    custom_size: Some(Vec2::new(50., 50.)),
-                    ..default()
-                },
-                texture,
-                transform: Transform::from_xyz(pos.x, pos.y, 0.),
-                ..default()
-            },
+            sprite: create_front_gimmick_sprite_bundle(texture, pos),
             collide: GimmickCollide,
+            page_index
         }
     }
 }
 
 
+#[inline]
 pub fn spawn(
     commands: &mut Commands,
     asset_sever: &AssetServer,
     pos: Vec2,
+    page_index: PageIndex,
 ) {
     let texture = asset_sever.load("gimmick/rock.png");
-    commands.spawn(RockBundle::new(texture, pos));
+    commands.spawn(RockBundle::new(texture, pos, page_index));
 }
