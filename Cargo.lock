@@ -1629,6 +1629,8 @@ dependencies = [
  "bevy-trait-query",
  "bevy_tweening",
  "itertools",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

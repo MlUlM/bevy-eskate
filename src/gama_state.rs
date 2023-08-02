@@ -4,7 +4,7 @@ use bevy::prelude::States;
 pub enum GameState {
     Title,
     #[default]
-    Maker,
+    StageCreator,
 
     StageSelect,
 

@@ -16,6 +16,8 @@ pub mod gimmick;
 mod gama_state;
 mod title;
 mod stage_creator;
+mod loader;
+mod undo;
 
 fn main() {
     App::new()

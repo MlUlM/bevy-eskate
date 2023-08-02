@@ -5,12 +5,14 @@ use bevy::prelude::{Component, default, Image, Sprite, SpriteBundle, Transform};
 use bevy_tweening::{Animator, EaseMethod, Tween};
 use bevy_tweening::lens::TransformPositionLens;
 
+use crate::gimmick::tag::GimmickTag;
 use crate::playing::start_moving::MoveDirection;
 
 pub mod floor;
 pub mod player;
 pub mod rock;
 pub mod fall_down;
+pub mod tag;
 
 
 pub const GIMMICK_WIDTH: f32 = 50.;
@@ -23,7 +25,10 @@ pub const FALL_DOWN_CODE: u64 = 1;
 
 
 #[derive(Default, Copy, Clone, Component)]
-pub struct GimmickItem;
+pub struct Floor;
+
+#[derive(Copy, Clone, Component)]
+pub struct GimmickItem(pub GimmickTag);
 
 
 #[derive(Default, Copy, Clone, Component)]

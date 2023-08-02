@@ -35,6 +35,12 @@ pub fn spawn(
     pos: Vec2,
     page_index: PageIndex,
 ) {
-    let texture = asset_sever.load("gimmick/floor.png");
+    let texture = texture(asset_sever);
     commands.spawn(FloorBundle::new(texture, pos, page_index));
+}
+
+
+#[inline]
+pub fn texture(asset: &AssetServer) -> Handle<Image> {
+    asset.load("gimmick/floor.png")
 }
