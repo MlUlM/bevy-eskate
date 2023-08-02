@@ -10,6 +10,9 @@ use crate::playing::PlayingPlugin;
 
 mod playing;
 pub mod gimmick;
+mod gama_state;
+mod title;
+mod stage_maker;
 
 fn main() {
     App::new()
@@ -21,6 +24,7 @@ fn main() {
             }),
              ..default()
         }))
+        .add_plugins()
         .add_plugins(PlayingPlugin)
         .add_plugins(TweeningPlugin)
         .run();

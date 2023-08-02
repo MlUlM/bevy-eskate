@@ -1,8 +1,9 @@
-use bevy::app::{App, Plugin, Startup, Update};
+use bevy::app::{App, Plugin, Update};
 use bevy::math::Vec2;
-use bevy::prelude::{any_with_component, AssetServer, Camera2dBundle, Commands, Component, IntoSystemConfigs, Query, Res, Resource, resource_changed, Visibility, With};
+use bevy::prelude::{any_with_component, AssetServer, Camera2dBundle, Commands, Component, in_state, IntoSystemConfigs, OnEnter, Query, Res, Resource, resource_changed, Visibility, With};
 use bevy_trait_query::RegisterExt;
 
+use crate::gama_state::GameState;
 use crate::gimmick::{floor, GimmickCollide, GimmickItem, player, PlayerControllable, rock};
 use crate::gimmick::fall_down::FallDownCollide;
 use crate::gimmick::player::Moving;
@@ -34,11 +35,23 @@ impl Plugin for PlayingPlugin {
         app
             .register_component_as::<dyn PlayerControllable, GimmickCollide>()
             .register_component_as::<dyn PlayerControllable, FallDownCollide>()
-            .add_systems(Startup, setup)
-            .add_systems(Update, page.run_if(resource_changed::<PageIndex>()))
-            .add_systems(Update, update_move_input_handle.run_if(any_with_component::<Idle>()))
-            .add_systems(Update, update_start_moving.run_if(any_with_component::<StartMoving>()))
-            .add_systems(Update, on_move_completed.run_if(any_with_component::<Moving>()));
+            .add_systems(OnEnter(GameState::Playing), setup)
+            .add_systems(Update, page
+                .run_if(resource_changed::<PageIndex>())
+                .run_if(in_state(GameState::Playing)),
+            )
+            .add_systems(Update, update_move_input_handle
+                .run_if(any_with_component::<Idle>())
+                .run_if(in_state(GameState::Playing)),
+            )
+            .add_systems(Update, update_start_moving
+                .run_if(any_with_component::<StartMoving>())
+                .run_if(in_state(GameState::Playing)),
+            )
+            .add_systems(Update, on_move_completed
+                .run_if(any_with_component::<Moving>())
+                .run_if(in_state(GameState::Playing)),
+            );
     }
 }
 

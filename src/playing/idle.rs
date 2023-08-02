@@ -1,7 +1,6 @@
 use bevy::input::Input;
 use bevy::prelude::{Commands, Component, Entity, KeyCode, Query, Res, With};
 
-use crate::gimmick::player::Movable;
 use crate::playing::start_moving::StartMoving;
 
 #[derive(Default, Component, Copy, Clone, Debug)]
@@ -11,17 +10,12 @@ pub struct Idle;
 pub fn update_move_input_handle(
     mut commands: Commands,
     keys: Res<Input<KeyCode>>,
-    players: Query<Entity, With<Movable>>,
-    idle: Query<Entity, With<Idle>>,
+    status: Query<Entity, With<Idle>>,
 ) {
     let mut emit = |start_moving: StartMoving| {
-        for player in players.iter() {
-            let mut entity = commands.entity(player);
-            entity.insert(start_moving);
-        }
-        let mut idle = commands.entity(idle.single());
-        idle.remove::<Idle>();
-        idle.insert(start_moving);
+        let mut status = commands.entity(status.single());
+        status.remove::<Idle>();
+        status.insert(start_moving);
     };
 
     if keys.pressed(KeyCode::Left) {

@@ -70,11 +70,13 @@ impl StartMoving {
 
 pub fn update_start_moving(
     mut commands: Commands,
-    mut players: Query<(Entity, &mut Transform, &StartMoving), With<Movable>>,
+    mut players: Query<(Entity, &mut Transform), With<Movable>>,
     mut controllers: Query<(One<&dyn PlayerControllable>, &mut Transform), Without<Movable>>,
-    status: Query<Entity, With<StartMoving>>,
+    status: Query<(Entity, &StartMoving), With<StartMoving>>,
 ) {
-    for (player, mut player_transform, StartMoving(move_direction)) in players.iter_mut() {
+    let (status_entity, StartMoving(move_direction)) = status.single();
+
+    for (player, mut player_transform) in players.iter_mut() {
         if let Some((controller, mut controller_transform)) = controllers
             .iter_mut()
             .filter(|(_, transform)| {
@@ -85,8 +87,8 @@ pub fn update_start_moving(
             })
             .next()
         {
-            let mut status = commands.entity(status.single());
-            status.remove::<Idle>();
+            let mut status = commands.entity(status_entity);
+            status.remove::<StartMoving>();
             status.insert(Moving);
 
             controller.move_player(
@@ -106,7 +108,6 @@ pub fn on_move_completed(
     status: Query<Entity, With<Moving>>,
 ) {
     for TweenCompleted { entity, user_data } in reader.iter() {
-        let mut entity = commands.entity(*entity);
         let mut status = commands.entity(status.single());
 
         match *user_data {

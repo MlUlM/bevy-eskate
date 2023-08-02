@@ -5,7 +5,7 @@ use bevy::prelude::{Component, default, Image, Sprite, SpriteBundle, Transform};
 use bevy_tweening::{Animator, EaseMethod, Tween};
 use bevy_tweening::lens::TransformPositionLens;
 
-use crate::playing::start_moving::{MoveDirection, StartMoving};
+use crate::playing::start_moving::MoveDirection;
 
 pub mod floor;
 pub mod player;
@@ -20,7 +20,6 @@ pub const GIMMICK_SIZE: Vec2 = Vec2::new(GIMMICK_WIDTH, GIMMICK_HEIGHT);
 
 
 pub const FALL_DOWN_CODE: u64 = 1;
-
 
 
 #[derive(Default, Copy, Clone, Component)]
@@ -59,7 +58,7 @@ impl PlayerControllable for GimmickCollide {
         move_linear(
             controller_entity,
             player_transform,
-            controller_transform.translation + direction.reverse().vec3() + Vec3::new(0., 0., 1.),
+            controller_transform.translation + direction.reverse().vec3(),
             0,
         );
     }
@@ -82,8 +81,8 @@ pub(crate) fn move_linear(
     )
         .with_completed_event(complete_code);
 
+
     controller_entity.insert(Animator::new(tween));
-    controller_entity.remove::<StartMoving>();
 }
 
 
