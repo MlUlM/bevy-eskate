@@ -107,7 +107,7 @@ pub fn on_move_completed(
     mut reader: EventReader<TweenCompleted>,
     status: Query<Entity, With<Moving>>,
 ) {
-    for TweenCompleted { entity, user_data } in reader.iter() {
+    for TweenCompleted { entity: _, user_data } in reader.iter() {
         let mut status = commands.entity(status.single());
 
         match *user_data {

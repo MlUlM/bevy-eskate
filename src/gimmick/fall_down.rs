@@ -13,7 +13,7 @@ pub struct FallDownCollide;
 
 
 impl PlayerControllable for FallDownCollide {
-    fn move_player(&self, controller_entity: &mut EntityCommands, controller_transform: &mut Transform, player_transform: &mut Transform, direction: &MoveDirection) {
+    fn move_player(&self, controller_entity: &mut EntityCommands, controller_transform: &mut Transform, player_transform: &mut Transform, _direction: &MoveDirection) {
         move_linear(
             controller_entity,
             player_transform,

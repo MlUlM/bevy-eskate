@@ -1,6 +1,9 @@
 use bevy::app::{App, Plugin, Update};
 use bevy::math::Vec2;
-use bevy::prelude::{any_with_component, AssetServer, Camera2dBundle, Commands, Component, in_state, IntoSystemConfigs, OnEnter, Query, Res, Resource, resource_changed, Visibility, With};
+use bevy::prelude::{
+    any_with_component, AssetServer, Camera2dBundle, Commands, Component, Condition,
+    in_state, IntoSystemConfigs, OnEnter, Query, Res, Resource, resource_changed, Visibility, With,
+};
 use bevy_trait_query::RegisterExt;
 
 use crate::gama_state::GameState;
@@ -10,13 +13,14 @@ use crate::gimmick::player::Moving;
 use crate::playing::idle::{Idle, update_move_input_handle};
 use crate::playing::start_moving::{on_move_completed, StartMoving, update_start_moving};
 
+mod fall_down;
 pub mod idle;
 pub mod start_moving;
-mod fall_down;
 
-#[derive(Debug, Default, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Resource, Component)]
+#[derive(
+Debug, Default, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Resource, Component,
+)]
 pub struct PageIndex(pub usize);
-
 
 impl PageIndex {
     #[inline]
@@ -25,41 +29,34 @@ impl PageIndex {
     }
 }
 
-
 #[derive(Default, Clone)]
 pub struct PlayingPlugin;
 
-
 impl Plugin for PlayingPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .register_component_as::<dyn PlayerControllable, GimmickCollide>()
+        app.register_component_as::<dyn PlayerControllable, GimmickCollide>()
             .register_component_as::<dyn PlayerControllable, FallDownCollide>()
             .add_systems(OnEnter(GameState::Playing), setup)
-            .add_systems(Update, page
-                .run_if(resource_changed::<PageIndex>())
-                .run_if(in_state(GameState::Playing)),
+            .add_systems(
+                Update,
+                page.run_if(in_state(GameState::Playing).and_then(resource_changed::<PageIndex>())),
             )
-            .add_systems(Update, update_move_input_handle
-                .run_if(any_with_component::<Idle>())
-                .run_if(in_state(GameState::Playing)),
+            .add_systems(
+                Update,
+                update_move_input_handle.run_if(in_state(GameState::Playing).and_then(any_with_component::<Idle>())),
             )
-            .add_systems(Update, update_start_moving
-                .run_if(any_with_component::<StartMoving>())
-                .run_if(in_state(GameState::Playing)),
+            .add_systems(
+                Update,
+                update_start_moving.run_if(in_state(GameState::Playing).and_then(any_with_component::<StartMoving>())),
             )
-            .add_systems(Update, on_move_completed
-                .run_if(any_with_component::<Moving>())
-                .run_if(in_state(GameState::Playing)),
+            .add_systems(
+                Update,
+                on_move_completed.run_if(in_state(GameState::Playing).and_then(any_with_component::<Moving>())),
             );
     }
 }
 
-
-fn setup(
-    mut commands: Commands,
-    asset_sever: Res<AssetServer>,
-) {
+fn setup(mut commands: Commands, asset_sever: Res<AssetServer>) {
     commands.spawn(Camera2dBundle::default());
     commands.spawn(Idle);
     commands.insert_resource(PageIndex::new(0));
@@ -70,22 +67,34 @@ fn setup(
                 let x = f32::from(x) * 50. - 12. * 50.;
                 let y = f32::from(y) * 50. - 7. * 50.;
 
-                rock::spawn(&mut commands, &asset_sever, Vec2::new(x, y), PageIndex::new(0));
+                rock::spawn(
+                    &mut commands,
+                    &asset_sever,
+                    Vec2::new(x, y),
+                    PageIndex::new(0),
+                );
             }
             let x = f32::from(x) * 50. - 12. * 50.;
             let y = f32::from(y) * 50. - 7. * 50.;
 
-            floor::spawn(&mut commands, &asset_sever, Vec2::new(x, y), PageIndex::new(0));
+            floor::spawn(
+                &mut commands,
+                &asset_sever,
+                Vec2::new(x, y),
+                PageIndex::new(0),
+            );
         }
     }
 
     player::spawn(&mut commands);
 }
 
-
 fn page(
     page_idx: Res<PageIndex>,
-    mut gimmicks: Query<(&mut Visibility, &mut PageIndex, Option<&mut GimmickItem>), With<PageIndex>>,
+    mut gimmicks: Query<
+        (&mut Visibility, &mut PageIndex, Option<&mut GimmickItem>),
+        With<PageIndex>,
+    >,
 ) {
     for (mut visible, mut index, item) in gimmicks.iter_mut() {
         if item.is_some() {
@@ -99,5 +108,3 @@ fn page(
         }
     }
 }
-
-
