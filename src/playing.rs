@@ -1,7 +1,7 @@
 use bevy::app::{App, Plugin, Update};
 use bevy::math::Vec2;
 use bevy::prelude::{
-    any_with_component, AssetServer, Camera2dBundle, Commands, Component, Condition,
+    any_with_component, AssetServer, Commands, Component, Condition,
     in_state, IntoSystemConfigs, OnEnter, Query, Res, Resource, resource_changed, Visibility, With,
 };
 use bevy_trait_query::RegisterExt;
@@ -57,7 +57,6 @@ impl Plugin for PlayingPlugin {
 }
 
 fn setup(mut commands: Commands, asset_sever: Res<AssetServer>) {
-    commands.spawn(Camera2dBundle::default());
     commands.spawn(Idle);
     commands.insert_resource(PageIndex::new(0));
 

@@ -1,9 +1,12 @@
 use bevy::prelude::*;
 
+use crate::button::SpriteInteraction;
 use crate::gama_state::GameState;
-use crate::gimmick::{Floor, Stage};
+use crate::gimmick::Floor;
+use crate::stage_creator::{front, gimmick_iem_sprite_bundle, StageCreatorState};
 use crate::stage_creator::idle::OnPick;
-use crate::stage_creator::StageCreatorState;
+use crate::undo::attached::UndoAttached;
+use crate::undo::Undo;
 
 #[derive(Debug, Default, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct StageCreatorPickedPlugin;
@@ -21,24 +24,19 @@ fn update(
     asset: Res<AssetServer>,
     mut state: ResMut<NextState<StageCreatorState>>,
     mut commands: Commands,
-    stage: Query<Entity, With<Stage>>,
     item: Query<&OnPick, With<OnPick>>,
-    floors: Query<(&Transform, &Interaction), (With<Button>, With<Floor>)>,
+    floors: Query<(&Transform, &SpriteInteraction), (With<SpriteInteraction>, With<Floor>)>,
 ) {
     for (transform, interaction, ) in floors.iter() {
-        if interaction == &Interaction::Pressed {
+        if interaction.is_clicked() {
             let OnPick(tag) = item.single();
 
-            let cell = commands
-                .spawn(SpriteBundle {
-                    transform: Transform::from_xyz(transform.translation.x, transform.translation.y, 1.),
-                    texture: tag.load(&asset),
-                    ..default()
-                })
-                .id();
+            commands
+                .spawn(gimmick_iem_sprite_bundle(front(transform.translation), tag.load(&asset)))
+                .insert(UndoAttached::new(|cmd| {
+                    cmd.despawn();
+                }));
 
-
-            println!("{tag:?}");
             state.set(StageCreatorState::Idle);
             return;
         }

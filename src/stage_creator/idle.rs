@@ -29,7 +29,11 @@ fn update(
     for (entity, interaction, GimmickItem(tag)) in items.iter() {
         if interaction == &Interaction::Pressed {
             state.set(StageCreatorState::PickItem);
-            commands.entity(entity).insert(OnPick(*tag));
+
+            commands
+                .entity(entity)
+                .insert(OnPick(*tag));
+
             return;
         }
     }

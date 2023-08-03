@@ -1,6 +1,112 @@
-use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy_trait_query::imports::Component;
+
+use crate::undo::attached::UndoAttached;
+use crate::undo::non_attach::UndoNonAttached;
+
+mod non_attach;
+pub mod attached;
+
+#[derive(Component)]
+pub enum Undo {
+    Attached(UndoAttached),
+    One(UndoNonAttached<Option<Entity>>),
+    Two(UndoNonAttached<(Option<Entity>, Option<Entity>)>),
+    Three(UndoNonAttached<(Option<Entity>, Option<Entity>, Option<Entity>)>),
+    Four(UndoNonAttached<(Option<Entity>, Option<Entity>, Option<Entity>, Option<Entity>)>),
+    Five(UndoNonAttached<(Option<Entity>, Option<Entity>, Option<Entity>, Option<Entity>, Option<Entity>)>),
+    Six(UndoNonAttached<(Option<Entity>, Option<Entity>, Option<Entity>, Option<Entity>, Option<Entity>, Option<Entity>)>),
+}
+
+
+impl Undo {
+    fn execute(&self, commands: &mut Commands, entity: Entity) {
+        match self {
+            Undo::Attached(UndoAttached(f)) => { f(&mut commands.entity(entity)) }
+            Undo::One(undo) => {
+                let args1 = args(commands, Some(undo.arg1));
+                undo.exe.undo(commands, args1)
+            }
+
+            Undo::Two(undo) => {
+                let args1 = args(commands, Some(undo.arg1));
+                let args2 = args(commands, undo.arg2);
+                undo.exe.undo(commands, (args1, args2))
+            }
+
+            Undo::Three(undo) => {
+                let args1 = args(commands, Some(undo.arg1));
+                let args2 = args(commands, undo.arg2);
+                let args3 = args(commands, undo.arg3);
+
+                undo.exe.undo(commands, (
+                    args1,
+                    args2,
+                    args3
+                ));
+            }
+
+            Undo::Four(undo) => {
+                let args1 = args(commands, Some(undo.arg1));
+                let args2 = args(commands, undo.arg2);
+                let args3 = args(commands, undo.arg3);
+                let args4 = args(commands, undo.arg4);
+
+                undo.exe.undo(commands, (
+                    args1,
+                    args2,
+                    args3,
+                    args4
+                ));
+            }
+
+            Undo::Five(undo) => {
+                let args1 = args(commands, Some(undo.arg1));
+                let args2 = args(commands, undo.arg2);
+                let args3 = args(commands, undo.arg3);
+                let args4 = args(commands, undo.arg4);
+                let args5 = args(commands, undo.arg5);
+
+                undo.exe.undo(commands, (
+                    args1,
+                    args2,
+                    args3,
+                    args4,
+                    args5
+                ));
+            }
+
+            Undo::Six(undo) => {
+                let args1 = args(commands, Some(undo.arg1));
+                let args2 = args(commands, undo.arg2);
+                let args3 = args(commands, undo.arg3);
+                let args4 = args(commands, undo.arg4);
+                let args5 = args(commands, undo.arg5);
+                let args6 = args(commands, undo.arg6);
+
+                undo.exe.undo(commands, (
+                    args1,
+                    args2,
+                    args3,
+                    args4,
+                    args5,
+                    args6
+                ));
+            }
+        }
+    }
+}
+
+
+fn args(commands: &mut Commands, expect_entity: Option<Entity>) -> Option<Entity> {
+    let e = expect_entity?;
+
+    if commands.get_entity(e).is_some() {
+        Some(e)
+    } else {
+        None
+    }
+}
 
 #[derive(Debug, Default, Eq, PartialEq, Copy, Clone, Hash, Component)]
 pub struct UndoExecute;
@@ -15,7 +121,6 @@ impl Plugin for UndoPlugin {
         app
             .add_systems(Update, undo
                 .run_if(any_with_component::<Undo>()
-                    // .and_then(any_with_component::<Undo>())
                     .and_then(any_with_component::<UndoExecute>())
                 ),
             );
@@ -23,12 +128,12 @@ impl Plugin for UndoPlugin {
 }
 
 
-#[derive(Component)]
-pub struct Undo(Box<dyn Fn(&mut EntityCommands) + Send + Sync + 'static>);
-
-impl Undo {
-    pub fn new(undo: impl Fn(&mut EntityCommands) + Send + Sync + 'static) -> Self {
-        Self(Box::new(undo))
+pub fn undo_if_input_keycode(
+    input: Res<Input<KeyCode>>,
+    mut commands: Commands,
+) {
+    if input.just_pressed(KeyCode::R) {
+        commands.spawn(UndoExecute);
     }
 }
 
@@ -36,15 +141,16 @@ impl Undo {
 fn undo(
     mut commands: Commands,
     execute: Query<Entity, With<UndoExecute>>,
-    query: Query<(Entity, &Undo, ), With<Undo>>,
+    query: Query<(
+        Entity,
+        &Undo
+    ), With<Undo>>,
 ) {
-    if let Some((entity, Undo(undo))) = query
+    if let Some((entity, undo)) = query
         .into_iter()
         .last()
     {
-        let mut entity_command = commands.entity(entity);
-        undo(&mut entity_command);
-        entity_command.remove::<Undo>();
+        undo.execute(&mut commands, entity);
     }
 
     for exe in execute.iter() {
@@ -61,7 +167,9 @@ mod tests {
     use bevy::prelude::Entity;
     use bevy::sprite::SpriteBundle;
 
-    use crate::undo::{Undo, UndoExecute, UndoPlugin};
+    use crate::undo::{UndoExecute, UndoPlugin};
+    use crate::undo::attached::UndoAttached;
+    use crate::undo::non_attach::builder::UndoNonAttachedBuilder;
 
     #[test]
     fn once_undo() {
@@ -135,13 +243,36 @@ mod tests {
     }
 
 
+    #[test]
+    fn non_attach() {
+        let mut app = App::new();
+        app.add_plugins(UndoPlugin);
+        let id1 = new_entity(&mut app);
+        let id2 = new_entity(&mut app);
+
+        let undo = UndoNonAttachedBuilder::new(id1)
+            .add_entity(id2)
+            .build(|cmd, (id1, id2)| {
+                cmd.entity(id1.unwrap()).despawn();
+                cmd.entity(id2.unwrap()).despawn();
+            });
+        app.world.spawn(undo);
+        app.update();
+
+        app.world.spawn(UndoExecute);
+        app.update();
+        assert!(app.world.get_entity(id1).is_none());
+        assert!(app.world.get_entity(id2).is_none());
+    }
+
+
     fn new_entity(app: &mut App) -> Entity {
         let mut entity = app
             .world
             .spawn_empty();
         entity
             .insert(SpriteBundle::default())
-            .insert(Undo::new(|command| {
+            .insert(UndoAttached::new(|command| {
                 command.despawn();
             }));
 
