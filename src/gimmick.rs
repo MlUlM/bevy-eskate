@@ -2,6 +2,7 @@ use bevy::asset::Handle;
 use bevy::ecs::system::EntityCommands;
 use bevy::math::{Vec2, Vec3};
 use bevy::prelude::{Component, default, Image, Sprite, SpriteBundle, Transform};
+use bevy::ui::Val;
 use bevy_tweening::{Animator, EaseMethod, Tween};
 use bevy_tweening::lens::TransformPositionLens;
 
@@ -17,6 +18,8 @@ pub mod tag;
 
 pub const GIMMICK_WIDTH: f32 = 50.;
 pub const GIMMICK_HEIGHT: f32 = 50.;
+pub const GIMMICK_WIDTH_PX: Val = Val::Px(GIMMICK_WIDTH);
+pub const GIMMICK_HEIGHT_PX: Val = Val::Px(GIMMICK_HEIGHT);
 pub const GIMMICK_SIZE_VEC3: Vec3 = Vec3::new(GIMMICK_WIDTH, GIMMICK_HEIGHT, 0.);
 pub const GIMMICK_SIZE: Vec2 = Vec2::new(GIMMICK_WIDTH, GIMMICK_HEIGHT);
 
@@ -24,7 +27,10 @@ pub const GIMMICK_SIZE: Vec2 = Vec2::new(GIMMICK_WIDTH, GIMMICK_HEIGHT);
 pub const FALL_DOWN_CODE: u64 = 1;
 
 
-#[derive(Default, Copy, Clone, Component)]
+#[derive(Default, Debug, Hash, Copy, Clone, Component)]
+pub struct Stage;
+
+#[derive(Default, Debug, Hash, Copy, Clone, Component)]
 pub struct Floor;
 
 #[derive(Copy, Clone, Component)]

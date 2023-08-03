@@ -10,6 +10,7 @@ use bevy_tweening::TweeningPlugin;
 use crate::gama_state::GameState;
 use crate::playing::PlayingPlugin;
 use crate::stage_creator::StageCreatorPlugin;
+use crate::undo::UndoPlugin;
 
 mod playing;
 pub mod gimmick;
@@ -33,6 +34,8 @@ fn main() {
         .add_plugins(StageCreatorPlugin)
         .add_plugins(PlayingPlugin)
         .add_plugins(TweeningPlugin)
+
+        .add_plugins(UndoPlugin)
         .add_state::<GameState>()
         .run();
 }

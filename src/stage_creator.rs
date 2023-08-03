@@ -1,11 +1,8 @@
-use bevy::app::{App, Plugin};
-use bevy::hierarchy::BuildChildren;
-use bevy::prelude::{AssetServer, ButtonBundle, Camera2dBundle, ChildBuilder, Color, Commands, FlexWrap, Handle, Image, NodeBundle, OnEnter, Res, States};
-use bevy::ui::{AlignItems, BackgroundColor, FlexDirection, JustifyContent, Style, UiImage, Val};
+use bevy::prelude::*;
 use bevy::utils::default;
 
 use crate::gama_state::GameState;
-use crate::gimmick::{floor, Floor, GIMMICK_HEIGHT, GIMMICK_WIDTH, GimmickItem};
+use crate::gimmick::{floor, Floor, GIMMICK_HEIGHT, GIMMICK_HEIGHT_PX, GIMMICK_WIDTH, GimmickItem, Stage};
 use crate::gimmick::tag::GimmickTag;
 use crate::stage_creator::idle::StageCreatorIdlePlugin;
 use crate::stage_creator::pick::StageCreatorPickedPlugin;
@@ -28,6 +25,7 @@ pub struct StageCreatorPlugin;
 
 impl Plugin for StageCreatorPlugin {
     fn build(&self, app: &mut App) {
+
         app
             .add_state::<StageCreatorState>()
             .add_systems(OnEnter(GameState::StageCreator), setup)
@@ -50,10 +48,31 @@ fn setup(
             flex_direction: FlexDirection::Column,
             ..Default::default()
         },
-        background_color: BackgroundColor(Color::WHITE),
+
         ..Default::default()
     })
         .with_children(|parent| children(parent, &asset));
+
+
+
+    for x in 0..=24u8 {
+        for y in 0..=12u8 {
+            let x = f32::from(x) * 50. - 12. * 50.;
+            let y = f32::from(y) * 50. - 3.5 * 50.;
+            commands.spawn(ButtonBundle {
+                style: Style{
+                    height: GIMMICK_HEIGHT_PX,
+                    width: GIMMICK_HEIGHT_PX,
+                    ..default()
+                },
+                image: GimmickTag::Floor.load_to_ui_image(&asset),
+                transform: Transform::from_xyz(x, y, 3.),
+                ..default()
+            })
+                .insert(Floor)
+            ;
+        }
+    }
 }
 
 
@@ -73,10 +92,9 @@ fn center(parent: &mut ChildBuilder, asset: &AssetServer) {
             justify_content: JustifyContent::Center,
             ..default()
         },
-        background_color: BackgroundColor(Color::ORANGE_RED),
+
         ..default()
-    })
-        .with_children(|parent| stage(parent, asset));
+    });
 }
 
 
@@ -86,17 +104,20 @@ fn stage(parent: &mut ChildBuilder, asset: &AssetServer) {
             width: Val::Px(GIMMICK_WIDTH * 24.),
             height: Val::Px(GIMMICK_HEIGHT * 12.),
             flex_wrap: FlexWrap::Wrap,
+            display: Display::None,
             ..default()
         },
         background_color: BackgroundColor(Color::NONE),
         ..default()
-    }).with_children(|parent| {
-        for _ in 0..24 {
-            for _ in 0..12 {
-                spawn(parent, floor::texture(asset));
+    })
+        .insert(Stage)
+        .with_children(|parent| {
+            for _ in 0..24 {
+                for _ in 0..12 {
+                    spawn(parent, floor::texture(asset));
+                }
             }
-        }
-    });
+        });
 }
 
 
@@ -124,7 +145,6 @@ fn footer(parent: &mut ChildBuilder) {
             height: Val::Percent(20.),
             align_items: AlignItems::Center,
             column_gap: Val::Px(10.),
-
             ..default()
         },
         background_color: BackgroundColor(Color::BLACK),
