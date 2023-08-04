@@ -2,7 +2,6 @@
 
 use bevy::app::{App, PluginGroup, Update};
 use bevy::DefaultPlugins;
-use bevy::prelude::{Component, Resource};
 use bevy::utils::default;
 use bevy::window::{Window, WindowPlugin, WindowResolution};
 use bevy_editor_pls::EditorPlugin;

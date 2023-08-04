@@ -5,8 +5,7 @@ use crate::gama_state::GameState;
 use crate::gimmick::Floor;
 use crate::stage_creator::{front, gimmick_iem_sprite_bundle, StageCreatorState};
 use crate::stage_creator::idle::OnPick;
-use crate::undo::attached::UndoAttached;
-use crate::undo::Undo;
+use crate::undo::on_undo::OnUndoBuilder;
 
 #[derive(Debug, Default, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct StageCreatorPickedPlugin;
@@ -33,9 +32,11 @@ fn update(
 
             commands
                 .spawn(gimmick_iem_sprite_bundle(front(transform.translation), tag.load(&asset)))
-                .insert(UndoAttached::new(|cmd| {
-                    cmd.despawn();
-                }));
+                .insert(OnUndoBuilder::new()
+                    .build(|cmd| {
+                        cmd.despawn();
+                    })
+                );
 
             state.set(StageCreatorState::Idle);
             return;
