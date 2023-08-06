@@ -4,21 +4,29 @@ use bevy::math::Vec2;
 use bevy::prelude::{Bundle, Commands, Component, Image, Transform};
 use bevy::sprite::SpriteBundle;
 
-use crate::gimmick::{create_front_gimmick_sprite_bundle, FALL_DOWN_CODE, move_linear, PlayerControllable};
+use crate::gimmick::{new_gimmick_sprite_bundle, FALL_DOWN_CODE, move_linear, PlayerControllable};
 use crate::playing::PageIndex;
 use crate::playing::start_moving::MoveDirection;
+
+
+#[derive(Default, Debug, Copy, Clone, Component)]
+pub struct FallDownProcessing;
+
 
 #[derive(Default, Debug, Copy, Clone, Component)]
 pub struct FallDownCollide;
 
 
 impl PlayerControllable for FallDownCollide {
-    fn move_player(&self, controller_entity: &mut EntityCommands, controller_transform: &mut Transform, player_transform: &mut Transform, _direction: &MoveDirection) {
+    fn move_player(&self, commands: &mut EntityCommands, controller_transform: &mut Transform, player_transform: &mut Transform, _direction: &MoveDirection) {
         move_linear(
-            controller_entity,
+            commands,
             player_transform,
             controller_transform.translation,
-            FALL_DOWN_CODE,
+            |commands| {
+                println!("Start fallDown");
+                commands.insert(FallDownProcessing);
+            },
         )
     }
 }
@@ -40,7 +48,7 @@ impl FallDownBundle {
         page_index: PageIndex,
     ) -> Self {
         Self {
-            sprite: create_front_gimmick_sprite_bundle(texture, pos),
+            sprite: new_gimmick_sprite_bundle(texture, pos),
             collide: FallDownCollide,
             page_index,
         }

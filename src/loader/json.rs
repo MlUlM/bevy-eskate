@@ -1,49 +1,55 @@
+use bevy::math::Vec2;
 use bevy::reflect::erased_serde::__private::serde::{Deserialize, Serialize};
+
+use crate::gimmick::tag::GimmickTag;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct StageJson {
+    pub name: String,
     pub pages: Vec<Page>,
 }
 
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Page {
-    pub cells: Vec<Cell>,
+    pub cells: Vec<StageCell>,
 }
 
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct Cell {
+pub struct StageCell {
     pub x: f32,
     pub y: f32,
-    pub tag: GimmickTag,
+    pub tags: Vec<GimmickTag>,
 }
 
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub enum GimmickTag {
-    Floor,
-    Rock,
-    Multiple(Vec<GimmickTag>),
+impl StageCell {
+    #[inline]
+    pub const fn new(pos: Vec2, tags: Vec<GimmickTag>) -> Self {
+        Self {
+            x: pos.x,
+            y: pos.y,
+            tags,
+        }
+    }
 }
 
 
 #[cfg(test)]
 mod tests {
-    use crate::loader::json::{Cell, GimmickTag, StageJson};
+    use crate::gimmick::tag::GimmickTag;
+    use crate::loader::json::{StageCell, StageJson};
 
     #[test]
     fn floor() {
-        let json = r#"{"pages" : [{ "cells": [{"x": 1, "y": 2, "tag": "Floor"}]} ]}"#;
+        let json = r#"{
+                "name": "stage1",
+                "pages" : [{
+                    "cells": [{ "x": 1, "y": 2, "tags": ["Floor"] }]
+                 }]
+            }"#;
         let stage = serde_json::from_str::<StageJson>(json).unwrap();
-        assert_eq!(stage.pages[0].cells[0], Cell { x: 1., y: 2., tag: GimmickTag::Floor });
-    }
-
-
-    #[test]
-    fn multiple() {
-        let json = r#"{"pages" : [{ "cells": [{"x": 1, "y": 2, "tag": {"Multiple": ["Floor", "Rock"]} }]} ]}"#;
-        let stage = serde_json::from_str::<StageJson>(json).unwrap();
-        assert_eq!(stage.pages[0].cells[0], Cell { x: 1., y: 2., tag: GimmickTag::Multiple(vec![GimmickTag::Floor, GimmickTag::Rock]) });
+        assert_eq!(stage.pages[0].cells[0], StageCell { x: 1., y: 2., tags: vec![GimmickTag::Floor] });
     }
 }

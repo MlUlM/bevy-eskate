@@ -1,11 +1,11 @@
 use bevy::prelude::*;
+use bevy_undo::prelude::EntityCommandsOnUndoExt;
 
 use crate::button::SpriteInteraction;
 use crate::gama_state::GameState;
-use crate::gimmick::Floor;
+use crate::gimmick::{Floor, Gimmick};
 use crate::stage_creator::{front, gimmick_iem_sprite_bundle, StageCreatorState};
 use crate::stage_creator::idle::OnPick;
-use crate::undo::on_undo::OnUndoBuilder;
 
 #[derive(Debug, Default, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct StageCreatorPickedPlugin;
@@ -23,21 +23,20 @@ fn update(
     asset: Res<AssetServer>,
     mut state: ResMut<NextState<StageCreatorState>>,
     mut commands: Commands,
-    item: Query<&OnPick, With<OnPick>>,
+    item: Query<(Entity, &OnPick), With<OnPick>>,
     floors: Query<(&Transform, &SpriteInteraction), (With<SpriteInteraction>, With<Floor>)>,
 ) {
     for (transform, interaction, ) in floors.iter() {
         if interaction.is_clicked() {
-            let OnPick(tag) = item.single();
+            let (on_pick_entity, OnPick(tag)) = item.single();
+            commands.entity(on_pick_entity).remove::<OnPick>();
 
             commands
                 .spawn(gimmick_iem_sprite_bundle(front(transform.translation), tag.load(&asset)))
-                .insert(OnUndoBuilder::new()
-                    .build(|cmd| {
-                        cmd.despawn();
-                    })
-                );
-
+                .insert(Gimmick(*tag))
+                .on_undo(|cmd, entity| {
+                    cmd.entity(entity).despawn();
+                });
             state.set(StageCreatorState::Idle);
             return;
         }

@@ -1,7 +1,5 @@
-use bevy::app::{App, Update};
-use bevy::input::Input;
 use bevy::math::Vec3Swizzles;
-use bevy::prelude::{Bundle, Camera, Camera2d, Component, GlobalTransform, MouseButton, Plugin, Query, Rect, Res, Resource, Sprite, SpriteBundle, Window, With};
+use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use itertools::Itertools;
 
@@ -14,7 +12,9 @@ pub struct SpriteButtonPlugin;
 impl Plugin for SpriteButtonPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(Update, update);
+            .add_systems(Update, update.run_if(any_with_component::<SpriteButton>()
+                .and_then(any_with_component::<SpriteInteraction>())
+            ));
     }
 }
 

@@ -3,13 +3,13 @@ use bevy::math::Vec2;
 use bevy::prelude::{Bundle, Commands, Image};
 use bevy::sprite::SpriteBundle;
 
-use crate::gimmick::{create_front_gimmick_sprite_bundle, GimmickCollide};
+use crate::gimmick::{new_gimmick_sprite_bundle, MoveToFront};
 use crate::playing::PageIndex;
 
 #[derive(Bundle, Clone)]
 pub struct RockBundle {
     sprite: SpriteBundle,
-    collide: GimmickCollide,
+    collide: MoveToFront,
     page_index: PageIndex,
 }
 
@@ -22,9 +22,9 @@ impl RockBundle {
         page_index: PageIndex,
     ) -> Self {
         Self {
-            sprite: create_front_gimmick_sprite_bundle(texture, pos),
-            collide: GimmickCollide,
-            page_index
+            sprite: new_gimmick_sprite_bundle(texture, pos),
+            collide: MoveToFront,
+            page_index,
         }
     }
 }
@@ -39,4 +39,11 @@ pub fn spawn(
 ) {
     let texture = asset_sever.load("gimmick/rock.png");
     commands.spawn(RockBundle::new(texture, pos, page_index));
+}
+
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn move_to_front_of_rock() {}
 }

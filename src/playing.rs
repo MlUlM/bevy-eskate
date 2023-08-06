@@ -1,17 +1,17 @@
 use bevy::app::{App, Plugin, Update};
 use bevy::math::Vec2;
-use bevy::prelude::{
-    any_with_component, AssetServer, Commands, Component, Condition,
-    in_state, IntoSystemConfigs, OnEnter, Query, Res, Resource, resource_changed, Visibility, With,
-};
+use bevy::prelude::{any_with_component, AssetServer, Camera2dBundle, Commands, Component, Condition, in_state, IntoSystemConfigs, OnEnter, Query, Res, Resource, resource_changed, Visibility, With};
 use bevy_trait_query::RegisterExt;
 
 use crate::gama_state::GameState;
-use crate::gimmick::{floor, GimmickCollide, GimmickItem, player, PlayerControllable, rock};
+use crate::gimmick;
+use crate::gimmick::{floor, GimmickItem, MoveToFront, player, PlayerControllable, rock};
 use crate::gimmick::fall_down::FallDownCollide;
-use crate::gimmick::player::Moving;
-use crate::playing::idle::{Idle, update_move_input_handle};
-use crate::playing::start_moving::{on_move_completed, StartMoving, update_start_moving};
+use crate::gimmick::tag::GimmickTag;
+use crate::loader::{StageLoadable, StageLoader};
+use crate::loader::json::StageCell;
+use crate::playing::idle::{PlayingIdle, update_move_input_handle};
+use crate::playing::start_moving::{StartMoving, update_start_moving};
 
 mod fall_down;
 pub mod idle;
@@ -34,61 +34,26 @@ pub struct PlayingPlugin;
 
 impl Plugin for PlayingPlugin {
     fn build(&self, app: &mut App) {
-        app.register_component_as::<dyn PlayerControllable, GimmickCollide>()
+        app.register_component_as::<dyn PlayerControllable, MoveToFront>()
             .register_component_as::<dyn PlayerControllable, FallDownCollide>()
             .add_systems(OnEnter(GameState::Playing), setup)
             .add_systems(
                 Update,
-                page.run_if(in_state(GameState::Playing).and_then(resource_changed::<PageIndex>())),
+                change_gimmicks_visible.run_if(in_state(GameState::Playing).and_then(resource_changed::<PageIndex>())),
             )
             .add_systems(
                 Update,
-                update_move_input_handle.run_if(in_state(GameState::Playing).and_then(any_with_component::<Idle>())),
+                update_move_input_handle.run_if(in_state(GameState::Playing).and_then(any_with_component::<PlayingIdle>())),
             )
             .add_systems(
                 Update,
                 update_start_moving.run_if(in_state(GameState::Playing).and_then(any_with_component::<StartMoving>())),
-            )
-            .add_systems(
-                Update,
-                on_move_completed.run_if(in_state(GameState::Playing).and_then(any_with_component::<Moving>())),
             );
     }
 }
 
-fn setup(mut commands: Commands, asset_sever: Res<AssetServer>) {
-    commands.spawn(Idle);
-    commands.insert_resource(PageIndex::new(0));
 
-    for x in 0..=24u8 {
-        for y in 0..=14u8 {
-            if x == 0 || y == 0 || x == 24 || y == 14 {
-                let x = f32::from(x) * 50. - 12. * 50.;
-                let y = f32::from(y) * 50. - 7. * 50.;
-
-                rock::spawn(
-                    &mut commands,
-                    &asset_sever,
-                    Vec2::new(x, y),
-                    PageIndex::new(0),
-                );
-            }
-            let x = f32::from(x) * 50. - 12. * 50.;
-            let y = f32::from(y) * 50. - 7. * 50.;
-
-            floor::spawn(
-                &mut commands,
-                &asset_sever,
-                Vec2::new(x, y),
-                PageIndex::new(0),
-            );
-        }
-    }
-
-    player::spawn(&mut commands);
-}
-
-fn page(
+fn change_gimmicks_visible(
     page_idx: Res<PageIndex>,
     mut gimmicks: Query<
         (&mut Visibility, &mut PageIndex, Option<&mut GimmickItem>),
@@ -104,6 +69,51 @@ fn page(
             *visible = Visibility::Visible;
         } else {
             *visible = Visibility::Hidden;
+        }
+    }
+}
+
+
+fn setup(mut commands: Commands, asset_sever: Res<AssetServer>) {
+    commands.spawn(Camera2dBundle::default());
+    commands.spawn(PlayingIdle);
+    commands.insert_resource(PageIndex::new(0));
+
+    let stages = StageLoader::new().load().unwrap();
+    let stage = stages.first().unwrap();
+    for (page_index, page) in stage.pages.iter().enumerate() {
+        let page_index = PageIndex(page_index);
+        for stage_cell in page.cells.iter() {
+            spawn_gimmick(&mut commands, &asset_sever, stage_cell, page_index);
+        }
+    }
+}
+
+
+fn spawn_gimmick(
+    commands: &mut Commands,
+    asset: &AssetServer,
+    stage_cell: &StageCell,
+    page_index: PageIndex,
+) {
+    let pos = Vec2::new(stage_cell.x, stage_cell.y);
+    for tag in stage_cell.tags.iter() {
+        match tag {
+            GimmickTag::Floor => {
+                floor::spawn(commands, asset, pos, page_index);
+            }
+            GimmickTag::Rock => {
+                rock::spawn(commands, asset, pos, page_index);
+            }
+            GimmickTag::Player => {
+                player::spawn(commands, asset, pos, page_index);
+            }
+            GimmickTag::FallDown => {
+                gimmick::fall_down::spawn(commands, asset, pos, page_index);
+            }
+            GimmickTag::Goal => {
+                gimmick::goal::spawn(commands, asset, pos, page_index)
+            }
         }
     }
 }

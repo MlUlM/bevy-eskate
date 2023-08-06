@@ -3,7 +3,7 @@ use bevy::math::Vec2;
 use bevy::prelude::{Bundle, Commands, Image};
 use bevy::sprite::SpriteBundle;
 
-use crate::gimmick::create_floor_sprite_bundle;
+use crate::gimmick::new_floor_sprite_bundle;
 use crate::playing::PageIndex;
 
 #[derive(Bundle, Clone)]
@@ -21,7 +21,7 @@ impl FloorBundle {
         page_index: PageIndex,
     ) -> Self {
         Self {
-            sprite: create_floor_sprite_bundle(texture, pos),
+            sprite: new_floor_sprite_bundle(texture, pos),
             page_index,
         }
     }

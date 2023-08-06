@@ -4,17 +4,17 @@ use bevy::prelude::{Commands, Component, Entity, KeyCode, Query, Res, With};
 use crate::playing::start_moving::StartMoving;
 
 #[derive(Default, Component, Copy, Clone, Debug)]
-pub struct Idle;
+pub struct PlayingIdle;
 
 
 pub fn update_move_input_handle(
     mut commands: Commands,
     keys: Res<Input<KeyCode>>,
-    status: Query<Entity, With<Idle>>,
+    status: Query<Entity, With<PlayingIdle>>,
 ) {
     let mut emit = |start_moving: StartMoving| {
         let mut status = commands.entity(status.single());
-        status.remove::<Idle>();
+        status.remove::<PlayingIdle>();
         status.insert(start_moving);
     };
 

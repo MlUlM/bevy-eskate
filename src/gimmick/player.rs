@@ -12,7 +12,7 @@ pub struct Movable;
 pub struct Moving;
 
 
-pub fn spawn(commands: &mut Commands) {
+pub fn spawn(commands: &mut Commands, asset: &AssetServer, pos: Vec2, page_index: PageIndex) {
     commands
         .spawn(SpriteBundle {
             sprite: Sprite {
@@ -20,11 +20,12 @@ pub fn spawn(commands: &mut Commands) {
                 color: Color::WHITE,
                 ..default()
             },
-            transform: Transform::from_xyz(0., 0., 1.),
+            texture: asset.load("gimmick/player.png"),
+            transform: Transform::from_xyz(pos.x, pos.y, 1.),
             ..default()
         })
-        .insert((Movable, Gimmick, GimmickItem(GimmickTag::Player)))
-        .insert(PageIndex::new(1));
+        .insert((Movable, Gimmick(GimmickTag::Player), GimmickItem(GimmickTag::Player)))
+        .insert(page_index);
 }
 
 

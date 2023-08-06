@@ -1,12 +1,10 @@
 use bevy::math::Vec3;
-use bevy::prelude::{Commands, Component, Entity, EventReader, Query, Transform, With, Without};
+use bevy::prelude::{Commands, Component, Entity, Query, Transform, With, Without};
 use bevy_trait_query::One;
-use bevy_tweening::TweenCompleted;
 use itertools::Itertools;
 
-use crate::gimmick::{FALL_DOWN_CODE, GIMMICK_SIZE_VEC3, PlayerControllable};
+use crate::gimmick::{GIMMICK_SIZE_VEC3, PlayerControllable};
 use crate::gimmick::player::{Movable, Moving};
-use crate::playing::idle::Idle;
 
 #[derive(Debug, Copy, Clone)]
 pub enum MoveDirection {
@@ -97,28 +95,6 @@ pub fn update_start_moving(
                 &mut player_transform,
                 move_direction,
             );
-        }
-    }
-}
-
-
-pub fn on_move_completed(
-    mut commands: Commands,
-    mut reader: EventReader<TweenCompleted>,
-    status: Query<Entity, With<Moving>>,
-) {
-    for TweenCompleted { entity: _, user_data } in reader.iter() {
-        let mut status = commands.entity(status.single());
-
-        match *user_data {
-            FALL_DOWN_CODE => {
-                status.remove::<Moving>();
-                status.insert(Idle);
-            }
-            _ => {
-                status.remove::<Moving>();
-                status.insert(Idle);
-            }
         }
     }
 }

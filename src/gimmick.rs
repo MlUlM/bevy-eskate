@@ -5,8 +5,11 @@ use bevy::prelude::{Component, default, Image, Sprite, SpriteBundle, Transform};
 use bevy::ui::Val;
 use bevy_tweening::{Animator, EaseMethod, Tween};
 use bevy_tweening::lens::TransformPositionLens;
+use bevy_undo::prelude::TweenOnUndoExt;
 
+use crate::gimmick::player::Moving;
 use crate::gimmick::tag::GimmickTag;
+use crate::playing::idle::PlayingIdle;
 use crate::playing::start_moving::MoveDirection;
 
 pub mod floor;
@@ -14,6 +17,7 @@ pub mod player;
 pub mod rock;
 pub mod fall_down;
 pub mod tag;
+pub mod goal;
 
 
 pub const GIMMICK_WIDTH: f32 = 50.;
@@ -36,17 +40,16 @@ pub struct Floor;
 #[derive(Copy, Clone, Component)]
 pub struct GimmickItem(pub GimmickTag);
 
-
-#[derive(Default, Copy, Clone, Component)]
-pub struct Gimmick;
+#[derive(Copy, Clone, Component)]
+pub struct Gimmick(pub GimmickTag);
 
 
 #[bevy_trait_query::queryable]
 pub trait PlayerControllable {
     fn move_player(
         &self,
-        controller_entity: &mut EntityCommands,
-        controller_transform: &mut Transform,
+        collide_cmd: &mut EntityCommands,
+        collide_transform: &mut Transform,
         player_transform: &mut Transform,
         direction: &MoveDirection,
     );
@@ -54,33 +57,38 @@ pub trait PlayerControllable {
 
 
 #[derive(Default, Debug, Copy, Clone, Component)]
-pub struct GimmickCollide;
+pub struct MoveToFront;
 
 
-impl PlayerControllable for GimmickCollide {
+impl PlayerControllable for MoveToFront {
     #[inline]
     fn move_player(
         &self,
-        controller_entity: &mut EntityCommands,
-        controller_transform: &mut Transform,
+        commands: &mut EntityCommands,
+        collide_transform: &mut Transform,
         player_transform: &mut Transform,
         direction: &MoveDirection,
     ) {
         move_linear(
-            controller_entity,
+            commands,
             player_transform,
-            controller_transform.translation + direction.reverse().vec3(),
-            0,
-        );
+            collide_transform.translation + direction.reverse().vec3(),
+            |enty_cmd| {
+                enty_cmd.remove::<Moving>();
+                enty_cmd
+                    .commands()
+                    .spawn(PlayingIdle);
+            },
+        )
     }
 }
 
 
 pub(crate) fn move_linear(
-    controller_entity: &mut EntityCommands,
+    commands: &mut EntityCommands,
     player_transform: &mut Transform,
     end: Vec3,
-    complete_code: u64,
+    on_completed: impl Fn(&mut EntityCommands) + Send + Sync + 'static + Clone,
 ) {
     let tween = Tween::new(
         EaseMethod::Linear,
@@ -90,15 +98,15 @@ pub(crate) fn move_linear(
             end,
         },
     )
-        .with_completed_event(complete_code);
+        .spawn_processing_and_remove_completed(commands.commands())
+        .with_completed_entity_commands(commands.commands(), on_completed);
 
-
-    controller_entity.insert(Animator::new(tween));
+    commands.insert(Animator::new(tween));
 }
 
 
 #[inline]
-pub(crate) fn create_front_gimmick_sprite_bundle(
+pub(crate) fn new_gimmick_sprite_bundle(
     texture: Handle<Image>,
     pos: Vec2,
 ) -> SpriteBundle {
@@ -107,7 +115,7 @@ pub(crate) fn create_front_gimmick_sprite_bundle(
 
 
 #[inline]
-pub(crate) fn create_floor_sprite_bundle(
+pub(crate) fn new_floor_sprite_bundle(
     texture: Handle<Image>,
     pos: Vec2,
 ) -> SpriteBundle {
