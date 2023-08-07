@@ -1,14 +1,12 @@
 use std::collections::HashMap;
-
 use bevy::math::I64Vec2;
 use bevy::prelude::*;
-
 use crate::gama_state::GameState;
 use crate::gimmick::{Gimmick, GimmickItem};
 use crate::gimmick::tag::GimmickTag;
 use crate::loader::{StageLoadable, StageLoader};
 use crate::loader::json::{Page, StageCell, StageJson};
-use crate::playing::PageIndex;
+use crate::stage_edit::page_param::PageParams;
 use crate::stage_edit::StageEditState;
 
 #[derive(Debug, Copy, Clone, Component, Eq, PartialEq)]
@@ -29,6 +27,7 @@ enum InputStatus {
     PickedItem(Entity, GimmickTag),
     SaveFile,
     NextPage,
+    PreviousPage
 }
 
 
@@ -47,11 +46,11 @@ impl Plugin for StageEditIdlePlugin {
 fn input_handle(
     In(input_status): In<InputStatus>,
     mut state: ResMut<NextState<StageEditState>>,
-    mut page_index: ResMut<PageIndex>,
     mut commands: Commands,
-    can_next_page: Query<Option<&NextablePage>>,
+    mut page_params: PageParams,
     cells: Query<(&Transform, &Gimmick), (With<Transform>, With<Gimmick>)>,
 ) {
+
     match input_status {
         InputStatus::PickedItem(entity, gimmick_tag) => {
             state.set(StageEditState::PickItem);
@@ -63,9 +62,10 @@ fn input_handle(
             stage_save(cells);
         }
         InputStatus::NextPage => {
-            if can_next_page.iter().next().is_some() {
-                *page_index += 1;
-            }
+            page_params.next_page();
+        }
+        InputStatus::PreviousPage => {
+            page_params.previous_page();
         }
         _ => {}
     }
@@ -82,6 +82,10 @@ fn click_pick_item(
 
     if key.just_pressed(KeyCode::Left) {
         return InputStatus::NextPage;
+    }
+
+    if key.just_pressed(KeyCode::Right){
+        return InputStatus::PreviousPage;
     }
 
     for (entity, interaction, GimmickItem(tag)) in items.iter() {

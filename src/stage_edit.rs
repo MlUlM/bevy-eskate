@@ -8,6 +8,7 @@ use crate::gimmick::asset::GimmickAssets;
 use crate::gimmick::tag::GimmickTag;
 use crate::playing::PageIndex;
 use crate::stage_edit::idle::{NextablePage, StageEditIdlePlugin};
+use crate::stage_edit::page_count::StageEditPageCount;
 use crate::stage_edit::pick::StageEditPickedPlugin;
 
 #[derive(Default, Debug, Hash, Eq, PartialEq, States, Copy, Clone)]
@@ -21,17 +22,8 @@ pub enum StageEditState {
 
 mod idle;
 mod pick;
-
-
-#[derive(Default, Debug, PartialEq, Copy, Clone, Resource)]
-pub struct StageEditPageCount(pub usize);
-
-impl StageEditPageCount {
-    #[inline]
-    pub const fn new(page_count: usize) -> Self {
-        Self(page_count)
-    }
-}
+pub mod page_count;
+mod page_param;
 
 
 #[derive(Default, Debug, PartialEq, Copy, Clone)]
@@ -43,8 +35,7 @@ impl Plugin for StageEditPlugin {
         app
             .add_state::<StageEditState>()
             .add_systems(OnEnter(GameState::StageEdit), setup_stage_editor)
-            .add_systems(Update, change_visible_gimmicks
-                .run_if(in_state(GameState::StageEdit).and_then(resource_changed::<PageIndex>())))
+            .add_systems(Update, change_visible_gimmicks.run_if(in_state(GameState::StageEdit).and_then(resource_changed::<PageIndex>())))
             .add_plugins(StageEditIdlePlugin)
             .add_plugins(StageEditPickedPlugin);
     }

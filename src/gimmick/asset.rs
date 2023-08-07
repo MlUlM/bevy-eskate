@@ -15,7 +15,7 @@ pub struct GimmickAssets {
     #[asset(path = "gimmick/goal.png")]
     pub goal: Handle<Image>,
 
-    #[asset(path = "gimmick/rock.png")]
+    #[asset(path = "gimmick/player.png")]
     pub player: Handle<Image>,
 }
 

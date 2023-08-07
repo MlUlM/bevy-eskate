@@ -1,4 +1,5 @@
-use std::ops::AddAssign;
+use std::ops::{AddAssign, Deref, SubAssign};
+
 use bevy::app::{App, Plugin, Update};
 use bevy::math::Vec2;
 use bevy::prelude::{any_with_component, AssetServer, Camera2dBundle, Commands, Component, Condition, in_state, IntoSystemConfigs, OnEnter, Query, Res, Resource, resource_changed, Visibility, With};
@@ -31,12 +32,29 @@ impl AddAssign<usize> for PageIndex {
 }
 
 
+impl SubAssign<usize> for PageIndex {
+    fn sub_assign(&mut self, rhs: usize) {
+        *self = PageIndex::new(self.0 - rhs);
+    }
+}
+
+
 impl PageIndex {
     #[inline]
     pub const fn new(index: usize) -> Self {
         Self(index)
     }
 }
+
+
+impl Deref for PageIndex {
+    type Target = usize;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 
 #[derive(Default, Clone)]
 pub struct PlayingPlugin;
