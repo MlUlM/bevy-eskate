@@ -9,8 +9,8 @@ pub struct GimmickAssets {
     #[asset(path = "gimmick/rock.png")]
     pub rock: Handle<Image>,
 
-    #[asset(path = "gimmick/fall_down.png")]
-    pub fall_down: Handle<Image>,
+    #[asset(path = "gimmick/next_page.png")]
+    pub next_page: Handle<Image>,
 
     #[asset(path = "gimmick/goal.png")]
     pub goal: Handle<Image>,

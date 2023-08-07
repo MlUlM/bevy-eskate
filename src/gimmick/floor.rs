@@ -1,7 +1,9 @@
 use bevy::asset::{AssetServer, Handle};
+use bevy::core::Name;
 use bevy::math::Vec2;
 use bevy::prelude::{Bundle, Commands, Image};
 use bevy::sprite::SpriteBundle;
+use crate::gimmick::asset::GimmickAssets;
 
 use crate::gimmick::new_floor_sprite_bundle;
 use crate::playing::PageIndex;
@@ -10,6 +12,7 @@ use crate::playing::PageIndex;
 pub struct FloorBundle {
     sprite: SpriteBundle,
     page_index: PageIndex,
+    name: Name
 }
 
 
@@ -23,6 +26,7 @@ impl FloorBundle {
         Self {
             sprite: new_floor_sprite_bundle(texture, pos),
             page_index,
+            name: Name::new("Floor")
         }
     }
 }
@@ -31,12 +35,11 @@ impl FloorBundle {
 #[inline]
 pub fn spawn(
     commands: &mut Commands,
-    asset_sever: &AssetServer,
+    assets: &GimmickAssets,
     pos: Vec2,
     page_index: PageIndex,
 ) {
-    let texture = texture(asset_sever);
-    commands.spawn(FloorBundle::new(texture, pos, page_index));
+    commands.spawn(FloorBundle::new(assets.floor.clone(), pos, page_index));
 }
 
 

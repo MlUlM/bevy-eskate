@@ -2,12 +2,12 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Res, ResMut};
 
 use crate::playing::PageIndex;
-use crate::stage_edit::page_count::StageEditPageCount;
+use crate::stage_edit::page_count::PageCount;
 
 #[derive(SystemParam, Debug)]
 pub struct PageParams<'w> {
     page_index: ResMut<'w, PageIndex>,
-    page_count: Res<'w, StageEditPageCount>,
+    page_count: Res<'w, PageCount>,
 }
 
 

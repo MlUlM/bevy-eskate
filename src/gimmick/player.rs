@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 use crate::gimmick::{Gimmick, GimmickItem};
+use crate::gimmick::asset::GimmickAssets;
 use crate::gimmick::tag::GimmickTag;
 use crate::playing::PageIndex;
 
@@ -12,7 +13,7 @@ pub struct Movable;
 pub struct Moving;
 
 
-pub fn spawn(commands: &mut Commands, asset: &AssetServer, pos: Vec2, page_index: PageIndex) {
+pub fn spawn(commands: &mut Commands, assets: &GimmickAssets, pos: Vec2, page_index: PageIndex) {
     commands
         .spawn(SpriteBundle {
             sprite: Sprite {
@@ -20,7 +21,7 @@ pub fn spawn(commands: &mut Commands, asset: &AssetServer, pos: Vec2, page_index
                 color: Color::WHITE,
                 ..default()
             },
-            texture: asset.load("gimmick/player.png"),
+            texture: assets.player.clone(),
             transform: Transform::from_xyz(pos.x, pos.y, 1.),
             ..default()
         })

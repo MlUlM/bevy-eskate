@@ -101,7 +101,7 @@ fn save_stage(
     stage_cells: &Query<(&Transform, &Gimmick, &PageIndex), (With<Transform>, With<Gimmick>, With<PageIndex>)>,
 ) {
     let pages = (0..page_params.page_count())
-        .map(|page_index| create_page_asset(page_params.page_count(), page_index, stage_cells))
+        .map(|page_index| create_page_asset(page_index, stage_cells))
         .collect::<Vec<Page>>();
 
     let json = StageJson {
@@ -113,7 +113,6 @@ fn save_stage(
 
 
 fn create_page_asset(
-    page_count: usize,
     page_index: usize,
     stage_cells: &Query<(&Transform, &Gimmick, &PageIndex), (With<Transform>, With<Gimmick>, With<PageIndex>)>,
 ) -> Page {
@@ -161,7 +160,7 @@ mod tests {
 
     use crate::playing::PageIndex;
     use crate::stage_edit::idle::{input_handle, InputStatus};
-    use crate::stage_edit::StageEditPageCount;
+    use crate::stage_edit::PageCount;
     use crate::stage_edit::tests::new_stage_edit_app;
 
     fn update_next_page() -> InputStatus {
@@ -170,7 +169,7 @@ mod tests {
 
     #[test]
     fn unchanged_next_page_if_last_page() {
-        let mut app = new_stage_edit_app(StageEditPageCount::new(2));
+        let mut app = new_stage_edit_app(PageCount::new(2));
         app.add_systems(Update, update_next_page.pipe(input_handle));
         *app
             .world
@@ -189,7 +188,7 @@ mod tests {
 
     #[test]
     fn increment_page_index_if_exists_nextable_page() {
-        let mut app = new_stage_edit_app(StageEditPageCount::new(2));
+        let mut app = new_stage_edit_app(PageCount::new(2));
         app.add_systems(Update, update_next_page.pipe(input_handle));
 
         app.update();

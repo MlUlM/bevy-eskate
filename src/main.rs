@@ -16,7 +16,7 @@ use crate::button::SpriteButtonPlugin;
 use crate::gama_state::GameState;
 use crate::gimmick::asset::GimmickAssets;
 use crate::playing::PlayingPlugin;
-use crate::stage_edit::page_count::StageEditPageCount;
+use crate::stage_edit::page_count::PageCount;
 use crate::stage_edit::StageEditPlugin;
 
 mod playing;
@@ -40,7 +40,7 @@ fn main() {
             ..default()
         }))
         .add_loading_state(
-            LoadingState::new(GameState::AssetLoading).continue_to_state(GameState::StageEdit),
+            LoadingState::new(GameState::AssetLoading).continue_to_state(GameState::Playing),
         )
         .add_collection_to_loading_state::<_, GimmickAssets>(GameState::AssetLoading)
         .add_plugins(WorldInspectorPlugin::new())
@@ -59,7 +59,7 @@ fn main() {
 fn setup(
     mut commands: Commands
 ) {
-    commands.insert_resource(StageEditPageCount::new(2));
+    commands.insert_resource(PageCount::new(2));
 }
 
 

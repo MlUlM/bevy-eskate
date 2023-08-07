@@ -1,13 +1,15 @@
+use bevy::core::Name;
 use bevy::ecs::system::EntityCommands;
 use bevy::math::{Vec2, Vec3};
-use bevy::prelude::{AssetServer, Bundle, Commands, Transform};
+use bevy::prelude::{Bundle, Commands, Transform};
 use bevy::sprite::SpriteBundle;
 use bevy_trait_query::imports::Component;
-use crate::gimmick::{new_gimmick_sprite_bundle, move_linear, PlayerControllable};
+
+use crate::gimmick::{move_linear, new_gimmick_sprite_bundle, PlayerControllable};
+use crate::gimmick::asset::GimmickAssets;
 use crate::gimmick::player::Moving;
 use crate::playing::PageIndex;
 use crate::playing::start_moving::MoveDirection;
-
 
 #[derive(Component, Copy, Clone, PartialEq, Eq, Debug)]
 pub struct Goaled;
@@ -40,20 +42,22 @@ pub struct GoalBundle {
     sprite: SpriteBundle,
     collide: GoalCollide,
     page_index: PageIndex,
+    name: Name,
 }
 
 
 impl GoalBundle {
     #[inline]
     pub fn new(
-        asset: &AssetServer,
+        assets: &GimmickAssets,
         pos: Vec2,
         page_index: PageIndex,
     ) -> Self {
         Self {
-            sprite: new_gimmick_sprite_bundle(asset.load("gimmick/goal.png"), pos),
+            sprite: new_gimmick_sprite_bundle(assets.goal.clone(), pos),
             collide: GoalCollide,
             page_index,
+            name: Name::new("Goal"),
         }
     }
 }
@@ -62,11 +66,11 @@ impl GoalBundle {
 #[inline]
 pub fn spawn(
     commands: &mut Commands,
-    asset: &AssetServer,
+    assets: &GimmickAssets,
     pos: Vec2,
     page_index: PageIndex,
 ) {
-    commands.spawn(GoalBundle::new(asset, pos, page_index));
+    commands.spawn(GoalBundle::new(assets, pos, page_index));
 }
 
 

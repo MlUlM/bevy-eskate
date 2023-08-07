@@ -16,10 +16,10 @@ impl StageLoadable for NativeStageLoader {
         let dir = eskate_dir_path()?;
         Ok(dir
             .read_dir()?
-            .filter_map(|dir| dir.ok())
+            .map(|dir| dir.unwrap())
             .filter(|entry| entry.path().extension().is_some_and(|extension| extension == "json"))
-            .filter_map(|entry| fs::read_to_string(entry.path()).ok())
-            .filter_map(|json| serde_json::from_str::<StageJson>(&json).ok())
+            .map(|entry| fs::read_to_string(entry.path()).unwrap())
+            .map(|json| serde_json::from_str::<StageJson>(&json).unwrap())
             .collect())
     }
 

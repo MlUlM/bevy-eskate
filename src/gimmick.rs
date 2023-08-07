@@ -15,7 +15,7 @@ use crate::playing::start_moving::MoveDirection;
 pub mod floor;
 pub mod player;
 pub mod rock;
-pub mod fall_down;
+pub mod next_page;
 pub mod tag;
 pub mod goal;
 pub mod asset;
@@ -40,6 +40,11 @@ pub struct Floor;
 
 #[derive(Copy, Clone, Component)]
 pub struct GimmickItem(pub GimmickTag);
+
+
+#[derive(Copy, Clone, Component)]
+pub struct GimmickItemSpawned(pub GimmickTag);
+
 
 #[derive(Copy, Clone, Component)]
 pub struct Gimmick(pub GimmickTag);

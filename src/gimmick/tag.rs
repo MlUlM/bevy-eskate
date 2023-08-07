@@ -10,7 +10,7 @@ pub enum GimmickTag {
     Floor,
     Rock,
     Player,
-    FallDown,
+    NextPage,
     Goal,
 }
 
@@ -22,7 +22,7 @@ impl GimmickTag {
             GimmickTag::Floor => "gimmick/floor.png".to_string(),
             GimmickTag::Rock => "gimmick/rock.png".to_string(),
             GimmickTag::Player => "gimmick/player.png".to_string(),
-            GimmickTag::FallDown => "gimmick/fall_down.png".to_string(),
+            GimmickTag::NextPage => "gimmick/next_page.png".to_string(),
             GimmickTag::Goal => "gimmick/goal.png".to_string()
         }
     }
@@ -34,7 +34,7 @@ impl GimmickTag {
             GimmickTag::Floor => assets.floor.clone(),
             GimmickTag::Rock => assets.rock.clone(),
             GimmickTag::Player => assets.player.clone(),
-            GimmickTag::FallDown => assets.fall_down.clone(),
+            GimmickTag::NextPage => assets.next_page.clone(),
             GimmickTag::Goal => assets.goal.clone()
         }
     }

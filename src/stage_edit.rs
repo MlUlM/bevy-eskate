@@ -8,7 +8,7 @@ use crate::gimmick::asset::GimmickAssets;
 use crate::gimmick::tag::GimmickTag;
 use crate::playing::PageIndex;
 use crate::stage_edit::idle::StageEditIdlePlugin;
-use crate::stage_edit::page_count::StageEditPageCount;
+use crate::stage_edit::page_count::PageCount;
 use crate::stage_edit::pick::StageEditPickedPlugin;
 
 #[derive(Default, Debug, Hash, Eq, PartialEq, States, Copy, Clone)]
@@ -43,7 +43,7 @@ impl Plugin for StageEditPlugin {
 
 
 fn setup_stage_editor(
-    page_count: Res<StageEditPageCount>,
+    page_count: Res<PageCount>,
     mut commands: Commands,
     assets: Res<GimmickAssets>,
 ) {
@@ -145,7 +145,7 @@ fn footer(parent: &mut ChildBuilder, asset: &GimmickAssets) {
             spawn_footer_items!(parent, asset, items => [
                 GimmickTag::Player,
                 GimmickTag::Rock,
-                GimmickTag::FallDown,
+                GimmickTag::NextPage,
                 GimmickTag::Goal
             ]);
         });
@@ -196,9 +196,9 @@ mod tests {
 
     use crate::gimmick::asset::GimmickAssets;
     use crate::playing::PageIndex;
-    use crate::stage_edit::{change_visible_gimmicks, setup_stage_editor, StageEditPageCount, StageEditState};
+    use crate::stage_edit::{change_visible_gimmicks, setup_stage_editor, PageCount, StageEditState};
 
-    pub(crate) fn new_stage_edit_app(page_count: StageEditPageCount) -> App {
+    pub(crate) fn new_stage_edit_app(page_count: PageCount) -> App {
         let mut app = App::new();
         app.insert_resource(page_count);
         app.insert_resource(GimmickAssets::default());
@@ -213,7 +213,7 @@ mod tests {
     fn setup_stage_editor_page2() {
         let mut app = App::new();
         app.add_systems(Startup, setup_stage_editor);
-        app.insert_resource(StageEditPageCount::new(2));
+        app.insert_resource(PageCount::new(2));
         app.insert_resource(GimmickAssets::default());
 
         app.update();
@@ -241,7 +241,7 @@ mod tests {
         app.add_systems(Update, change_visible_gimmicks.run_if(
             resource_changed::<PageIndex>()
         ));
-        app.insert_resource(StageEditPageCount::new(2));
+        app.insert_resource(PageCount::new(2));
         app.insert_resource(GimmickAssets::default());
 
         app.update();
@@ -271,7 +271,7 @@ mod tests {
         app.add_systems(Update, change_visible_gimmicks.run_if(
             resource_changed::<PageIndex>()
         ));
-        app.insert_resource(StageEditPageCount::new(2));
+        app.insert_resource(PageCount::new(2));
         app.insert_resource(GimmickAssets::default());
 
         app.update();

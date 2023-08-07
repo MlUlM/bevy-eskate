@@ -2,20 +2,22 @@ use std::ops::{AddAssign, Deref, SubAssign};
 
 use bevy::app::{App, Plugin, Update};
 use bevy::math::Vec2;
-use bevy::prelude::{any_with_component, AssetServer, Camera2dBundle, Commands, Component, Condition, in_state, IntoSystemConfigs, OnEnter, Query, Res, Resource, resource_changed, Visibility, With};
+use bevy::prelude::{any_with_component, Camera2dBundle, Commands, Component, Condition, in_state, IntoSystemConfigs, OnEnter, Query, Res, Resource, resource_changed, Visibility, With};
 use bevy_trait_query::RegisterExt;
 
 use crate::gama_state::GameState;
 use crate::gimmick;
 use crate::gimmick::{floor, GimmickItem, MoveToFront, player, PlayerControllable, rock};
-use crate::gimmick::fall_down::FallDownCollide;
+use crate::gimmick::asset::GimmickAssets;
+use crate::gimmick::next_page::NextPageCollide;
 use crate::gimmick::tag::GimmickTag;
 use crate::loader::{StageLoadable, StageLoader};
 use crate::loader::json::StageCell;
 use crate::playing::idle::{PlayingIdle, update_move_input_handle};
 use crate::playing::start_moving::{StartMoving, update_start_moving};
+use crate::stage_edit::page_count::PageCount;
 
-mod fall_down;
+mod next_page;
 pub mod idle;
 pub mod start_moving;
 
@@ -63,7 +65,7 @@ pub struct PlayingPlugin;
 impl Plugin for PlayingPlugin {
     fn build(&self, app: &mut App) {
         app.register_component_as::<dyn PlayerControllable, MoveToFront>()
-            .register_component_as::<dyn PlayerControllable, FallDownCollide>()
+            .register_component_as::<dyn PlayerControllable, NextPageCollide>()
             .add_systems(OnEnter(GameState::Playing), setup)
             .add_systems(
                 Update,
@@ -102,17 +104,21 @@ fn change_gimmicks_visible(
 }
 
 
-fn setup(mut commands: Commands, asset_sever: Res<AssetServer>) {
+fn setup(mut commands: Commands, assets: Res<GimmickAssets>) {
     commands.spawn(Camera2dBundle::default());
     commands.spawn(PlayingIdle);
     commands.insert_resource(PageIndex::new(0));
 
-    let stages = StageLoader::new().load().unwrap();
+    let stages = StageLoader::new()
+        .load()
+        .unwrap();
     let stage = stages.first().unwrap();
+    commands.insert_resource(PageCount::new(stage.pages.len()));
+
     for (page_index, page) in stage.pages.iter().enumerate() {
         let page_index = PageIndex(page_index);
         for stage_cell in page.cells.iter() {
-            spawn_gimmick(&mut commands, &asset_sever, stage_cell, page_index);
+            spawn_gimmick(&mut commands, &assets, stage_cell, page_index);
         }
     }
 }
@@ -120,7 +126,7 @@ fn setup(mut commands: Commands, asset_sever: Res<AssetServer>) {
 
 fn spawn_gimmick(
     commands: &mut Commands,
-    asset: &AssetServer,
+    assets: &GimmickAssets,
     stage_cell: &StageCell,
     page_index: PageIndex,
 ) {
@@ -128,20 +134,45 @@ fn spawn_gimmick(
     for tag in stage_cell.tags.iter() {
         match tag {
             GimmickTag::Floor => {
-                floor::spawn(commands, asset, pos, page_index);
+                floor::spawn(commands, assets, pos, page_index);
             }
             GimmickTag::Rock => {
-                rock::spawn(commands, asset, pos, page_index);
+                rock::spawn(commands, assets, pos, page_index);
             }
             GimmickTag::Player => {
-                player::spawn(commands, asset, pos, page_index);
+                player::spawn(commands, assets, pos, page_index);
             }
-            GimmickTag::FallDown => {
-                gimmick::fall_down::spawn(commands, asset, pos, page_index);
+            GimmickTag::NextPage => {
+                gimmick::next_page::spawn(commands, assets, pos, page_index);
             }
             GimmickTag::Goal => {
-                gimmick::goal::spawn(commands, asset, pos, page_index)
+                gimmick::goal::spawn(commands, assets, pos, page_index)
             }
         }
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use bevy::app::{App, Startup};
+
+    use crate::gimmick::asset::GimmickAssets;
+    use crate::playing::setup;
+
+    pub(crate) fn new_playing_app() -> App {
+        let mut app = App::new();
+        app.insert_resource(GimmickAssets::default());
+
+        app
+    }
+
+
+    #[test]
+    fn new_app() {
+        let mut app = new_playing_app();
+        app.add_systems(Startup, setup);
+
+        app.update();
     }
 }

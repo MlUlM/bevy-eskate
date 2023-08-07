@@ -1,9 +1,10 @@
-use bevy::asset::{AssetServer, Handle};
+use bevy::asset::Handle;
 use bevy::math::Vec2;
 use bevy::prelude::{Bundle, Commands, Image};
 use bevy::sprite::SpriteBundle;
 
-use crate::gimmick::{new_gimmick_sprite_bundle, MoveToFront};
+use crate::gimmick::{MoveToFront, new_gimmick_sprite_bundle};
+use crate::gimmick::asset::GimmickAssets;
 use crate::playing::PageIndex;
 
 #[derive(Bundle, Clone)]
@@ -33,12 +34,11 @@ impl RockBundle {
 #[inline]
 pub fn spawn(
     commands: &mut Commands,
-    asset_sever: &AssetServer,
+    assets: &GimmickAssets,
     pos: Vec2,
     page_index: PageIndex,
 ) {
-    let texture = asset_sever.load("gimmick/rock.png");
-    commands.spawn(RockBundle::new(texture, pos, page_index));
+    commands.spawn(RockBundle::new(assets.rock.clone(), pos, page_index));
 }
 
 

@@ -1,30 +1,36 @@
-use bevy::asset::{AssetServer, Handle};
+use bevy::asset::Handle;
 use bevy::ecs::system::EntityCommands;
 use bevy::math::Vec2;
 use bevy::prelude::{Bundle, Commands, Component, Image, Transform};
 use bevy::sprite::SpriteBundle;
 
 use crate::gimmick::{move_linear, new_gimmick_sprite_bundle, PlayerControllable};
+use crate::gimmick::asset::GimmickAssets;
 use crate::playing::PageIndex;
 use crate::playing::start_moving::MoveDirection;
 
 #[derive(Default, Debug, Copy, Clone, Component)]
-pub struct FallDownProcessing;
+pub struct NextPageProcessing;
 
 
 #[derive(Default, Debug, Copy, Clone, Component)]
-pub struct FallDownCollide;
+pub struct NextPageCollide;
 
 
-impl PlayerControllable for FallDownCollide {
-    fn move_player(&self, commands: &mut EntityCommands, controller_transform: &mut Transform, player_transform: &mut Transform, _direction: &MoveDirection) {
+impl PlayerControllable for NextPageCollide {
+    fn move_player(
+        &self,
+        collide_cmd: &mut EntityCommands,
+        collide_transform: &mut Transform,
+        player_transform: &mut Transform,
+        _direction: &MoveDirection,
+    ) {
         move_linear(
-            commands,
+            collide_cmd,
             player_transform,
-            controller_transform.translation,
+            collide_transform.translation,
             |commands| {
-                println!("Start fallDown");
-                commands.insert(FallDownProcessing);
+                commands.insert(NextPageProcessing);
             },
         )
     }
@@ -32,14 +38,14 @@ impl PlayerControllable for FallDownCollide {
 
 
 #[derive(Bundle, Clone)]
-pub struct FallDownBundle {
+pub struct NextPageBundle {
     sprite: SpriteBundle,
-    collide: FallDownCollide,
+    collide: NextPageCollide,
     page_index: PageIndex,
 }
 
 
-impl FallDownBundle {
+impl NextPageBundle {
     #[inline]
     pub fn new(
         texture: Handle<Image>,
@@ -48,7 +54,7 @@ impl FallDownBundle {
     ) -> Self {
         Self {
             sprite: new_gimmick_sprite_bundle(texture, pos),
-            collide: FallDownCollide,
+            collide: NextPageCollide,
             page_index,
         }
     }
@@ -58,10 +64,9 @@ impl FallDownBundle {
 #[inline]
 pub fn spawn(
     commands: &mut Commands,
-    asset_sever: &AssetServer,
+    assets: &GimmickAssets,
     pos: Vec2,
     page_index: PageIndex,
 ) {
-    let texture = asset_sever.load("gimmick/fall_down.png");
-    commands.spawn(FallDownBundle::new(texture, pos, page_index));
+    commands.spawn(NextPageBundle::new(assets.next_page.clone(), pos, page_index));
 }
