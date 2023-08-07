@@ -4,10 +4,9 @@ use bevy::math::Vec2;
 use bevy::prelude::{Bundle, Commands, Component, Image, Transform};
 use bevy::sprite::SpriteBundle;
 
-use crate::gimmick::{new_gimmick_sprite_bundle, FALL_DOWN_CODE, move_linear, PlayerControllable};
+use crate::gimmick::{move_linear, new_gimmick_sprite_bundle, PlayerControllable};
 use crate::playing::PageIndex;
 use crate::playing::start_moving::MoveDirection;
-
 
 #[derive(Default, Debug, Copy, Clone, Component)]
 pub struct FallDownProcessing;

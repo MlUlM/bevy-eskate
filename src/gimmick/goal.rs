@@ -18,7 +18,7 @@ pub struct GoalCollide;
 
 
 impl PlayerControllable for GoalCollide {
-    fn move_player(&self, collide_cmd: &mut EntityCommands, collide_transform: &mut Transform, player_transform: &mut Transform, direction: &MoveDirection) {
+    fn move_player(&self, collide_cmd: &mut EntityCommands, collide_transform: &mut Transform, player_transform: &mut Transform, _: &MoveDirection) {
         let t = collide_transform.translation;
         move_linear(
             collide_cmd,

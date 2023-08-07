@@ -1,3 +1,4 @@
+use std::ops::AddAssign;
 use bevy::app::{App, Plugin, Update};
 use bevy::math::Vec2;
 use bevy::prelude::{any_with_component, AssetServer, Camera2dBundle, Commands, Component, Condition, in_state, IntoSystemConfigs, OnEnter, Query, Res, Resource, resource_changed, Visibility, With};
@@ -21,6 +22,14 @@ pub mod start_moving;
 Debug, Default, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Resource, Component,
 )]
 pub struct PageIndex(pub usize);
+
+
+impl AddAssign<usize> for PageIndex {
+    fn add_assign(&mut self, rhs: usize) {
+        *self = PageIndex::new(self.0 + rhs);
+    }
+}
+
 
 impl PageIndex {
     #[inline]

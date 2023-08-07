@@ -17,3 +17,4 @@ bevy-undo = { git = "https://github.com/elm-register/bevy-undo", features = ["tw
 thiserror = "1.0.43"
 directories = "5.0.1"
 auto-delegate = "0.0.7"
+bevy_asset_loader = "0.17.0"

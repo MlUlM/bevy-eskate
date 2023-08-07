@@ -1,7 +1,9 @@
 use bevy::asset::Handle;
-use bevy::prelude::{AssetServer, Image};
+use bevy::prelude::Image;
 use bevy::ui::UiImage;
 use serde::{Deserialize, Serialize};
+
+use crate::gimmick::asset::GimmickAssets;
 
 #[derive(Eq, PartialEq, Debug, Copy, Clone, Deserialize, Serialize)]
 pub enum GimmickTag {
@@ -9,7 +11,7 @@ pub enum GimmickTag {
     Rock,
     Player,
     FallDown,
-    Goal
+    Goal,
 }
 
 
@@ -27,13 +29,19 @@ impl GimmickTag {
 
 
     #[inline]
-    pub fn load(&self, asset: &AssetServer) -> Handle<Image> {
-        asset.load(self.asset_path())
+    pub fn image(&self, assets: &GimmickAssets) -> Handle<Image> {
+        match self {
+            GimmickTag::Floor => assets.floor.clone(),
+            GimmickTag::Rock => assets.rock.clone(),
+            GimmickTag::Player => assets.player.clone(),
+            GimmickTag::FallDown => assets.fall_down.clone(),
+            GimmickTag::Goal => assets.goal.clone()
+        }
     }
 
 
     #[inline]
-    pub fn load_to_ui_image(&self, asset: &AssetServer) -> UiImage {
-        UiImage::new(asset.load(self.asset_path()))
+    pub fn ui_image(&self, asset: &GimmickAssets) -> UiImage {
+        UiImage::new(self.image(asset))
     }
 }

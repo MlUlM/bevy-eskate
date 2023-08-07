@@ -18,6 +18,7 @@ pub mod rock;
 pub mod fall_down;
 pub mod tag;
 pub mod goal;
+pub mod asset;
 
 
 pub const GIMMICK_WIDTH: f32 = 50.;
