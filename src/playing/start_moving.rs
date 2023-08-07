@@ -81,7 +81,7 @@ pub fn update_start_moving(
                 filter_move_direction(&player_transform, transform, move_direction)
             })
             .sorted_by(|(_, prev), (_, next)| {
-                distance(&player_transform, prev, move_direction).partial_cmp(&distance(&player_transform, &next, &move_direction)).unwrap()
+                distance(&player_transform, prev, move_direction).partial_cmp(&distance(&player_transform, next, move_direction)).unwrap()
             })
             .next()
         {

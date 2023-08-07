@@ -8,6 +8,7 @@ use crate::gimmick::{Gimmick, GimmickItem};
 use crate::gimmick::tag::GimmickTag;
 use crate::loader::{StageLoadable, StageLoader};
 use crate::loader::json::{Page, StageCell, StageJson};
+use crate::playing::PageIndex;
 use crate::stage_edit::page_param::PageParams;
 use crate::stage_edit::StageEditState;
 
@@ -46,7 +47,7 @@ fn input_handle(
     mut state: ResMut<NextState<StageEditState>>,
     mut commands: Commands,
     mut page_params: PageParams,
-    cells: Query<(&Transform, &Gimmick), (With<Transform>, With<Gimmick>)>,
+    stage_cells: Query<(&Transform, &Gimmick, &PageIndex), (With<Transform>, With<Gimmick>, With<PageIndex>)>,
 ) {
     match input_status {
         InputStatus::PickedItem(entity, gimmick_tag) => {
@@ -56,7 +57,7 @@ fn input_handle(
                 .insert(OnPick(gimmick_tag));
         }
         InputStatus::SaveFile => {
-            stage_save(cells);
+            save_stage(page_params, &stage_cells);
         }
         InputStatus::NextPage => {
             page_params.next_page();
@@ -95,41 +96,59 @@ fn click_pick_item(
 }
 
 
-fn stage_save(
-    cells: Query<(&Transform, &Gimmick), (With<Transform>, With<Gimmick>)>
+fn save_stage(
+    page_params: PageParams,
+    stage_cells: &Query<(&Transform, &Gimmick, &PageIndex), (With<Transform>, With<Gimmick>, With<PageIndex>)>,
 ) {
-    let mut stage_cells = Vec::new();
-    for (pos, tags) in stage(cells) {
-        stage_cells.push(StageCell::new(Vec2::new(pos.x as f32, pos.y as f32), tags));
-    }
+    let pages = (0..page_params.page_count())
+        .map(|page_index| create_page_asset(page_params.page_count(), page_index, stage_cells))
+        .collect::<Vec<Page>>();
 
     let json = StageJson {
         name: "stage1".to_string(),
-        pages: vec![{
-            Page {
-                cells: stage_cells
-            }
-        }],
+        pages,
     };
     StageLoader::new().save(&json).unwrap();
 }
 
 
-fn stage(
-    cells: Query<(&Transform, &Gimmick), (With<Transform>, With<Gimmick>)>
+fn create_page_asset(
+    page_count: usize,
+    page_index: usize,
+    stage_cells: &Query<(&Transform, &Gimmick, &PageIndex), (With<Transform>, With<Gimmick>, With<PageIndex>)>,
+) -> Page {
+    let mut cells = Vec::new();
+
+    for (pos, tags) in cells_in_page(page_index, stage_cells) {
+        cells.push(StageCell::new(Vec2::new(pos.x as f32, pos.y as f32), tags));
+    }
+
+    Page {
+        cells
+    }
+}
+
+
+fn cells_in_page(
+    page_index: usize,
+    stage_cells: &Query<(&Transform, &Gimmick, &PageIndex), (With<Transform>, With<Gimmick>, With<PageIndex>)>,
 ) -> HashMap<I64Vec2, Vec<GimmickTag>> {
     let mut stage = HashMap::<I64Vec2, Vec<GimmickTag>>::new();
-    cells.for_each(|(transform, gimmick)| {
-        let key = transform.translation.truncate().as_i64vec2();
-        if let std::collections::hash_map::Entry::Vacant(e) = stage.entry(key) {
-            e.insert(vec![gimmick.0]);
-        } else {
-            stage
-                .get_mut(&key)
-                .unwrap()
-                .push(gimmick.0);
-        }
-    });
+
+    stage_cells
+        .iter()
+        .filter(|(_, _, idx)| ***idx == page_index)
+        .for_each(|(transform, gimmick, _)| {
+            let key = transform.translation.truncate().as_i64vec2();
+            if let std::collections::hash_map::Entry::Vacant(e) = stage.entry(key) {
+                e.insert(vec![gimmick.0]);
+            } else {
+                stage
+                    .get_mut(&key)
+                    .unwrap()
+                    .push(gimmick.0);
+            }
+        });
 
     stage
 }
@@ -156,7 +175,7 @@ mod tests {
         *app
             .world
             .resource_mut::<PageIndex>()
-          = PageIndex::new(2);
+            = PageIndex::new(2);
 
         app.update();
 

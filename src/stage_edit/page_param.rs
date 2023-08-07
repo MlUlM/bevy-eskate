@@ -37,4 +37,17 @@ impl<'w> PageParams<'w> {
             *self.page_index -= 1;
         }
     }
+
+
+    #[inline]
+    pub fn page_count(&self) -> usize {
+        **self.page_count
+    }
+
+
+    #[inline]
+    #[allow(unused)]
+    pub fn page_index(&self) -> usize {
+        **self.page_index
+    }
 }
