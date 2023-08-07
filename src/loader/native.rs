@@ -68,6 +68,8 @@ mod tests {
 
     #[test]
     fn save() {
+        remove_all();
+
         let json = StageJson {
             name: "stage1".to_string(),
             pages: vec![],

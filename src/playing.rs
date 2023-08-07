@@ -59,6 +59,7 @@ impl Deref for PageIndex {
 #[derive(Default, Clone)]
 pub struct PlayingPlugin;
 
+
 impl Plugin for PlayingPlugin {
     fn build(&self, app: &mut App) {
         app.register_component_as::<dyn PlayerControllable, MoveToFront>()

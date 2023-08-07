@@ -7,7 +7,7 @@ use crate::gimmick::{Floor, Gimmick, GIMMICK_SIZE, GimmickItem, Stage};
 use crate::gimmick::asset::GimmickAssets;
 use crate::gimmick::tag::GimmickTag;
 use crate::playing::PageIndex;
-use crate::stage_edit::idle::{NextablePage, StageEditIdlePlugin};
+use crate::stage_edit::idle::StageEditIdlePlugin;
 use crate::stage_edit::page_count::StageEditPageCount;
 use crate::stage_edit::pick::StageEditPickedPlugin;
 
@@ -49,7 +49,6 @@ fn setup_stage_editor(
 ) {
     commands.spawn(Camera2dBundle::default()).insert(Stage);
     commands.insert_resource(PageIndex::default());
-    commands.spawn(NextablePage);
 
     ui(&mut commands, &assets);
     spawn_stage_gimmicks(&mut commands, &assets, page_count.0);
@@ -208,6 +207,7 @@ mod tests {
 
         app
     }
+    
 
     #[test]
     fn setup_stage_editor_page2() {

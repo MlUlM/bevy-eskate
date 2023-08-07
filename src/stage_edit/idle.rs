@@ -1,6 +1,8 @@
 use std::collections::HashMap;
+
 use bevy::math::I64Vec2;
 use bevy::prelude::*;
+
 use crate::gama_state::GameState;
 use crate::gimmick::{Gimmick, GimmickItem};
 use crate::gimmick::tag::GimmickTag;
@@ -17,17 +19,13 @@ pub struct OnPick(pub GimmickTag);
 pub struct StageEditIdlePlugin;
 
 
-#[derive(Debug, Default, Copy, Clone, Hash, Eq, PartialEq, Component, Resource)]
-pub struct NextablePage;
-
-
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 enum InputStatus {
     None,
     PickedItem(Entity, GimmickTag),
     SaveFile,
     NextPage,
-    PreviousPage
+    PreviousPage,
 }
 
 
@@ -50,7 +48,6 @@ fn input_handle(
     mut page_params: PageParams,
     cells: Query<(&Transform, &Gimmick), (With<Transform>, With<Gimmick>)>,
 ) {
-
     match input_status {
         InputStatus::PickedItem(entity, gimmick_tag) => {
             state.set(StageEditState::PickItem);
@@ -84,7 +81,7 @@ fn click_pick_item(
         return InputStatus::NextPage;
     }
 
-    if key.just_pressed(KeyCode::Right){
+    if key.just_pressed(KeyCode::Right) {
         return InputStatus::PreviousPage;
     }
 
@@ -144,7 +141,7 @@ mod tests {
     use bevy::prelude::IntoSystem;
 
     use crate::playing::PageIndex;
-    use crate::stage_edit::idle::{input_handle, InputStatus, NextablePage};
+    use crate::stage_edit::idle::{input_handle, InputStatus};
     use crate::stage_edit::StageEditPageCount;
     use crate::stage_edit::tests::new_stage_edit_app;
 
@@ -153,9 +150,13 @@ mod tests {
     }
 
     #[test]
-    fn unchanged_next_page_if_not_exists_can_next_page() {
+    fn unchanged_next_page_if_last_page() {
         let mut app = new_stage_edit_app(StageEditPageCount::new(2));
         app.add_systems(Update, update_next_page.pipe(input_handle));
+        *app
+            .world
+            .resource_mut::<PageIndex>()
+          = PageIndex::new(2);
 
         app.update();
 
@@ -163,7 +164,7 @@ mod tests {
             .world
             .resource::<PageIndex>();
 
-        assert_eq!(*page_index, PageIndex(0));
+        assert_eq!(*page_index, PageIndex(2));
     }
 
 
@@ -171,9 +172,6 @@ mod tests {
     fn increment_page_index_if_exists_nextable_page() {
         let mut app = new_stage_edit_app(StageEditPageCount::new(2));
         app.add_systems(Update, update_next_page.pipe(input_handle));
-        app
-            .world
-            .spawn(NextablePage);
 
         app.update();
 
