@@ -5,10 +5,10 @@ use bevy::prelude::{Bundle, Commands, Transform};
 use bevy::sprite::SpriteBundle;
 use bevy_trait_query::imports::Component;
 
+use crate::page::page_index::PageIndex;
 use crate::playing::gimmick::{GimmickCollide, move_linear, new_gimmick_sprite_bundle};
 use crate::playing::gimmick::asset::GimmickAssets;
 use crate::playing::move_direction::MoveDirection;
-use crate::playing::PageIndex;
 use crate::playing::phase::PlayingPhase;
 
 #[derive(Component, Copy, Clone, PartialEq, Eq, Debug)]

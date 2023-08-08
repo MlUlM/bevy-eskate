@@ -6,7 +6,6 @@ use crate::gama_state::GameState;
 use crate::playing::move_direction::MoveDirection;
 use crate::playing::phase::PlayingPhase;
 
-
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct PlayingIdlePlugin;
 
@@ -55,8 +54,9 @@ mod tests {
     use bevy::app::{App, Update};
     use bevy::input::Input;
     use bevy::prelude::KeyCode;
-    use crate::playing::idle::input_move;
+
     use crate::playing::move_direction::MoveDirection;
+    use crate::playing::phase::idle::input_move;
     use crate::playing::phase::PlayingPhase;
     use crate::playing::tests::new_playing_app;
 

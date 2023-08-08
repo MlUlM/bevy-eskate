@@ -3,12 +3,12 @@ use bevy::utils::default;
 
 use crate::button::{SpriteButton, SpriteInteraction};
 use crate::gama_state::GameState;
+use crate::page::page_count::PageCount;
+use crate::page::page_index::PageIndex;
 use crate::playing::gimmick::{Floor, Gimmick, GIMMICK_SIZE, GimmickItem, Stage};
 use crate::playing::gimmick::asset::GimmickAssets;
 use crate::playing::gimmick::tag::GimmickTag;
-use crate::playing::PageIndex;
 use crate::stage_edit::idle::StageEditIdlePlugin;
-use crate::stage_edit::page_count::PageCount;
 use crate::stage_edit::pick::StageEditPickedPlugin;
 
 #[derive(Default, Debug, Hash, Eq, PartialEq, States, Copy, Clone)]
@@ -22,8 +22,6 @@ pub enum StageEditState {
 
 mod idle;
 mod pick;
-pub mod page_count;
-mod page_param;
 
 
 #[derive(Default, Debug, PartialEq, Copy, Clone)]
@@ -194,8 +192,8 @@ pub(crate) fn gimmick_iem_sprite_bundle(pos: Vec3, texture: Handle<Image>) -> Sp
 mod tests {
     use bevy::prelude::*;
 
+    use crate::page::page_index::PageIndex;
     use crate::playing::gimmick::asset::GimmickAssets;
-    use crate::playing::PageIndex;
     use crate::stage_edit::{change_visible_gimmicks, PageCount, setup_stage_editor, StageEditState};
 
     pub(crate) fn new_stage_edit_app(page_count: PageCount) -> App {

@@ -4,13 +4,12 @@ use bevy::math::I64Vec2;
 use bevy::prelude::*;
 
 use crate::gama_state::GameState;
-
 use crate::loader::{StageLoadable, StageLoader};
 use crate::loader::json::{Page, StageCell, StageJson};
+use crate::page::page_index::PageIndex;
+use crate::page::page_param::PageParams;
 use crate::playing::gimmick::{Gimmick, GimmickItem};
 use crate::playing::gimmick::tag::GimmickTag;
-use crate::playing::PageIndex;
-use crate::stage_edit::page_param::PageParams;
 use crate::stage_edit::StageEditState;
 
 #[derive(Debug, Copy, Clone, Component, Eq, PartialEq)]
@@ -158,8 +157,7 @@ fn cells_in_page(
 mod tests {
     use bevy::app::Update;
     use bevy::prelude::IntoSystem;
-
-    use crate::playing::PageIndex;
+    use crate::page::page_index::PageIndex;
     use crate::stage_edit::idle::{input_handle, InputStatus};
     use crate::stage_edit::PageCount;
     use crate::stage_edit::tests::new_stage_edit_app;

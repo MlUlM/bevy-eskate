@@ -1,8 +1,8 @@
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Res, ResMut};
 
-use crate::playing::PageIndex;
-use crate::stage_edit::page_count::PageCount;
+use crate::page::page_count::PageCount;
+use crate::page::page_index::PageIndex;
 
 #[derive(SystemParam, Debug)]
 pub struct PageParams<'w> {
@@ -23,11 +23,14 @@ impl<'w> PageParams<'w> {
         0 < **self.page_index
     }
 
+
     #[inline]
-    pub fn next_page(&mut self) {
+    pub fn next_page(&mut self) -> PageIndex {
         if self.can_next_page() {
             *self.page_index += 1;
         }
+        
+        *self.page_index
     }
 
 

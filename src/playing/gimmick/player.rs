@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 
+use crate::page::page_index::PageIndex;
 use crate::playing::gimmick::{Gimmick, GimmickItem};
 use crate::playing::gimmick::asset::GimmickAssets;
 use crate::playing::gimmick::tag::GimmickTag;
-use crate::playing::PageIndex;
 
 #[derive(Default, Clone, Copy, Component)]
 pub struct Movable;

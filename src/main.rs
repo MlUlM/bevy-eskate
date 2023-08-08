@@ -16,7 +16,7 @@ use crate::button::SpriteButtonPlugin;
 use crate::gama_state::GameState;
 use crate::playing::gimmick::asset::GimmickAssets;
 use crate::playing::PlayingPlugin;
-use crate::stage_edit::page_count::PageCount;
+use page::page_count::PageCount;
 use crate::stage_edit::StageEditPlugin;
 
 mod playing;
@@ -26,6 +26,7 @@ mod stage_edit;
 mod loader;
 mod button;
 mod error;
+mod page;
 
 
 fn main() {

@@ -3,9 +3,9 @@ use bevy::math::Vec2;
 use bevy::prelude::{Bundle, Commands, Image};
 use bevy::sprite::SpriteBundle;
 
+use crate::page::page_index::PageIndex;
 use crate::playing::gimmick::{MoveToFront, new_gimmick_sprite_bundle};
 use crate::playing::gimmick::asset::GimmickAssets;
-use crate::playing::PageIndex;
 
 #[derive(Bundle, Clone)]
 pub struct RockBundle {

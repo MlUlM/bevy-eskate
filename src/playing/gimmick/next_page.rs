@@ -4,10 +4,10 @@ use bevy::math::Vec2;
 use bevy::prelude::{Bundle, Commands, Component, Image, Transform};
 use bevy::sprite::SpriteBundle;
 
+use crate::page::page_index::PageIndex;
 use crate::playing::gimmick::{GimmickCollide, move_linear, new_gimmick_sprite_bundle};
 use crate::playing::gimmick::asset::GimmickAssets;
 use crate::playing::move_direction::MoveDirection;
-use crate::playing::PageIndex;
 use crate::playing::phase::PlayingPhase;
 
 #[derive(Default, Debug, Copy, Clone, Component)]

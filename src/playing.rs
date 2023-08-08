@@ -1,64 +1,26 @@
-use std::ops::{AddAssign, Deref, SubAssign};
-
 use bevy::app::{App, Plugin, Update};
 use bevy::math::Vec2;
-use bevy::prelude::{Camera2dBundle, Commands, Component, Condition, in_state, IntoSystemConfigs, OnEnter, Query, Res, Resource, resource_changed, Visibility, With};
+use bevy::prelude::{Camera2dBundle, Commands, Condition, in_state, IntoSystemConfigs, OnEnter, Query, Res, resource_changed, Visibility, With};
 use bevy_trait_query::RegisterExt;
+
+use phase::idle::PlayingIdlePlugin;
+use phase::start_move::PlayingStartMovePlugin;
 
 use crate::gama_state::GameState;
 use crate::loader::{StageLoadable, StageLoader};
 use crate::loader::json::StageCell;
-use crate::playing::gimmick::next_page::NextPageCollide;
-use crate::playing::gimmick::{MoveToFront, GimmickCollide, GimmickItem, floor, rock, player};
+use crate::page::page_count::PageCount;
+use crate::page::page_index::PageIndex;
+use crate::playing::gimmick::{floor, GimmickCollide, GimmickItem, MoveToFront, player, rock};
 use crate::playing::gimmick::asset::GimmickAssets;
+use crate::playing::gimmick::next_page::NextPageCollide;
 use crate::playing::gimmick::tag::GimmickTag;
-use crate::playing::idle::PlayingIdlePlugin;
+use crate::playing::phase::next_page::PlayingNextPagePlugin;
 use crate::playing::phase::PlayingPhase;
-use crate::playing::start_move::PlayingStartMovePlugin;
-use crate::stage_edit::page_count::PageCount;
 
-mod next_page;
-pub mod idle;
-pub mod start_move;
 mod phase;
 pub mod move_direction;
 pub mod gimmick;
-
-#[derive(
-Debug, Default, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Resource, Component,
-)]
-pub struct PageIndex(pub usize);
-
-
-impl AddAssign<usize> for PageIndex {
-    fn add_assign(&mut self, rhs: usize) {
-        *self = PageIndex::new(self.0 + rhs);
-    }
-}
-
-
-impl SubAssign<usize> for PageIndex {
-    fn sub_assign(&mut self, rhs: usize) {
-        *self = PageIndex::new(self.0 - rhs);
-    }
-}
-
-
-impl PageIndex {
-    #[inline]
-    pub const fn new(index: usize) -> Self {
-        Self(index)
-    }
-}
-
-
-impl Deref for PageIndex {
-    type Target = usize;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
 
 
 #[derive(Default, Clone)]
@@ -68,8 +30,11 @@ pub struct PlayingPlugin;
 impl Plugin for PlayingPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_plugins(PlayingIdlePlugin)
-            .add_plugins(PlayingStartMovePlugin)
+            .add_plugins((
+                PlayingIdlePlugin,
+                PlayingStartMovePlugin,
+                PlayingNextPagePlugin
+            ))
             .register_component_as::<dyn GimmickCollide, MoveToFront>()
             .register_component_as::<dyn GimmickCollide, NextPageCollide>()
             .add_systems(OnEnter(GameState::Playing), setup)
@@ -154,9 +119,8 @@ fn spawn_gimmick(
 #[cfg(test)]
 mod tests {
     use bevy::app::{App, Startup};
+
     use crate::playing::gimmick::asset::GimmickAssets;
-
-
     use crate::playing::setup;
 
     pub(crate) fn new_playing_app() -> App {
