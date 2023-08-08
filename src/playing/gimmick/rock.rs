@@ -1,9 +1,10 @@
+use bevy::asset::Handle;
 use bevy::math::Vec2;
 use bevy::prelude::{Bundle, Commands, Image};
 use bevy::sprite::SpriteBundle;
 
-use crate::gimmick::{MoveToFront, new_gimmick_sprite_bundle};
-use crate::gimmick::asset::GimmickAssets;
+use crate::playing::gimmick::{MoveToFront, new_gimmick_sprite_bundle};
+use crate::playing::gimmick::asset::GimmickAssets;
 use crate::playing::PageIndex;
 
 #[derive(Bundle, Clone)]

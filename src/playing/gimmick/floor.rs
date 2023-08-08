@@ -1,20 +1,22 @@
+use bevy::asset::Handle;
+use bevy::core::Name;
 use bevy::math::Vec2;
 use bevy::prelude::{Bundle, Commands, Image};
 use bevy::sprite::SpriteBundle;
 
-use crate::gimmick::{MoveToFront, new_gimmick_sprite_bundle};
-use crate::gimmick::asset::GimmickAssets;
+use crate::playing::gimmick::asset::GimmickAssets;
+use crate::playing::gimmick::new_floor_sprite_bundle;
 use crate::playing::PageIndex;
 
 #[derive(Bundle, Clone)]
-pub struct RockBundle {
+pub struct FloorBundle {
     sprite: SpriteBundle,
-    collide: MoveToFront,
     page_index: PageIndex,
+    name: Name,
 }
 
 
-impl RockBundle {
+impl FloorBundle {
     #[inline]
     pub fn new(
         texture: Handle<Image>,
@@ -22,9 +24,9 @@ impl RockBundle {
         page_index: PageIndex,
     ) -> Self {
         Self {
-            sprite: new_gimmick_sprite_bundle(texture, pos),
-            collide: MoveToFront,
+            sprite: new_floor_sprite_bundle(texture, pos),
             page_index,
+            name: Name::new("Floor"),
         }
     }
 }
@@ -37,12 +39,6 @@ pub fn spawn(
     pos: Vec2,
     page_index: PageIndex,
 ) {
-    commands.spawn(RockBundle::new(assets.rock.clone(), pos, page_index));
+    commands.spawn(FloorBundle::new(assets.floor.clone(), pos, page_index));
 }
 
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn move_to_front_of_rock() {}
-}

@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use itertools::Itertools;
 
-use crate::gimmick::Stage;
+use crate::playing::gimmick::Stage;
 
 #[derive(Debug, Copy, Clone, Default, Hash, Eq, PartialEq)]
 pub struct SpriteButtonPlugin;
@@ -29,6 +29,7 @@ pub struct SpriteButtonBundle {
 
 impl SpriteButtonBundle {
     #[inline]
+    #[allow(unused)]
     pub fn new(sprite: SpriteBundle) -> Self {
         Self {
             sprite,

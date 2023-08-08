@@ -2,15 +2,13 @@ use bevy::asset::Handle;
 use bevy::ecs::system::EntityCommands;
 use bevy::math::{Vec2, Vec3};
 use bevy::prelude::{Component, default, Image, Sprite, SpriteBundle, Transform};
-use bevy::ui::Val;
 use bevy_tweening::{Animator, EaseMethod, Tween};
 use bevy_tweening::lens::TransformPositionLens;
 use bevy_undo::prelude::TweenOnUndoExt;
 
-use crate::gimmick::player::Moving;
-use crate::gimmick::tag::GimmickTag;
-use crate::playing::idle::PlayingIdle;
-use crate::playing::start_moving::MoveDirection;
+use crate::playing::gimmick::player::Moving;
+use crate::playing::gimmick::tag::GimmickTag;
+use crate::playing::move_direction::MoveDirection;
 
 pub mod floor;
 pub mod player;
@@ -23,13 +21,10 @@ pub mod asset;
 
 pub const GIMMICK_WIDTH: f32 = 50.;
 pub const GIMMICK_HEIGHT: f32 = 50.;
-pub const GIMMICK_WIDTH_PX: Val = Val::Px(GIMMICK_WIDTH);
-pub const GIMMICK_HEIGHT_PX: Val = Val::Px(GIMMICK_HEIGHT);
+// pub const GIMMICK_WIDTH_PX: Val = Val::Px(GIMMICK_WIDTH);
+// pub const GIMMICK_HEIGHT_PX: Val = Val::Px(GIMMICK_HEIGHT);
 pub const GIMMICK_SIZE_VEC3: Vec3 = Vec3::new(GIMMICK_WIDTH, GIMMICK_HEIGHT, 0.);
 pub const GIMMICK_SIZE: Vec2 = Vec2::new(GIMMICK_WIDTH, GIMMICK_HEIGHT);
-
-
-pub const FALL_DOWN_CODE: u64 = 1;
 
 
 #[derive(Default, Debug, Hash, Copy, Clone, Component)]
@@ -51,7 +46,7 @@ pub struct Gimmick(pub GimmickTag);
 
 
 #[bevy_trait_query::queryable]
-pub trait PlayerControllable {
+pub trait GimmickCollide {
     fn move_player(
         &self,
         collide_cmd: &mut EntityCommands,
@@ -66,7 +61,7 @@ pub trait PlayerControllable {
 pub struct MoveToFront;
 
 
-impl PlayerControllable for MoveToFront {
+impl GimmickCollide for MoveToFront {
     #[inline]
     fn move_player(
         &self,
@@ -81,9 +76,9 @@ impl PlayerControllable for MoveToFront {
             collide_transform.translation + direction.reverse().vec3(),
             |enty_cmd| {
                 enty_cmd.remove::<Moving>();
-                enty_cmd
-                    .commands()
-                    .spawn(PlayingIdle);
+                // enty_cmd
+                //     .commands()
+                //     .spawn(PlayingIdle);
             },
         )
     }

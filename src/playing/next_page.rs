@@ -1,26 +1,32 @@
-use bevy::prelude::{Commands, Component, Entity, Query, With};
-use crate::gimmick::GimmickItemSpawned;
-use crate::playing::PageIndex;
+use bevy::prelude::Component;
 
 #[derive(Component, Copy, Clone, Debug)]
 pub struct NextPage;
 
-
-pub fn update_fall_down(
-    mut commands: Commands,
-    mut gimmicks: Query<(Entity, &mut PageIndex), (With<GimmickItemSpawned>, With<PageIndex>)>,
-    status: Query<Entity, With<NextPage>>,
-) {
-}
-
+//
+// #[derive(Copy, Clone, Hash, Eq, PartialEq)]
+// pub struct PlayingNextPagePlugin;
+//
+//
+// impl Plugin for PlayingNextPagePlugin{
+//     fn build(&self, app: &mut App) {
+//         app.add_systems(Update, (update_fall_down)
+//             .run_if(in_state(GameState::Playing))
+//         )
+//     }
+// }
+//
+//
+// pub fn update_fall_down(
+//     mut commands: Commands,
+//     mut gimmicks: Query<(Entity, &mut PageIndex), (With<GimmickItemSpawned>, With<PageIndex>)>,
+//     status: Query<Entity, With<NextPage>>,
+// ) {
+// }
 
 
 #[cfg(test)]
-mod tests{
-    use bevy::prelude::system_adapter::new;
-
+mod tests {
     #[test]
-    fn page_move_spawned_items(){
-
-    }
+    fn page_move_spawned_items() {}
 }

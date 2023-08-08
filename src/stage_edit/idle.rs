@@ -4,10 +4,11 @@ use bevy::math::I64Vec2;
 use bevy::prelude::*;
 
 use crate::gama_state::GameState;
-use crate::gimmick::{Gimmick, GimmickItem};
-use crate::gimmick::tag::GimmickTag;
+
 use crate::loader::{StageLoadable, StageLoader};
 use crate::loader::json::{Page, StageCell, StageJson};
+use crate::playing::gimmick::{Gimmick, GimmickItem};
+use crate::playing::gimmick::tag::GimmickTag;
 use crate::playing::PageIndex;
 use crate::stage_edit::page_param::PageParams;
 use crate::stage_edit::StageEditState;

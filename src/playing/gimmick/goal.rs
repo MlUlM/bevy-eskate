@@ -5,11 +5,11 @@ use bevy::prelude::{Bundle, Commands, Transform};
 use bevy::sprite::SpriteBundle;
 use bevy_trait_query::imports::Component;
 
-use crate::gimmick::{move_linear, new_gimmick_sprite_bundle, PlayerControllable};
-use crate::gimmick::asset::GimmickAssets;
-use crate::gimmick::player::Moving;
+use crate::playing::gimmick::{GimmickCollide, move_linear, new_gimmick_sprite_bundle};
+use crate::playing::gimmick::asset::GimmickAssets;
+use crate::playing::move_direction::MoveDirection;
 use crate::playing::PageIndex;
-use crate::playing::start_move::MoveDirection;
+use crate::playing::phase::PlayingPhase;
 
 #[derive(Component, Copy, Clone, PartialEq, Eq, Debug)]
 pub struct Goaled;
@@ -19,7 +19,7 @@ pub struct Goaled;
 pub struct GoalCollide;
 
 
-impl PlayerControllable for GoalCollide {
+impl GimmickCollide for GoalCollide {
     fn move_player(&self, collide_cmd: &mut EntityCommands, collide_transform: &mut Transform, player_transform: &mut Transform, _: &MoveDirection) {
         let t = collide_transform.translation;
         move_linear(
@@ -27,7 +27,7 @@ impl PlayerControllable for GoalCollide {
             player_transform,
             Vec3::new(t.x, t.y, 2.),
             |cmd| {
-                cmd.remove::<Moving>();
+                cmd.commands().insert_resource(PlayingPhase::Idle);
                 cmd
                     .commands()
                     .spawn(Goaled);

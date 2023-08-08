@@ -1,7 +1,7 @@
 use bevy::math::Vec2;
 use bevy::reflect::erased_serde::__private::serde::{Deserialize, Serialize};
 
-use crate::gimmick::tag::GimmickTag;
+use crate::playing::gimmick::tag::GimmickTag;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct StageJson {
@@ -38,8 +38,8 @@ impl StageCell {
 
 #[cfg(test)]
 mod tests {
-    use crate::gimmick::tag::GimmickTag;
     use crate::loader::json::{StageCell, StageJson};
+    use crate::playing::gimmick::tag::GimmickTag;
 
     #[test]
     fn floor() {

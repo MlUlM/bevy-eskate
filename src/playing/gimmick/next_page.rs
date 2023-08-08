@@ -1,12 +1,14 @@
+use bevy::asset::Handle;
 use bevy::ecs::system::EntityCommands;
 use bevy::math::Vec2;
 use bevy::prelude::{Bundle, Commands, Component, Image, Transform};
 use bevy::sprite::SpriteBundle;
 
-use crate::gimmick::{move_linear, new_gimmick_sprite_bundle, PlayerControllable};
-use crate::gimmick::asset::GimmickAssets;
+use crate::playing::gimmick::{GimmickCollide, move_linear, new_gimmick_sprite_bundle};
+use crate::playing::gimmick::asset::GimmickAssets;
+use crate::playing::move_direction::MoveDirection;
 use crate::playing::PageIndex;
-use crate::playing::start_move::MoveDirection;
+use crate::playing::phase::PlayingPhase;
 
 #[derive(Default, Debug, Copy, Clone, Component)]
 pub struct NextPageProcessing;
@@ -16,7 +18,7 @@ pub struct NextPageProcessing;
 pub struct NextPageCollide;
 
 
-impl PlayerControllable for NextPageCollide {
+impl GimmickCollide for NextPageCollide {
     fn move_player(
         &self,
         collide_cmd: &mut EntityCommands,
@@ -29,6 +31,7 @@ impl PlayerControllable for NextPageCollide {
             player_transform,
             collide_transform.translation,
             |commands| {
+                commands.commands().insert_resource(PlayingPhase::NextPage);
                 commands.insert(NextPageProcessing);
             },
         )

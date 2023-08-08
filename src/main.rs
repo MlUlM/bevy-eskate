@@ -14,13 +14,12 @@ use bevy_undo::prelude::UndoPlugin;
 
 use crate::button::SpriteButtonPlugin;
 use crate::gama_state::GameState;
-use crate::gimmick::asset::GimmickAssets;
+use crate::playing::gimmick::asset::GimmickAssets;
 use crate::playing::PlayingPlugin;
 use crate::stage_edit::page_count::PageCount;
 use crate::stage_edit::StageEditPlugin;
 
 mod playing;
-pub mod gimmick;
 mod gama_state;
 mod title;
 mod stage_edit;
