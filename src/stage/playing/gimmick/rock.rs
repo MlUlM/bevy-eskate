@@ -1,17 +1,19 @@
 use bevy::asset::Handle;
+use bevy::core::Name;
 use bevy::math::Vec2;
 use bevy::prelude::{Bundle, Commands, Image};
 use bevy::sprite::SpriteBundle;
 
+use crate::gimmick_assets::GimmickAssets;
 use crate::page::page_index::PageIndex;
-use crate::playing::gimmick::{MoveToFront, new_gimmick_sprite_bundle};
-use crate::playing::gimmick::asset::GimmickAssets;
+use crate::stage::playing::gimmick::{MoveToFront, new_gimmick_sprite_bundle};
 
 #[derive(Bundle, Clone)]
 pub struct RockBundle {
     sprite: SpriteBundle,
     collide: MoveToFront,
     page_index: PageIndex,
+    name: Name,
 }
 
 
@@ -26,6 +28,7 @@ impl RockBundle {
             sprite: new_gimmick_sprite_bundle(texture, pos),
             collide: MoveToFront,
             page_index,
+            name: Name::new("Rock")
         }
     }
 }

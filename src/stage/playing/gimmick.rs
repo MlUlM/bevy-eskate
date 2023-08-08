@@ -6,9 +6,9 @@ use bevy_tweening::{Animator, EaseMethod, Tween};
 use bevy_tweening::lens::TransformPositionLens;
 use bevy_undo::prelude::TweenOnUndoExt;
 
-use crate::playing::gimmick::player::Moving;
-use crate::playing::gimmick::tag::GimmickTag;
-use crate::playing::move_direction::MoveDirection;
+use crate::stage::playing::gimmick::tag::GimmickTag;
+use crate::stage::playing::move_direction::MoveDirection;
+use crate::stage::status::StageStatus;
 
 pub mod floor;
 pub mod player;
@@ -16,7 +16,6 @@ pub mod rock;
 pub mod next_page;
 pub mod tag;
 pub mod goal;
-pub mod asset;
 
 
 pub const GIMMICK_WIDTH: f32 = 50.;
@@ -74,11 +73,10 @@ impl GimmickCollide for MoveToFront {
             commands,
             player_transform,
             collide_transform.translation + direction.reverse().vec3(),
-            |enty_cmd| {
-                enty_cmd.remove::<Moving>();
-                // enty_cmd
-                //     .commands()
-                //     .spawn(PlayingIdle);
+            |entry_cmd| {
+                entry_cmd
+                    .commands()
+                    .insert_resource(StageStatus::playing_idle());
             },
         )
     }

@@ -1,15 +1,9 @@
-use std::collections::HashMap;
-
-use bevy::math::I64Vec2;
 use bevy::prelude::*;
 
 use crate::gama_state::GameState;
-use crate::loader::{StageLoadable, StageLoader};
-use crate::loader::json::{Page, StageCell, StageJson};
-use crate::page::page_index::PageIndex;
 use crate::page::page_param::PageParams;
-use crate::playing::gimmick::{Gimmick, GimmickItem};
-use crate::playing::gimmick::tag::GimmickTag;
+use crate::stage::playing::gimmick::GimmickItem;
+use crate::stage::playing::gimmick::tag::GimmickTag;
 use crate::stage_edit::StageEditState;
 
 #[derive(Debug, Copy, Clone, Component, Eq, PartialEq)]
@@ -42,34 +36,6 @@ impl Plugin for StageEditIdlePlugin {
 }
 
 
-fn input_handle(
-    In(input_status): In<InputStatus>,
-    mut state: ResMut<NextState<StageEditState>>,
-    mut commands: Commands,
-    mut page_params: PageParams,
-    stage_cells: Query<(&Transform, &Gimmick, &PageIndex), (With<Transform>, With<Gimmick>, With<PageIndex>)>,
-) {
-    match input_status {
-        InputStatus::PickedItem(entity, gimmick_tag) => {
-            state.set(StageEditState::PickItem);
-            commands
-                .entity(entity)
-                .insert(OnPick(gimmick_tag));
-        }
-        InputStatus::SaveFile => {
-            save_stage(page_params, &stage_cells);
-        }
-        InputStatus::NextPage => {
-            page_params.next_page();
-        }
-        InputStatus::PreviousPage => {
-            page_params.previous_page();
-        }
-        _ => {}
-    }
-}
-
-
 fn click_pick_item(
     key: Res<Input<KeyCode>>,
     items: Query<(Entity, &Interaction, &GimmickItem), (With<Button>, With<GimmickItem>)>,
@@ -95,61 +61,30 @@ fn click_pick_item(
     InputStatus::None
 }
 
-
-fn save_stage(
-    page_params: PageParams,
-    stage_cells: &Query<(&Transform, &Gimmick, &PageIndex), (With<Transform>, With<Gimmick>, With<PageIndex>)>,
+fn input_handle(
+    In(input_status): In<InputStatus>,
+    mut state: ResMut<NextState<StageEditState>>,
+    mut commands: Commands,
+    mut page_params: PageParams,
 ) {
-    let pages = (0..page_params.page_count())
-        .map(|page_index| create_page_asset(page_index, stage_cells))
-        .collect::<Vec<Page>>();
-
-    let json = StageJson {
-        name: "stage1".to_string(),
-        pages,
-    };
-    StageLoader::new().save(&json).unwrap();
-}
-
-
-fn create_page_asset(
-    page_index: usize,
-    stage_cells: &Query<(&Transform, &Gimmick, &PageIndex), (With<Transform>, With<Gimmick>, With<PageIndex>)>,
-) -> Page {
-    let mut cells = Vec::new();
-
-    for (pos, tags) in cells_in_page(page_index, stage_cells) {
-        cells.push(StageCell::new(Vec2::new(pos.x as f32, pos.y as f32), tags));
+    match input_status {
+        InputStatus::PickedItem(entity, gimmick_tag) => {
+            state.set(StageEditState::PickItem);
+            commands
+                .entity(entity)
+                .insert(OnPick(gimmick_tag));
+        }
+        InputStatus::SaveFile => {
+            state.set(StageEditState::Save);
+        }
+        InputStatus::NextPage => {
+            page_params.next_page();
+        }
+        InputStatus::PreviousPage => {
+            page_params.previous_page();
+        }
+        _ => {}
     }
-
-    Page {
-        cells
-    }
-}
-
-
-fn cells_in_page(
-    page_index: usize,
-    stage_cells: &Query<(&Transform, &Gimmick, &PageIndex), (With<Transform>, With<Gimmick>, With<PageIndex>)>,
-) -> HashMap<I64Vec2, Vec<GimmickTag>> {
-    let mut stage = HashMap::<I64Vec2, Vec<GimmickTag>>::new();
-
-    stage_cells
-        .iter()
-        .filter(|(_, _, idx)| ***idx == page_index)
-        .for_each(|(transform, gimmick, _)| {
-            let key = transform.translation.truncate().as_i64vec2();
-            if let std::collections::hash_map::Entry::Vacant(e) = stage.entry(key) {
-                e.insert(vec![gimmick.0]);
-            } else {
-                stage
-                    .get_mut(&key)
-                    .unwrap()
-                    .push(gimmick.0);
-            }
-        });
-
-    stage
 }
 
 
@@ -157,6 +92,7 @@ fn cells_in_page(
 mod tests {
     use bevy::app::Update;
     use bevy::prelude::IntoSystem;
+
     use crate::page::page_index::PageIndex;
     use crate::stage_edit::idle::{input_handle, InputStatus};
     use crate::stage_edit::PageCount;

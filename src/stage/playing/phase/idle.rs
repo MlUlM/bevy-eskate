@@ -3,8 +3,9 @@ use bevy::input::Input;
 use bevy::prelude::*;
 
 use crate::gama_state::GameState;
-use crate::playing::move_direction::MoveDirection;
-use crate::playing::phase::PlayingPhase;
+use crate::stage::playing::move_direction::MoveDirection;
+use crate::stage::playing::phase::PlayingPhase;
+use crate::stage::status::StageStatus;
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct PlayingIdlePlugin;
@@ -14,7 +15,7 @@ impl Plugin for PlayingIdlePlugin {
     fn build(&self, app: &mut App) {
         app
             .add_systems(Update, input_move
-                .run_if(in_state(GameState::Playing).and_then(run_if_idle)),
+                .run_if(in_state(GameState::Stage).and_then(run_if_idle)),
             );
     }
 }
@@ -22,10 +23,10 @@ impl Plugin for PlayingIdlePlugin {
 
 #[inline]
 fn run_if_idle(
-    phase: Res<PlayingPhase>,
+    phase: Res<StageStatus>,
 ) -> bool
 {
-    matches!(*phase, PlayingPhase::Idle)
+    matches!(*phase, StageStatus::Playing(PlayingPhase::Idle))
 }
 
 
@@ -34,7 +35,7 @@ fn input_move(
     keys: Res<Input<KeyCode>>,
 ) {
     let mut emit = |direction: MoveDirection| {
-        commands.insert_resource(PlayingPhase::StartMove(direction));
+        commands.insert_resource(StageStatus::playing_start_move(direction));
     };
 
     if keys.just_pressed(KeyCode::Left) {
@@ -55,15 +56,15 @@ mod tests {
     use bevy::input::Input;
     use bevy::prelude::KeyCode;
 
-    use crate::playing::move_direction::MoveDirection;
-    use crate::playing::phase::idle::input_move;
-    use crate::playing::phase::PlayingPhase;
-    use crate::playing::tests::new_playing_app;
+    use crate::stage::playing::move_direction::MoveDirection;
+    use crate::stage::playing::phase::idle::input_move;
+    use crate::stage::playing::phase::PlayingPhase;
+    use crate::stage::status::StageStatus;
+    use crate::stage::tests::new_playing_app;
 
     #[test]
     fn input_left() {
         let mut app = new_playing_app();
-        app.insert_resource(PlayingPhase::Idle);
         app.add_systems(Update, input_move);
 
         input(&mut app, KeyCode::Left, MoveDirection::Left);
@@ -79,7 +80,7 @@ mod tests {
         app.insert_resource(input);
 
         app.update();
-        let phase = app.world.resource::<PlayingPhase>();
-        assert_eq!(*phase, PlayingPhase::StartMove(expect));
+        let phase = app.world.resource::<StageStatus>();
+        assert_eq!(*phase, StageStatus::Playing(PlayingPhase::StartMove(expect)));
     }
 }

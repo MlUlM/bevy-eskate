@@ -5,11 +5,11 @@ use bevy::prelude::{Bundle, Commands, Transform};
 use bevy::sprite::SpriteBundle;
 use bevy_trait_query::imports::Component;
 
+use crate::gimmick_assets::GimmickAssets;
 use crate::page::page_index::PageIndex;
-use crate::playing::gimmick::{GimmickCollide, move_linear, new_gimmick_sprite_bundle};
-use crate::playing::gimmick::asset::GimmickAssets;
-use crate::playing::move_direction::MoveDirection;
-use crate::playing::phase::PlayingPhase;
+use crate::stage::playing::gimmick::{GimmickCollide, move_linear, new_gimmick_sprite_bundle};
+use crate::stage::playing::move_direction::MoveDirection;
+use crate::stage::status::StageStatus;
 
 #[derive(Component, Copy, Clone, PartialEq, Eq, Debug)]
 pub struct Goaled;
@@ -27,10 +27,7 @@ impl GimmickCollide for GoalCollide {
             player_transform,
             Vec3::new(t.x, t.y, 2.),
             |cmd| {
-                cmd.commands().insert_resource(PlayingPhase::Idle);
-                cmd
-                    .commands()
-                    .spawn(Goaled);
+                cmd.commands().insert_resource(StageStatus::playing_goaled());
             },
         );
     }

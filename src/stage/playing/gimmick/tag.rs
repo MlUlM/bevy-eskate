@@ -3,7 +3,7 @@ use bevy::prelude::Image;
 use bevy::ui::UiImage;
 use serde::{Deserialize, Serialize};
 
-use crate::playing::gimmick::asset::GimmickAssets;
+use crate::gimmick_assets::GimmickAssets;
 
 #[derive(Eq, PartialEq, Debug, Copy, Clone, Deserialize, Serialize)]
 pub enum GimmickTag {

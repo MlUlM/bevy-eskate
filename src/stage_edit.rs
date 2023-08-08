@@ -3,13 +3,15 @@ use bevy::utils::default;
 
 use crate::button::{SpriteButton, SpriteInteraction};
 use crate::gama_state::GameState;
+use crate::gimmick_assets::GimmickAssets;
 use crate::page::page_count::PageCount;
 use crate::page::page_index::PageIndex;
-use crate::playing::gimmick::{Floor, Gimmick, GIMMICK_SIZE, GimmickItem, Stage};
-use crate::playing::gimmick::asset::GimmickAssets;
-use crate::playing::gimmick::tag::GimmickTag;
+use crate::stage::playing::gimmick::{Floor, Gimmick, GIMMICK_SIZE, GimmickItem, Stage};
+use crate::stage::playing::gimmick::tag::GimmickTag;
 use crate::stage_edit::idle::StageEditIdlePlugin;
 use crate::stage_edit::pick::StageEditPickedPlugin;
+use crate::stage_edit::save::StageEditSavePlugin;
+use crate::stage_edit::stage_name::StageName;
 
 #[derive(Default, Debug, Hash, Eq, PartialEq, States, Copy, Clone)]
 pub enum StageEditState {
@@ -17,11 +19,15 @@ pub enum StageEditState {
     Idle,
 
     PickItem,
+
+    Save,
 }
 
 
 mod idle;
 mod pick;
+mod save;
+mod stage_name;
 
 
 #[derive(Default, Debug, PartialEq, Copy, Clone)]
@@ -34,8 +40,11 @@ impl Plugin for StageEditPlugin {
             .add_state::<StageEditState>()
             .add_systems(OnEnter(GameState::StageEdit), setup_stage_editor)
             .add_systems(Update, change_visible_gimmicks.run_if(in_state(GameState::StageEdit).and_then(resource_changed::<PageIndex>())))
-            .add_plugins(StageEditIdlePlugin)
-            .add_plugins(StageEditPickedPlugin);
+            .add_plugins((
+                StageEditIdlePlugin,
+                StageEditPickedPlugin,
+                StageEditSavePlugin
+            ));
     }
 }
 
@@ -47,6 +56,7 @@ fn setup_stage_editor(
 ) {
     commands.spawn(Camera2dBundle::default()).insert(Stage);
     commands.insert_resource(PageIndex::default());
+    commands.insert_resource(StageName::default());
 
     ui(&mut commands, &assets);
     spawn_stage_gimmicks(&mut commands, &assets, page_count.0);
@@ -80,12 +90,19 @@ fn spawn_stage_gimmicks(
         let page_index = PageIndex::new(page_index);
         for x in 0..=24u8 {
             for y in 0..=12u8 {
-                let x = f32::from(x) * 50. - 12. * 50.;
-                let y = f32::from(y) * 50. - 3.5 * 50.;
-
-                commands
-                    .spawn(gimmick_iem_sprite_bundle(Vec3::new(x, y, 0.), GimmickTag::Floor.image(assets)))
-                    .insert((Floor, Gimmick(GimmickTag::Floor), SpriteButton, SpriteInteraction::None, page_index));
+                if x == 0 || y == 0 || x == 24 || y == 12 {
+                    let x = f32::from(x) * 50. - 12. * 50.;
+                    let y = f32::from(y) * 50. - 3.5 * 50.;
+                    commands
+                        .spawn(gimmick_iem_sprite_bundle(Vec3::new(x, y, 0.), GimmickTag::Rock.image(assets)))
+                        .insert((Gimmick(GimmickTag::Rock), SpriteButton, SpriteInteraction::None, page_index));
+                } else {
+                    let x = f32::from(x) * 50. - 12. * 50.;
+                    let y = f32::from(y) * 50. - 3.5 * 50.;
+                    commands
+                        .spawn(gimmick_iem_sprite_bundle(Vec3::new(x, y, 0.), GimmickTag::Floor.image(assets)))
+                        .insert((Floor, Gimmick(GimmickTag::Floor), SpriteButton, SpriteInteraction::None, page_index));
+                };
             }
         }
     }
@@ -192,8 +209,8 @@ pub(crate) fn gimmick_iem_sprite_bundle(pos: Vec3, texture: Handle<Image>) -> Sp
 mod tests {
     use bevy::prelude::*;
 
+    use crate::gimmick_assets::GimmickAssets;
     use crate::page::page_index::PageIndex;
-    use crate::playing::gimmick::asset::GimmickAssets;
     use crate::stage_edit::{change_visible_gimmicks, PageCount, setup_stage_editor, StageEditState};
 
     pub(crate) fn new_stage_edit_app(page_count: PageCount) -> App {

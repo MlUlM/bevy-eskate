@@ -36,8 +36,8 @@ fn eskate_dir_path() -> GameResult<PathBuf> {
     let base = directories::BaseDirs::new().unwrap();
     let dir = base.data_local_dir();
     let dir = dir.join("eskate");
-    if std::fs::metadata(&dir).is_err() {
-        std::fs::create_dir(&dir)?;
+    if fs::metadata(&dir).is_err() {
+        fs::create_dir(&dir)?;
     }
 
     Ok(dir)

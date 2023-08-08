@@ -3,9 +3,9 @@ use bevy_undo::prelude::EntityCommandsOnUndoExt;
 
 use crate::button::SpriteInteraction;
 use crate::gama_state::GameState;
+use crate::gimmick_assets::GimmickAssets;
 use crate::page::page_index::PageIndex;
-use crate::playing::gimmick::asset::GimmickAssets;
-use crate::playing::gimmick::{Floor, Gimmick};
+use crate::stage::playing::gimmick::{Floor, Gimmick};
 use crate::stage_edit::{front, gimmick_iem_sprite_bundle, StageEditState};
 use crate::stage_edit::idle::OnPick;
 

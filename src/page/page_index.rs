@@ -1,8 +1,9 @@
 use std::ops::{AddAssign, Deref, SubAssign};
+
 use bevy::prelude::{Component, Resource};
 
 #[derive(
-Debug, Default, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Resource, Component,
+Debug, Default, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Resource, Component
 )]
 pub struct PageIndex(pub usize);
 

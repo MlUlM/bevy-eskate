@@ -1,4 +1,5 @@
-use bevy::prelude::*;
+use bevy::asset::Handle;
+use bevy::prelude::{AssetServer, Image, Resource};
 use bevy_asset_loader::prelude::*;
 
 #[derive(AssetCollection, Resource, Default)]

@@ -1800,6 +1800,7 @@ dependencies = [
  "bevy-undo",
  "bevy_asset_loader",
  "bevy_editor_pls",
+ "bevy_egui",
  "bevy_tweening",
  "directories",
  "itertools",

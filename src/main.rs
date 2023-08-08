@@ -12,14 +12,15 @@ use bevy_tweening::TweeningPlugin;
 use bevy_undo::prelude::*;
 use bevy_undo::prelude::UndoPlugin;
 
+use page::page_count::PageCount;
+
 use crate::button::SpriteButtonPlugin;
 use crate::gama_state::GameState;
-use crate::playing::gimmick::asset::GimmickAssets;
-use crate::playing::PlayingPlugin;
-use page::page_count::PageCount;
+use crate::gimmick_assets::GimmickAssets;
+use crate::loader::{StageLoadable, StageLoader};
+use crate::stage::StagePlugin;
 use crate::stage_edit::StageEditPlugin;
 
-mod playing;
 mod gama_state;
 mod title;
 mod stage_edit;
@@ -27,30 +28,36 @@ mod loader;
 mod button;
 mod error;
 mod page;
+mod stage;
+mod gimmick_assets;
 
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
-                resolution: WindowResolution::new(1920., 1080.),
+                resolution: WindowResolution::new(500., 300.),
                 title: "Eskate".to_string(),
                 ..default()
             }),
             ..default()
         }))
         .add_loading_state(
-            LoadingState::new(GameState::AssetLoading).continue_to_state(GameState::Playing),
+            LoadingState::new(GameState::AssetLoading).continue_to_state(GameState::StageEdit),
         )
         .add_collection_to_loading_state::<_, GimmickAssets>(GameState::AssetLoading)
-        .add_plugins(WorldInspectorPlugin::new())
-        .add_plugins(StageEditPlugin)
-        .add_plugins(PlayingPlugin)
-        .add_plugins(TweeningPlugin)
-        .add_plugins(UndoPlugin)
+        .add_plugins((
+            WorldInspectorPlugin::new(),
+            TweeningPlugin,
+            UndoPlugin,
+            SpriteButtonPlugin
+        ))
+        .add_plugins((
+            StageEditPlugin,
+            StagePlugin
+        ))
         .add_systems(Startup, setup)
         .add_systems(Update, undo_if_input_keycode)
-        .add_plugins(SpriteButtonPlugin)
         .add_state::<GameState>()
         .run();
 }
@@ -59,6 +66,10 @@ fn main() {
 fn setup(
     mut commands: Commands
 ) {
+    let stages = StageLoader::new().load().unwrap();
+    let stage = stages.first().unwrap();
+
+    commands.insert_resource(stage.clone());
     commands.insert_resource(PageCount::new(2));
 }
 

@@ -1,6 +1,6 @@
 use bevy::math::Vec3;
 
-use crate::playing::gimmick::GIMMICK_SIZE_VEC3;
+use crate::stage::playing::gimmick::GIMMICK_SIZE_VEC3;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum MoveDirection {
@@ -21,6 +21,7 @@ impl MoveDirection {
             MoveDirection::Down => MoveDirection::Up,
         }
     }
+
 
     #[inline]
     pub fn vec3_unit(&self) -> Vec3 {

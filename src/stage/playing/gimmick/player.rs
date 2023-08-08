@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 
+use crate::gimmick_assets::GimmickAssets;
 use crate::page::page_index::PageIndex;
-use crate::playing::gimmick::{Gimmick, GimmickItem};
-use crate::playing::gimmick::asset::GimmickAssets;
-use crate::playing::gimmick::tag::GimmickTag;
+use crate::stage::playing::gimmick::{Gimmick, GimmickItemSpawned};
+use crate::stage::playing::gimmick::tag::GimmickTag;
 
 #[derive(Default, Clone, Copy, Component)]
 pub struct Movable;
@@ -25,8 +25,9 @@ pub fn spawn(commands: &mut Commands, assets: &GimmickAssets, pos: Vec2, page_in
             transform: Transform::from_xyz(pos.x, pos.y, 1.),
             ..default()
         })
-        .insert((Movable, Gimmick(GimmickTag::Player), GimmickItem(GimmickTag::Player)))
-        .insert(page_index);
+        .insert((Movable, Gimmick(GimmickTag::Player), GimmickItemSpawned(GimmickTag::Player)))
+        .insert(page_index)
+        .insert(Name::new("Player"));
 }
 
 
