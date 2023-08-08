@@ -3,7 +3,7 @@
 use bevy::app::{App, PluginGroup, Startup, Update};
 use bevy::DefaultPlugins;
 use bevy::input::Input;
-use bevy::prelude::{Commands, KeyCode, Res};
+use bevy::prelude::{Camera2dBundle, Commands, KeyCode, Res};
 use bevy::utils::default;
 use bevy::window::{Window, WindowPlugin, WindowResolution};
 use bevy_asset_loader::prelude::{LoadingState, LoadingStateAppExt};
@@ -14,12 +14,14 @@ use bevy_undo::prelude::UndoPlugin;
 
 use page::page_count::PageCount;
 
+use crate::assets::font::FontAssets;
 use crate::button::SpriteButtonPlugin;
 use crate::gama_state::GameState;
 use crate::gimmick_assets::GimmickAssets;
 use crate::loader::{StageLoadable, StageLoader};
 use crate::stage::StagePlugin;
 use crate::stage_edit::StageEditPlugin;
+use crate::title::TitlePlugin;
 
 mod gama_state;
 mod title;
@@ -30,6 +32,7 @@ mod error;
 mod page;
 mod stage;
 mod gimmick_assets;
+mod assets;
 
 
 fn main() {
@@ -43,9 +46,10 @@ fn main() {
             ..default()
         }))
         .add_loading_state(
-            LoadingState::new(GameState::AssetLoading).continue_to_state(GameState::StageEdit),
+            LoadingState::new(GameState::AssetLoading).continue_to_state(GameState::Title),
         )
         .add_collection_to_loading_state::<_, GimmickAssets>(GameState::AssetLoading)
+        .add_collection_to_loading_state::<_, FontAssets>(GameState::AssetLoading)
         .add_plugins((
             WorldInspectorPlugin::new(),
             TweeningPlugin,
@@ -53,6 +57,7 @@ fn main() {
             SpriteButtonPlugin
         ))
         .add_plugins((
+            TitlePlugin,
             StageEditPlugin,
             StagePlugin
         ))
@@ -66,6 +71,7 @@ fn main() {
 fn setup(
     mut commands: Commands
 ) {
+    commands.spawn(Camera2dBundle::default());
     let stages = StageLoader::new().load().unwrap();
     let stage = stages.first().unwrap();
 

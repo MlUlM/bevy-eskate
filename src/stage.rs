@@ -1,6 +1,6 @@
 use bevy::app::{App, Plugin};
 use bevy::math::Vec2;
-use bevy::prelude::{Camera2dBundle, Commands, OnEnter, Res};
+use bevy::prelude::{Commands, OnEnter, Res};
 
 use crate::gama_state::GameState;
 use crate::gimmick_assets::GimmickAssets;
@@ -34,7 +34,6 @@ fn setup(
     stage: Res<StageJson>,
     mut commands: Commands,
 ) {
-    commands.spawn(Camera2dBundle::default());
     commands.insert_resource(PageIndex::new(0));
     commands.insert_resource(StageStatus::default());
     commands.insert_resource(PageCount::new(stage.pages.len()));

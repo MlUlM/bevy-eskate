@@ -6,7 +6,7 @@ use crate::gama_state::GameState;
 use crate::gimmick_assets::GimmickAssets;
 use crate::page::page_count::PageCount;
 use crate::page::page_index::PageIndex;
-use crate::stage::playing::gimmick::{Floor, Gimmick, GIMMICK_SIZE, GimmickItem, Stage};
+use crate::stage::playing::gimmick::{Floor, Gimmick, GIMMICK_SIZE, GimmickItem};
 use crate::stage::playing::gimmick::tag::GimmickTag;
 use crate::stage_edit::idle::StageEditIdlePlugin;
 use crate::stage_edit::pick::StageEditPickedPlugin;
@@ -54,7 +54,6 @@ fn setup_stage_editor(
     mut commands: Commands,
     assets: Res<GimmickAssets>,
 ) {
-    commands.spawn(Camera2dBundle::default()).insert(Stage);
     commands.insert_resource(PageIndex::default());
     commands.insert_resource(StageName::default());
 
