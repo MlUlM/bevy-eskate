@@ -3,7 +3,7 @@ use bevy::core::Name;
 use bevy::hierarchy::BuildChildren;
 use bevy::prelude::{Bundle, ButtonBundle, Color, Commands, in_state, IntoSystemConfigs, JustifyContent, NextState, NodeBundle, OnEnter, OnExit, Query, Res, ResMut, TextBundle, Val, With};
 use bevy::text::{Text, TextStyle};
-use bevy::ui::{Interaction, Style};
+use bevy::ui::{AlignItems, BackgroundColor, Interaction, Style};
 use bevy::utils::default;
 use bevy_trait_query::imports::Component;
 
@@ -85,12 +85,6 @@ fn setup(
 }
 
 
-#[derive(Component, Copy, Clone, Debug, Eq, PartialEq, Hash)]
-struct StageEditButton;
-
-#[derive(Component, Copy, Clone, Debug, Eq, PartialEq, Hash)]
-struct StageButton;
-
 fn input(
     mut state: ResMut<NextState<GameState>>,
     stage: Query<&Interaction, (With<Interaction>, With<StageButton>)>,
@@ -99,9 +93,15 @@ fn input(
     if stage_edit.single().pressed() {
         state.set(GameState::StageEdit);
     } else if stage.single().pressed() {
-        state.set(GameState::Stage);
+        state.set(GameState::StageSelect);
     }
 }
+
+#[derive(Component, Copy, Clone, Debug, Eq, PartialEq, Hash)]
+struct StageEditButton;
+
+#[derive(Component, Copy, Clone, Debug, Eq, PartialEq, Hash)]
+struct StageButton;
 
 
 #[derive(Bundle, Clone)]
@@ -118,9 +118,12 @@ impl ScreenBundle {
                 style: Style {
                     width: Val::Percent(100.),
                     height: Val::Percent(100.),
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Center,
+                    column_gap: Val::Px(10.),
                     ..default()
                 },
-                background_color: Default::default(),
+                background_color: BackgroundColor::from(Color::NONE),
                 ..default()
             },
             name: Name::new("Screen"),

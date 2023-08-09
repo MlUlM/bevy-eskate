@@ -45,7 +45,7 @@ fn eskate_dir_path() -> GameResult<PathBuf> {
 
 
 fn stage_path(name: &str) -> GameResult<PathBuf> {
-    let file_name = format!("{}.json", name);
+    let file_name = format!("{}.stage.json", name);
 
     Ok(eskate_dir_path()?.join(file_name))
 }

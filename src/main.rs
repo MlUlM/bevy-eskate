@@ -1,7 +1,7 @@
 #![allow(clippy::type_complexity)]
 
 use bevy::app::{App, PluginGroup, Update};
-use bevy::asset::{Assets, AssetServer};
+use bevy::asset::Assets;
 use bevy::DefaultPlugins;
 use bevy::input::Input;
 use bevy::prelude::{Camera, Camera2dBundle, Commands, Component, Entity, KeyCode, OnExit, Query, Res, ResMut, Without};
@@ -16,13 +16,14 @@ use bevy_undo::prelude::UndoPlugin;
 
 use crate::assets::font::FontAssets;
 use crate::assets::gimmick::GimmickAssets;
-use crate::assets::stage::StageAssets;
+use crate::assets::stage::{BuiltInStages, StageAssets};
 use crate::button::SpriteButtonPlugin;
 use crate::gama_state::GameState;
 use crate::loader::json::StageJson;
 use crate::page::page_count::PageCount;
 use crate::stage::StagePlugin;
 use crate::stage_edit::StageEditPlugin;
+use crate::stage_select::StageSelectPlugin;
 use crate::title::TitlePlugin;
 
 mod gama_state;
@@ -35,13 +36,14 @@ mod page;
 mod stage;
 mod assets;
 mod extension;
+mod stage_select;
 
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
-                resolution: WindowResolution::new(700., 500.),
+                resolution: WindowResolution::new(1431., 971.),
                 title: "Eskate".to_string(),
                 ..default()
             }),
@@ -63,6 +65,7 @@ fn main() {
         .add_plugins((
             TitlePlugin,
             StageEditPlugin,
+            StageSelectPlugin,
             StagePlugin
         ))
         .add_systems(OnExit(GameState::AssetLoading), setup)
@@ -81,17 +84,17 @@ fn setup(
     stages: Res<StageAssets>,
     stage: ResMut<Assets<StageJson>>,
 ) {
-    // let stages = asset_server
-    //     .load_folder("stages")
-    //     .unwrap();
-    let stages = stages.stages.clone();
-    let stage = stage.get(stages.first().unwrap()).unwrap();
-    println!("{stage:?}");
     commands
         .spawn(Camera2dBundle::default())
         .insert(MainCamera);
 
-    commands.insert_resource(stage.clone());
+    let stages = stages
+        .stages
+        .iter()
+        .filter_map(|stage_handle| stage.get(stage_handle).cloned())
+        .collect::<Vec<StageJson>>();
+
+    commands.insert_resource(BuiltInStages(stages));
     commands.insert_resource(PageCount::new(2));
 }
 
