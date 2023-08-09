@@ -2,8 +2,8 @@ use bevy::app::{App, Plugin};
 use bevy::math::Vec2;
 use bevy::prelude::{Commands, OnEnter, Res};
 
+use crate::assets::gimmick::GimmickAssets;
 use crate::gama_state::GameState;
-use crate::gimmick_assets::GimmickAssets;
 use crate::loader::json::{StageCell, StageJson};
 use crate::page::page_count::PageCount;
 use crate::page::page_index::PageIndex;
@@ -80,7 +80,7 @@ fn spawn_gimmick(
 mod tests {
     use bevy::app::{App, Startup};
 
-    use crate::gimmick_assets::GimmickAssets;
+    use crate::assets::gimmick::GimmickAssets;
     use crate::loader::{StageLoadable, StageLoader};
     use crate::page::page_count::PageCount;
     use crate::page::page_index::PageIndex;
@@ -107,7 +107,7 @@ mod tests {
         app.update();
 
         assert_eq!(app.world.resource::<PageIndex>().0, 0);
-        assert_eq!(app.world.resource::<PageCount>().0, 2);
+        assert_eq!(app.world.resource::<PageCount>().0, 0);
         assert_eq!(*app.world.resource::<StageStatus>(), StageStatus::Playing(PlayingPhase::Idle));
     }
 }

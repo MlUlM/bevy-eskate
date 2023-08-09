@@ -4,7 +4,7 @@ use crate::gama_state::GameState;
 use crate::page::page_param::PageParams;
 use crate::stage::playing::gimmick::GimmickItem;
 use crate::stage::playing::gimmick::tag::GimmickTag;
-use crate::stage_edit::StageEditState;
+use crate::stage_edit::StageEditStatus;
 
 #[derive(Debug, Copy, Clone, Component, Eq, PartialEq)]
 pub struct OnPick(pub GimmickTag);
@@ -18,7 +18,7 @@ pub struct StageEditIdlePlugin;
 enum InputStatus {
     None,
     PickedItem(Entity, GimmickTag),
-    SaveFile,
+    SaveStage,
     NextPage,
     PreviousPage,
 }
@@ -30,7 +30,7 @@ impl Plugin for StageEditIdlePlugin {
             .add_systems(Update,
                          click_pick_item
                              .pipe(input_handle)
-                             .run_if(in_state(GameState::StageEdit).and_then(in_state(StageEditState::Idle))),
+                             .run_if(in_state(GameState::StageEdit).and_then(resource_exists_and_equals(StageEditStatus::Idle))),
             );
     }
 }
@@ -41,7 +41,7 @@ fn click_pick_item(
     items: Query<(Entity, &Interaction, &GimmickItem), (With<Button>, With<GimmickItem>)>,
 ) -> InputStatus {
     if key.just_pressed(KeyCode::Return) {
-        return InputStatus::SaveFile;
+        return InputStatus::SaveStage;
     }
 
     if key.just_pressed(KeyCode::Left) {
@@ -63,19 +63,18 @@ fn click_pick_item(
 
 fn input_handle(
     In(input_status): In<InputStatus>,
-    mut state: ResMut<NextState<StageEditState>>,
     mut commands: Commands,
     mut page_params: PageParams,
 ) {
     match input_status {
         InputStatus::PickedItem(entity, gimmick_tag) => {
-            state.set(StageEditState::PickItem);
+            commands.insert_resource(StageEditStatus::PickedItem);
             commands
                 .entity(entity)
                 .insert(OnPick(gimmick_tag));
         }
-        InputStatus::SaveFile => {
-            state.set(StageEditState::Save);
+        InputStatus::SaveStage => {
+             commands.insert_resource(StageEditStatus::SaveStage);
         }
         InputStatus::NextPage => {
             page_params.next_page();
@@ -122,7 +121,7 @@ mod tests {
 
 
     #[test]
-    fn increment_page_index_if_exists_nextable_page() {
+    fn increment_page_index() {
         let mut app = new_stage_edit_app(PageCount::new(2));
         app.add_systems(Update, update_next_page.pipe(input_handle));
 

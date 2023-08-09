@@ -1,9 +1,10 @@
 use bevy::prelude::*;
 use bevy::utils::default;
 
+use crate::assets::gimmick::GimmickAssets;
 use crate::button::{SpriteButton, SpriteInteraction};
+use crate::destroy_all;
 use crate::gama_state::GameState;
-use crate::gimmick_assets::GimmickAssets;
 use crate::page::page_count::PageCount;
 use crate::page::page_index::PageIndex;
 use crate::stage::playing::gimmick::{Floor, Gimmick, GIMMICK_SIZE, GimmickItem};
@@ -13,14 +14,14 @@ use crate::stage_edit::pick::StageEditPickedPlugin;
 use crate::stage_edit::save::StageEditSavePlugin;
 use crate::stage_edit::stage_name::StageName;
 
-#[derive(Default, Debug, Hash, Eq, PartialEq, States, Copy, Clone)]
-pub enum StageEditState {
+#[derive(Default, Debug, Hash, Eq, PartialEq, Copy, Clone, Resource)]
+pub enum StageEditStatus {
     #[default]
     Idle,
 
-    PickItem,
+    PickedItem,
 
-    Save,
+    SaveStage,
 }
 
 
@@ -37,8 +38,8 @@ pub struct StageEditPlugin;
 impl Plugin for StageEditPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_state::<StageEditState>()
             .add_systems(OnEnter(GameState::StageEdit), setup_stage_editor)
+            .add_systems(OnExit(GameState::StageEdit), destroy_all)
             .add_systems(Update, change_visible_gimmicks.run_if(in_state(GameState::StageEdit).and_then(resource_changed::<PageIndex>())))
             .add_plugins((
                 StageEditIdlePlugin,
@@ -54,6 +55,7 @@ fn setup_stage_editor(
     mut commands: Commands,
     assets: Res<GimmickAssets>,
 ) {
+    commands.init_resource::<StageEditStatus>();
     commands.insert_resource(PageIndex::default());
     commands.insert_resource(StageName::default());
 
@@ -208,16 +210,16 @@ pub(crate) fn gimmick_iem_sprite_bundle(pos: Vec3, texture: Handle<Image>) -> Sp
 mod tests {
     use bevy::prelude::*;
 
-    use crate::gimmick_assets::GimmickAssets;
+    use crate::assets::gimmick::GimmickAssets;
     use crate::page::page_index::PageIndex;
-    use crate::stage_edit::{change_visible_gimmicks, PageCount, setup_stage_editor, StageEditState};
+    use crate::stage_edit::{change_visible_gimmicks, PageCount, setup_stage_editor, StageEditStatus};
 
     pub(crate) fn new_stage_edit_app(page_count: PageCount) -> App {
         let mut app = App::new();
+        app.init_resource::<StageEditStatus>();
+        app.init_resource::<PageIndex>();
+        app.init_resource::<GimmickAssets>();
         app.insert_resource(page_count);
-        app.insert_resource(GimmickAssets::default());
-        app.add_state::<StageEditState>();
-        app.insert_resource(PageIndex::default());
 
         app
     }

@@ -1,10 +1,12 @@
 use bevy::math::Vec2;
 use bevy::prelude::Resource;
+use bevy::reflect::{TypePath, TypeUuid};
 use bevy::reflect::erased_serde::__private::serde::{Deserialize, Serialize};
 
 use crate::stage::playing::gimmick::tag::GimmickTag;
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Resource)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Resource, TypePath, TypeUuid)]
+#[uuid = "413be529-bfeb-41b3-9db0-4b8b380a2c43"]
 pub struct StageJson {
     pub name: String,
     pub pages: Vec<Page>,

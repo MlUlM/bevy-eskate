@@ -5,7 +5,7 @@ use bevy::math::Vec2;
 use bevy::prelude::{Bundle, Commands, Component, Image, Transform};
 use bevy::sprite::SpriteBundle;
 
-use crate::gimmick_assets::GimmickAssets;
+use crate::assets::gimmick::GimmickAssets;
 use crate::page::page_index::PageIndex;
 use crate::stage::playing::gimmick::{GimmickCollide, move_linear, new_gimmick_sprite_bundle};
 use crate::stage::playing::move_direction::MoveDirection;

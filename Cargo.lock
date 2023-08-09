@@ -527,6 +527,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_common_assets"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a0e5659f20aeaa1703e76d87c62d66f92aaa56e431fbed71bb38345b576aa6f0"
+dependencies = [
+ "anyhow",
+ "bevy",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "bevy_core"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1799,6 +1811,7 @@ dependencies = [
  "bevy-trait-query",
  "bevy-undo",
  "bevy_asset_loader",
+ "bevy_common_assets",
  "bevy_editor_pls",
  "bevy_egui",
  "bevy_tweening",

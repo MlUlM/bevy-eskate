@@ -4,7 +4,7 @@ use bevy::math::Vec2;
 use bevy::prelude::{Bundle, Commands, Image};
 use bevy::sprite::SpriteBundle;
 
-use crate::gimmick_assets::GimmickAssets;
+use crate::assets::gimmick::GimmickAssets;
 use crate::page::page_index::PageIndex;
 use crate::stage::playing::gimmick::new_floor_sprite_bundle;
 

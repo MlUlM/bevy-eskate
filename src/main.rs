@@ -1,24 +1,26 @@
 #![allow(clippy::type_complexity)]
 
-use bevy::app::{App, PluginGroup, Startup, Update};
+use bevy::app::{App, PluginGroup, Update};
+use bevy::asset::{Assets, AssetServer};
 use bevy::DefaultPlugins;
 use bevy::input::Input;
-use bevy::prelude::{Camera2dBundle, Commands, KeyCode, Res};
+use bevy::prelude::{Camera, Camera2dBundle, Commands, Component, Entity, KeyCode, OnExit, Query, Res, ResMut, Without};
 use bevy::utils::default;
 use bevy::window::{Window, WindowPlugin, WindowResolution};
 use bevy_asset_loader::prelude::{LoadingState, LoadingStateAppExt};
+use bevy_common_assets::json::JsonAssetPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_tweening::TweeningPlugin;
 use bevy_undo::prelude::*;
 use bevy_undo::prelude::UndoPlugin;
 
-use page::page_count::PageCount;
-
 use crate::assets::font::FontAssets;
+use crate::assets::gimmick::GimmickAssets;
+use crate::assets::stage::StageAssets;
 use crate::button::SpriteButtonPlugin;
 use crate::gama_state::GameState;
-use crate::gimmick_assets::GimmickAssets;
-use crate::loader::{StageLoadable, StageLoader};
+use crate::loader::json::StageJson;
+use crate::page::page_count::PageCount;
 use crate::stage::StagePlugin;
 use crate::stage_edit::StageEditPlugin;
 use crate::title::TitlePlugin;
@@ -31,15 +33,15 @@ mod button;
 mod error;
 mod page;
 mod stage;
-mod gimmick_assets;
 mod assets;
+mod extension;
 
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
-                resolution: WindowResolution::new(500., 300.),
+                resolution: WindowResolution::new(700., 500.),
                 title: "Eskate".to_string(),
                 ..default()
             }),
@@ -50,7 +52,9 @@ fn main() {
         )
         .add_collection_to_loading_state::<_, GimmickAssets>(GameState::AssetLoading)
         .add_collection_to_loading_state::<_, FontAssets>(GameState::AssetLoading)
+        .add_collection_to_loading_state::<_, StageAssets>(GameState::AssetLoading)
         .add_plugins((
+            JsonAssetPlugin::<StageJson>::new(&["stage.json"]),
             WorldInspectorPlugin::new(),
             TweeningPlugin,
             UndoPlugin,
@@ -61,19 +65,31 @@ fn main() {
             StageEditPlugin,
             StagePlugin
         ))
-        .add_systems(Startup, setup)
+        .add_systems(OnExit(GameState::AssetLoading), setup)
         .add_systems(Update, undo_if_input_keycode)
         .add_state::<GameState>()
         .run();
 }
 
 
+#[derive(Debug, Copy, Clone, Default, Eq, PartialEq, Hash, Component)]
+pub struct MainCamera;
+
+
 fn setup(
-    mut commands: Commands
+    mut commands: Commands,
+    stages: Res<StageAssets>,
+    stage: ResMut<Assets<StageJson>>,
 ) {
-    commands.spawn(Camera2dBundle::default());
-    let stages = StageLoader::new().load().unwrap();
-    let stage = stages.first().unwrap();
+    // let stages = asset_server
+    //     .load_folder("stages")
+    //     .unwrap();
+    let stages = stages.stages.clone();
+    let stage = stage.get(stages.first().unwrap()).unwrap();
+    println!("{stage:?}");
+    commands
+        .spawn(Camera2dBundle::default())
+        .insert(MainCamera);
 
     commands.insert_resource(stage.clone());
     commands.insert_resource(PageCount::new(2));
@@ -86,6 +102,13 @@ fn undo_if_input_keycode(
 ) {
     if keycode.just_pressed(KeyCode::R) {
         commands.undo();
+    }
+}
+
+
+pub(crate) fn destroy_all(mut commands: Commands, entities: Query<Entity, (Without<Camera>, Without<Window>)>) {
+    for entity in &entities {
+        commands.entity(entity).despawn();
     }
 }
 

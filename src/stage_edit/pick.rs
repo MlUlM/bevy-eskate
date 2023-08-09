@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 use bevy_undo::prelude::EntityCommandsOnUndoExt;
 
+use crate::assets::gimmick::GimmickAssets;
 use crate::button::SpriteInteraction;
 use crate::gama_state::GameState;
-use crate::gimmick_assets::GimmickAssets;
 use crate::page::page_index::PageIndex;
 use crate::stage::playing::gimmick::{Floor, Gimmick};
-use crate::stage_edit::{front, gimmick_iem_sprite_bundle, StageEditState};
+use crate::stage_edit::{front, gimmick_iem_sprite_bundle, StageEditStatus};
 use crate::stage_edit::idle::OnPick;
 
 #[derive(Debug, Default, Copy, Clone, Hash, Eq, PartialEq)]
@@ -16,7 +16,9 @@ pub struct StageEditPickedPlugin;
 impl Plugin for StageEditPickedPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(Update, update.run_if(in_state(GameState::StageEdit).and_then(in_state(StageEditState::PickItem))));
+            .add_systems(Update, update
+                .run_if(in_state(GameState::StageEdit).and_then(resource_exists_and_equals(StageEditStatus::PickedItem))),
+            );
     }
 }
 
@@ -24,7 +26,6 @@ impl Plugin for StageEditPickedPlugin {
 fn update(
     assets: Res<GimmickAssets>,
     page_index: Res<PageIndex>,
-    mut state: ResMut<NextState<StageEditState>>,
     mut commands: Commands,
     item: Query<(Entity, &OnPick), With<OnPick>>,
     floors: Query<(&Transform, &SpriteInteraction), (With<SpriteInteraction>, With<Floor>)>,
@@ -41,7 +42,7 @@ fn update(
                 .on_undo(|cmd, entity| {
                     cmd.entity(entity).despawn();
                 });
-            state.set(StageEditState::Idle);
+            commands.insert_resource(StageEditStatus::Idle);
             return;
         }
     }
@@ -49,21 +50,4 @@ fn update(
 
 
 #[cfg(test)]
-mod tests {
-    use bevy::app::App;
-    use bevy::prelude::NextState;
-
-    use crate::stage_edit::StageEditState;
-
-    #[test]
-    fn drop_item() {
-        let mut app = App::new();
-        app.add_state::<StageEditState>();
-        app
-            .world
-            .resource_mut::<NextState<StageEditState>>()
-            .set(StageEditState::PickItem);
-
-        assert_eq!(1, 1);
-    }
-}
+mod tests {}

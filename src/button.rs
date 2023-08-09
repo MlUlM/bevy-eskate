@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use itertools::Itertools;
 
-use crate::stage::playing::gimmick::Stage;
+use crate::MainCamera;
 
 #[derive(Debug, Copy, Clone, Default, Hash, Eq, PartialEq)]
 pub struct SpriteButtonPlugin;
@@ -43,7 +43,7 @@ impl SpriteButtonBundle {
 fn update(
     mouse: Res<Input<MouseButton>>,
     window: Query<&Window, With<PrimaryWindow>>,
-    camera: Query<(&Camera, &GlobalTransform), (With<Camera2d>, With<Stage>)>,
+    camera: Query<(&Camera, &GlobalTransform), (With<Camera2d>, With<MainCamera>)>,
     buttons: Query<(&Sprite, &GlobalTransform, &mut SpriteInteraction), (
         With<Sprite>,
         With<SpriteButton>,
@@ -60,7 +60,7 @@ fn update(
 
 fn clicked(
     window: Query<&Window, With<PrimaryWindow>>,
-    camera: Query<(&Camera, &GlobalTransform), (With<Camera2d>, With<Stage>)>,
+    camera: Query<(&Camera, &GlobalTransform), (With<Camera2d>, With<MainCamera>)>,
     mut buttons: Query<(&Sprite, &GlobalTransform, &mut SpriteInteraction), (
         With<Sprite>,
         With<SpriteButton>,

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::gimmick_assets::GimmickAssets;
+use crate::assets::gimmick::GimmickAssets;
 use crate::page::page_index::PageIndex;
 use crate::stage::playing::gimmick::{Gimmick, GimmickItemSpawned};
 use crate::stage::playing::gimmick::tag::GimmickTag;

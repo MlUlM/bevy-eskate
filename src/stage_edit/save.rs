@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use bevy::app::{App, Plugin, Update};
 use bevy::math::{I64Vec2, Vec2};
-use bevy::prelude::{Condition, in_state, IntoSystemConfigs, NextState, Query, ResMut, Transform, With};
+use bevy::prelude::{Commands, Condition, in_state, IntoSystemConfigs, NextState, Query, ResMut, resource_exists_and_equals, Transform, With};
 use bevy_egui::{egui, EguiContexts};
 
 use crate::gama_state::GameState;
@@ -13,7 +13,7 @@ use crate::page::page_param::PageParams;
 use crate::stage::playing::gimmick::Gimmick;
 use crate::stage::playing::gimmick::tag::GimmickTag;
 use crate::stage_edit::stage_name::StageName;
-use crate::stage_edit::StageEditState;
+use crate::stage_edit::StageEditStatus;
 
 #[derive(Default, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct StageEditSavePlugin;
@@ -23,14 +23,15 @@ impl Plugin for StageEditSavePlugin {
     fn build(&self, app: &mut App) {
         app
             .add_systems(Update, save_ui
-                .run_if(in_state(GameState::StageEdit).and_then(in_state(StageEditState::Save))),
+                .run_if(in_state(GameState::StageEdit).and_then(resource_exists_and_equals(StageEditStatus::SaveStage))),
             );
     }
 }
 
 
 fn save_ui(
-    mut state: ResMut<NextState<StageEditState>>,
+    mut commands: Commands,
+    mut state: ResMut<NextState<GameState>>,
     mut stage_name: ResMut<StageName>,
     page_params: PageParams,
     stage_cells: Query<(&Transform, &Gimmick, &PageIndex), (With<Transform>, With<Gimmick>, With<PageIndex>)>,
@@ -43,11 +44,14 @@ fn save_ui(
 
                 ui.vertical_centered(|ui| {
                     if ui.button("Cancel").clicked() {
-                        state.set(StageEditState::Idle);
+                        commands.insert_resource(StageEditStatus::Idle);
+                        return;
                     }
 
                     if ui.button("Save").clicked() {
                         save_stage(stage_name.0.clone(), page_params, &stage_cells);
+                        commands.remove_resource::<StageEditStatus>();
+                        state.set(GameState::Title);
                     }
                 });
             });
