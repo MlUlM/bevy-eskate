@@ -1,5 +1,5 @@
 use bevy::app::{App, Plugin, Update};
-use bevy::prelude::{Component, Condition, in_state, IntoSystemConfigs, Res};
+use bevy::prelude::{Component, Condition, in_state, IntoSystemConfigs, NextState, Res, ResMut};
 
 use crate::gama_state::GameState;
 use crate::stage::playing::phase::PlayingPhase;
@@ -30,8 +30,10 @@ fn run_if_goaled_phase(
 }
 
 
-fn goaled() {
-    println!("GOALED");
+fn goaled(
+    mut state: ResMut<NextState<GameState>>
+) {
+    state.set(GameState::StageSelect);
 }
 
 

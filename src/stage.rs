@@ -1,8 +1,9 @@
 use bevy::app::{App, Plugin};
 use bevy::math::Vec2;
-use bevy::prelude::{Commands, OnEnter, Res};
+use bevy::prelude::{Commands, OnEnter, OnExit, Res};
 
 use crate::assets::gimmick::GimmickAssets;
+use crate::destroy_all;
 use crate::gama_state::GameState;
 use crate::loader::json::{StageCell, StageJson};
 use crate::page::page_count::PageCount;
@@ -24,7 +25,8 @@ impl Plugin for StagePlugin {
     fn build(&self, app: &mut App) {
         app
             .add_plugins(PlayingPlugin)
-            .add_systems(OnEnter(GameState::Stage), setup);
+            .add_systems(OnEnter(GameState::Stage), setup)
+            .add_systems(OnExit(GameState::Stage), destroy_all);
     }
 }
 

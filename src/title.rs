@@ -35,6 +35,7 @@ fn setup(
         .with_children(|parent| {
             parent.spawn(ButtonBundle {
                 button: Default::default(),
+                background_color: BackgroundColor::from(Color::DARK_GRAY),
                 ..default()
             })
                 .insert(Name::new("Stage"))
@@ -60,10 +61,10 @@ fn setup(
 
             parent.spawn(ButtonBundle {
                 button: Default::default(),
+                background_color: BackgroundColor::from(Color::DARK_GRAY),
                 ..default()
             })
-                .insert(Name::new("StageEditButton"))
-                .insert(StageEditButton)
+                .insert((Name::new("StageEditButton"), StageEditButton))
                 .with_children(|parent| {
                     parent.spawn(TextBundle {
                         text: Text::from_section(
@@ -91,7 +92,7 @@ fn input(
     stage_edit: Query<&Interaction, (With<Interaction>, With<StageEditButton>)>,
 ) {
     if stage_edit.single().pressed() {
-        state.set(GameState::StageEdit);
+        state.set(GameState::BeforeStageEdit);
     } else if stage.single().pressed() {
         state.set(GameState::StageSelect);
     }
@@ -123,7 +124,7 @@ impl ScreenBundle {
                     column_gap: Val::Px(10.),
                     ..default()
                 },
-                background_color: BackgroundColor::from(Color::NONE),
+                background_color: BackgroundColor::from(Color::BLACK),
                 ..default()
             },
             name: Name::new("Screen"),

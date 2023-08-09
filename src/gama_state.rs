@@ -7,6 +7,8 @@ pub enum GameState {
 
     Title,
 
+    BeforeStageEdit,
+
     StageEdit,
 
     StageSelect,

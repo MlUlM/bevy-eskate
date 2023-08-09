@@ -1,3 +1,4 @@
+use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy_undo::prelude::EntityCommandsOnUndoExt;
 
@@ -17,8 +18,25 @@ impl Plugin for StageEditPickedPlugin {
     fn build(&self, app: &mut App) {
         app
             .add_systems(Update, update
-                .run_if(in_state(GameState::StageEdit).and_then(resource_exists_and_equals(StageEditStatus::PickedItem))),
+                .run_if(in_state(GameState::StageEdit)
+                    .and_then(resource_exists_and_equals(StageEditStatus::Idle))
+                    .and_then(any_with_component::<OnPick>())
+                ),
             );
+    }
+}
+
+
+#[derive(SystemParam, Debug)]
+pub struct PickedItemsParam<'w, 's> {
+    picked_items: Query<'w, 's, Entity, With<OnPick>>,
+}
+
+impl<'w, 's> PickedItemsParam<'w, 's> {
+    pub fn remove_picked(&self, commands: &mut Commands) {
+        for entity in self.picked_items.iter() {
+            commands.entity(entity).remove::<OnPick>();
+        }
     }
 }
 
@@ -27,13 +45,12 @@ fn update(
     assets: Res<GimmickAssets>,
     page_index: Res<PageIndex>,
     mut commands: Commands,
-    item: Query<(Entity, &OnPick), With<OnPick>>,
+    item: Query<&OnPick, With<OnPick>>,
     floors: Query<(&Transform, &SpriteInteraction), (With<SpriteInteraction>, With<Floor>)>,
 ) {
     for (transform, interaction, ) in floors.iter() {
         if interaction.is_clicked() {
-            let (on_pick_entity, OnPick(tag)) = item.single();
-            commands.entity(on_pick_entity).remove::<OnPick>();
+            let OnPick(tag) = item.single();
 
             commands
                 .spawn(gimmick_iem_sprite_bundle(front(transform.translation), tag.image(&assets)))
@@ -42,7 +59,6 @@ fn update(
                 .on_undo(|cmd, entity| {
                     cmd.entity(entity).despawn();
                 });
-            commands.insert_resource(StageEditStatus::Idle);
             return;
         }
     }

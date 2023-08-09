@@ -1,9 +1,14 @@
-use bevy::prelude::*;
+use bevy::app::{App, Plugin, Update};
+use bevy::input::Input;
+use bevy::prelude::{Button, Commands, Component, Condition, Entity, In, in_state, Interaction, IntoSystem, IntoSystemConfigs, KeyCode, Query, Res, resource_exists_and_equals, UiImage, With};
 
+use crate::assets::gimmick::GimmickAssets;
+use crate::cursor::GameCursor;
 use crate::gama_state::GameState;
 use crate::page::page_param::PageParams;
 use crate::stage::playing::gimmick::GimmickItem;
 use crate::stage::playing::gimmick::tag::GimmickTag;
+use crate::stage_edit::pick::PickedItemsParam;
 use crate::stage_edit::StageEditStatus;
 
 #[derive(Debug, Copy, Clone, Component, Eq, PartialEq)]
@@ -61,20 +66,25 @@ fn click_pick_item(
     InputStatus::None
 }
 
+
 fn input_handle(
     In(input_status): In<InputStatus>,
+    assets: Res<GimmickAssets>,
     mut commands: Commands,
     mut page_params: PageParams,
+    picked_item_params: PickedItemsParam,
+    mut cursor: Query<&mut UiImage, With<GameCursor>>,
 ) {
     match input_status {
         InputStatus::PickedItem(entity, gimmick_tag) => {
-            commands.insert_resource(StageEditStatus::PickedItem);
+            picked_item_params.remove_picked(&mut commands);
+            cursor.single_mut().texture = gimmick_tag.image(&assets);
             commands
                 .entity(entity)
                 .insert(OnPick(gimmick_tag));
         }
         InputStatus::SaveStage => {
-             commands.insert_resource(StageEditStatus::SaveStage);
+            commands.insert_resource(StageEditStatus::SaveStage);
         }
         InputStatus::NextPage => {
             page_params.next_page();

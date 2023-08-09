@@ -4,7 +4,6 @@ use bevy::ecs::system::EntityCommands;
 use bevy::math::Vec2;
 use bevy::prelude::{Bundle, Commands, Component, Image, Transform};
 use bevy::sprite::SpriteBundle;
-
 use crate::assets::gimmick::GimmickAssets;
 use crate::page::page_index::PageIndex;
 use crate::stage::playing::gimmick::{GimmickCollide, move_linear, new_gimmick_sprite_bundle};

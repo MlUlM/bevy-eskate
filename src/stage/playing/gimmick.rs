@@ -4,7 +4,7 @@ use bevy::math::{Vec2, Vec3};
 use bevy::prelude::{Component, default, Image, Sprite, SpriteBundle, Transform};
 use bevy_tweening::{Animator, EaseMethod, Tween};
 use bevy_tweening::lens::TransformPositionLens;
-use bevy_undo::prelude::TweenOnUndoExt;
+use bevy_undo::prelude::{EntityCommandsOnUndoExt, TweenOnUndoExt};
 
 use crate::stage::playing::gimmick::tag::GimmickTag;
 use crate::stage::playing::move_direction::MoveDirection;
@@ -24,10 +24,6 @@ pub const GIMMICK_HEIGHT: f32 = 50.;
 // pub const GIMMICK_HEIGHT_PX: Val = Val::Px(GIMMICK_HEIGHT);
 pub const GIMMICK_SIZE_VEC3: Vec3 = Vec3::new(GIMMICK_WIDTH, GIMMICK_HEIGHT, 0.);
 pub const GIMMICK_SIZE: Vec2 = Vec2::new(GIMMICK_WIDTH, GIMMICK_HEIGHT);
-
-
-#[derive(Default, Debug, Hash, Copy, Clone, Component)]
-pub struct Stage;
 
 #[derive(Default, Debug, Hash, Copy, Clone, Component)]
 pub struct Floor;
@@ -69,12 +65,29 @@ impl GimmickCollide for MoveToFront {
         player_transform: &mut Transform,
         direction: &MoveDirection,
     ) {
+        let start = player_transform.translation;
+        let end = collide_transform.translation + direction.reverse().vec3();
         move_linear(
             commands,
             player_transform,
-            collide_transform.translation + direction.reverse().vec3(),
-            |entry_cmd| {
-                entry_cmd
+            end,
+            move |entity_cmd| {
+                entity_cmd
+                    .on_undo_with_entity_commands(move |cmd| {
+                        let tween = Tween::new(
+                            EaseMethod::Linear,
+                            std::time::Duration::from_secs(1),
+                            TransformPositionLens {
+                                start: end,
+                                end: start,
+                            },
+                        )
+                            .spawn_processing_and_remove_completed(cmd.commands());
+
+                        cmd.insert(Animator::new(tween));
+                    });
+
+                entity_cmd
                     .commands()
                     .insert_resource(StageStatus::playing_idle());
             },
@@ -89,11 +102,13 @@ pub(crate) fn move_linear(
     end: Vec3,
     on_completed: impl Fn(&mut EntityCommands) + Send + Sync + 'static + Clone,
 ) {
+    let start = player_transform.translation;
+    let distance = end.distance(start) / 0.3;
     let tween = Tween::new(
         EaseMethod::Linear,
-        std::time::Duration::from_secs(1),
+        std::time::Duration::from_millis(distance as u64),
         TransformPositionLens {
-            start: player_transform.translation,
+            start,
             end,
         },
     )

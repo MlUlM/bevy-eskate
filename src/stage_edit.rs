@@ -38,7 +38,7 @@ pub struct StageEditPlugin;
 impl Plugin for StageEditPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(OnEnter(GameState::StageEdit), setup_stage_editor)
+            .add_systems(OnEnter(GameState::StageEdit), setup)
             .add_systems(OnExit(GameState::StageEdit), destroy_all)
             .add_systems(Update, change_visible_gimmicks.run_if(in_state(GameState::StageEdit).and_then(resource_changed::<PageIndex>())))
             .add_plugins((
@@ -50,14 +50,14 @@ impl Plugin for StageEditPlugin {
 }
 
 
-fn setup_stage_editor(
+fn setup(
     page_count: Res<PageCount>,
     mut commands: Commands,
     assets: Res<GimmickAssets>,
 ) {
     commands.init_resource::<StageEditStatus>();
-    commands.insert_resource(PageIndex::default());
-    commands.insert_resource(StageName::default());
+    commands.init_resource::<PageIndex>();
+    commands.init_resource::<StageName>();
 
     ui(&mut commands, &assets);
     spawn_stage_gimmicks(&mut commands, &assets, page_count.0);
@@ -212,7 +212,7 @@ mod tests {
 
     use crate::assets::gimmick::GimmickAssets;
     use crate::page::page_index::PageIndex;
-    use crate::stage_edit::{change_visible_gimmicks, PageCount, setup_stage_editor, StageEditStatus};
+    use crate::stage_edit::{change_visible_gimmicks, PageCount, setup, StageEditStatus};
 
     pub(crate) fn new_stage_edit_app(page_count: PageCount) -> App {
         let mut app = App::new();
@@ -228,7 +228,7 @@ mod tests {
     #[test]
     fn setup_stage_editor_page2() {
         let mut app = App::new();
-        app.add_systems(Startup, setup_stage_editor);
+        app.add_systems(Startup, setup);
         app.insert_resource(PageCount::new(2));
         app.insert_resource(GimmickAssets::default());
 
@@ -253,7 +253,7 @@ mod tests {
     #[test]
     fn changed_invisible_page1_gimmicks() {
         let mut app = App::new();
-        app.add_systems(Startup, setup_stage_editor);
+        app.add_systems(Startup, setup);
         app.add_systems(Update, change_visible_gimmicks.run_if(
             resource_changed::<PageIndex>()
         ));
@@ -283,7 +283,7 @@ mod tests {
     #[test]
     fn changed_visible_gimmicks_if_page_index_changed() {
         let mut app = App::new();
-        app.add_systems(Startup, setup_stage_editor);
+        app.add_systems(Startup, setup);
         app.add_systems(Update, change_visible_gimmicks.run_if(
             resource_changed::<PageIndex>()
         ));

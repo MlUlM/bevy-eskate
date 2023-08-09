@@ -10,6 +10,7 @@ use crate::page::page_index::PageIndex;
 use crate::stage::playing::gimmick::{GimmickCollide, GimmickItemSpawned, MoveToFront};
 use crate::stage::playing::gimmick::goal::GoalCollide;
 use crate::stage::playing::gimmick::next_page::NextPageCollide;
+use crate::stage::playing::phase::goaled::PlayingGoaledPlugin;
 use crate::stage::playing::phase::next_page::PlayingNextPagePlugin;
 
 pub mod phase;
@@ -27,7 +28,8 @@ impl Plugin for PlayingPlugin {
             .add_plugins((
                 PlayingIdlePlugin,
                 PlayingStartMovePlugin,
-                PlayingNextPagePlugin
+                PlayingNextPagePlugin,
+                PlayingGoaledPlugin
             ))
             .register_component_as::<dyn GimmickCollide, MoveToFront>()
             .register_component_as::<dyn GimmickCollide, NextPageCollide>()

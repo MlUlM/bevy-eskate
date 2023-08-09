@@ -4,9 +4,10 @@ use bevy::app::{App, PluginGroup, Update};
 use bevy::asset::Assets;
 use bevy::DefaultPlugins;
 use bevy::input::Input;
-use bevy::prelude::{Camera, Camera2dBundle, Commands, Component, Entity, KeyCode, OnExit, Query, Res, ResMut, Without};
+use bevy::prelude::{Camera, Camera2dBundle, Commands, Component, Entity, in_state, IntoSystemConfigs, KeyCode, not, OnExit, Query, Res, ResMut, With, Without};
+use bevy::ui::{Style, Val};
 use bevy::utils::default;
-use bevy::window::{Window, WindowPlugin, WindowResolution};
+use bevy::window::{Cursor, Window, WindowPlugin, WindowResolution};
 use bevy_asset_loader::prelude::{LoadingState, LoadingStateAppExt};
 use bevy_common_assets::json::JsonAssetPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
@@ -17,10 +18,11 @@ use bevy_undo::prelude::UndoPlugin;
 use crate::assets::font::FontAssets;
 use crate::assets::gimmick::GimmickAssets;
 use crate::assets::stage::{BuiltInStages, StageAssets};
+use crate::before_stage_edit::BeforeStageEditPlugin;
 use crate::button::SpriteButtonPlugin;
+use crate::cursor::{GameCursor, GameCursorBundle};
 use crate::gama_state::GameState;
 use crate::loader::json::StageJson;
-use crate::page::page_count::PageCount;
 use crate::stage::StagePlugin;
 use crate::stage_edit::StageEditPlugin;
 use crate::stage_select::StageSelectPlugin;
@@ -37,12 +39,18 @@ mod stage;
 mod assets;
 mod extension;
 mod stage_select;
+mod before_stage_edit;
+mod cursor;
 
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
+                cursor: Cursor {
+                    visible: false,
+                    ..default()
+                },
                 resolution: WindowResolution::new(1431., 971.),
                 title: "Eskate".to_string(),
                 ..default()
@@ -64,12 +72,16 @@ fn main() {
         ))
         .add_plugins((
             TitlePlugin,
+            BeforeStageEditPlugin,
             StageEditPlugin,
             StageSelectPlugin,
             StagePlugin
         ))
         .add_systems(OnExit(GameState::AssetLoading), setup)
-        .add_systems(Update, undo_if_input_keycode)
+        .add_systems(Update, (
+            undo_if_input_keycode,
+            move_cursor
+        ).run_if(not(in_state(GameState::AssetLoading))))
         .add_state::<GameState>()
         .run();
 }
@@ -88,6 +100,8 @@ fn setup(
         .spawn(Camera2dBundle::default())
         .insert(MainCamera);
 
+    commands.spawn(GameCursorBundle::new());
+
     let stages = stages
         .stages
         .iter()
@@ -95,7 +109,6 @@ fn setup(
         .collect::<Vec<StageJson>>();
 
     commands.insert_resource(BuiltInStages(stages));
-    commands.insert_resource(PageCount::new(2));
 }
 
 
@@ -109,7 +122,17 @@ fn undo_if_input_keycode(
 }
 
 
-pub(crate) fn destroy_all(mut commands: Commands, entities: Query<Entity, (Without<Camera>, Without<Window>)>) {
+fn move_cursor(window: Query<&Window>, mut cursor: Query<&mut Style, With<GameCursor>>) {
+    let window: &Window = window.single();
+    if let Some(position) = window.cursor_position() {
+        let mut img_style = cursor.single_mut();
+        img_style.left = Val::Px(position.x);
+        img_style.top = Val::Px(position.y);
+    }
+}
+
+
+pub(crate) fn destroy_all(mut commands: Commands, entities: Query<Entity, (Without<Camera>, Without<Window>, Without<GameCursor>)>) {
     for entity in &entities {
         commands.entity(entity).despawn();
     }
