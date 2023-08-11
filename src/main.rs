@@ -50,7 +50,7 @@ fn main() {
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 cursor: Cursor {
-                    visible: true,
+                    visible: false,
                     ..default()
                 },
                 resolution: WindowResolution::new(800., 800.),

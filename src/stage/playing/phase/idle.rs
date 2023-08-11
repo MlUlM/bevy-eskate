@@ -38,13 +38,13 @@ fn input_move(
         commands.insert_resource(StageStatus::playing_start_move(direction));
     };
 
-    if keys.just_pressed(KeyCode::Left) {
+    if keys.any_just_pressed([KeyCode::Left, KeyCode::A])  {
         emit(MoveDirection::Left);
-    } else if keys.just_pressed(KeyCode::Up) {
+    } else if keys.any_just_pressed([KeyCode::Up, KeyCode::W]) {
         emit(MoveDirection::Up);
-    } else if keys.just_pressed(KeyCode::Right) {
+    } else if keys.any_just_pressed([KeyCode::Right, KeyCode::D]) {
         emit(MoveDirection::Right);
-    } else if keys.just_pressed(KeyCode::Down) {
+    } else if keys.any_just_pressed([KeyCode::Down, KeyCode::S]) {
         emit(MoveDirection::Down);
     }
 }

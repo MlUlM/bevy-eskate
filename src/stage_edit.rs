@@ -161,7 +161,9 @@ fn footer(parent: &mut ChildBuilder, asset: &GimmickAssets) {
                 GimmickTag::Player,
                 GimmickTag::Rock,
                 GimmickTag::NextPage,
-                GimmickTag::Goal
+                GimmickTag::Goal,
+                GimmickTag::Stop,
+                GimmickTag::IceBox
             ]);
         });
 }

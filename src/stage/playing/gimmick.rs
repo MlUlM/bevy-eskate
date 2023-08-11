@@ -48,7 +48,6 @@ pub(crate) fn undo_move_linear(
     end: Vec3,
 ) {
     let distance = start.distance(end) * 0.3;
-
     let tween = Tween::new(
         EaseMethod::Linear,
         std::time::Duration::from_millis(distance as u64),
