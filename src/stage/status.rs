@@ -47,6 +47,12 @@ impl StageStatus {
 
 
     #[inline(always)]
+    pub const fn playing_previous_page() -> Self {
+        Self::Playing(PlayingPhase::PreviousPage)
+    }
+
+
+    #[inline(always)]
     pub const fn playing_goaled() -> Self {
         Self::Playing(PlayingPhase::Goaled)
     }

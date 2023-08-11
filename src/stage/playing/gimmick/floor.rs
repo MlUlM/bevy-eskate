@@ -1,32 +1,25 @@
-use bevy::asset::Handle;
-use bevy::core::Name;
-use bevy::math::Vec2;
-use bevy::prelude::{Bundle, Commands, Image};
-use bevy::sprite::SpriteBundle;
+use bevy::math::Vec3;
+use bevy::prelude::{Bundle, Commands};
 
 use crate::assets::gimmick::GimmickAssets;
 use crate::page::page_index::PageIndex;
-use crate::stage::playing::gimmick::new_floor_sprite_bundle;
+use crate::stage::playing::gimmick::core::GimmickCoreBundle;
 
 #[derive(Bundle, Clone)]
 pub struct FloorBundle {
-    sprite: SpriteBundle,
-    page_index: PageIndex,
-    name: Name,
+    core: GimmickCoreBundle,
 }
 
 
 impl FloorBundle {
     #[inline]
     pub fn new(
-        texture: Handle<Image>,
-        pos: Vec2,
+        assets: &GimmickAssets,
+        pos: Vec3,
         page_index: PageIndex,
     ) -> Self {
         Self {
-            sprite: new_floor_sprite_bundle(texture, pos),
-            page_index,
-            name: Name::new("Floor"),
+            core: GimmickCoreBundle::new("Floor", assets.floor.clone(), pos, page_index)
         }
     }
 }
@@ -36,9 +29,9 @@ impl FloorBundle {
 pub fn spawn(
     commands: &mut Commands,
     assets: &GimmickAssets,
-    pos: Vec2,
+    pos: Vec3,
     page_index: PageIndex,
 ) {
-    commands.spawn(FloorBundle::new(assets.floor.clone(), pos, page_index));
+    commands.spawn(FloorBundle::new(assets, pos, page_index));
 }
 

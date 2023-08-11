@@ -51,7 +51,6 @@ fn update(
     for (transform, interaction, ) in floors.iter() {
         if interaction.is_clicked() {
             let OnPick(tag) = item.single();
-
             commands
                 .spawn(gimmick_iem_sprite_bundle(front(transform.translation), tag.image(&assets)))
                 .insert(Gimmick(*tag))

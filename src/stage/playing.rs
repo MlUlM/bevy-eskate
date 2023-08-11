@@ -7,15 +7,16 @@ use phase::start_move::PlayingStartMovePlugin;
 
 use crate::gama_state::GameState;
 use crate::page::page_index::PageIndex;
-use crate::stage::playing::gimmick::{GimmickCollide, GimmickItemSpawned, MoveToFront};
-use crate::stage::playing::gimmick::goal::GoalCollide;
-use crate::stage::playing::gimmick::next_page::NextPageCollide;
+use crate::stage::playing::gimmick::GimmickItemSpawned;
+use crate::stage::playing::move_position::{MovePosition, MoveToFront, MoveUp};
 use crate::stage::playing::phase::goaled::PlayingGoaledPlugin;
 use crate::stage::playing::phase::next_page::PlayingNextPagePlugin;
 
 pub mod phase;
 pub mod move_direction;
 pub mod gimmick;
+pub mod collide;
+mod move_position;
 
 
 #[derive(Default, Clone)]
@@ -31,9 +32,8 @@ impl Plugin for PlayingPlugin {
                 PlayingNextPagePlugin,
                 PlayingGoaledPlugin
             ))
-            .register_component_as::<dyn GimmickCollide, MoveToFront>()
-            .register_component_as::<dyn GimmickCollide, NextPageCollide>()
-            .register_component_as::<dyn GimmickCollide, GoalCollide>()
+            .register_component_as::<dyn MovePosition, MoveToFront>()
+            .register_component_as::<dyn MovePosition, MoveUp>()
             .add_systems(
                 Update,
                 change_gimmicks_visible.run_if(in_state(GameState::Stage).and_then(resource_changed::<PageIndex>())),

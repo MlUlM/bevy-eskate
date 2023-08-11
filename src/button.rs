@@ -52,7 +52,7 @@ fn update(
 ) {
     if mouse.just_pressed(MouseButton::Left) {
         clicked(window, camera, buttons);
-    } else if mouse.just_released(MouseButton::Left) {
+    } else if mouse.pressed(MouseButton::Left) || mouse.just_released(MouseButton::Left) {
         releases(buttons);
     }
 }

@@ -35,10 +35,12 @@ impl<'w> PageParams<'w> {
 
 
     #[inline]
-    pub fn previous_page(&mut self) {
+    pub fn previous_page(&mut self) -> PageIndex {
         if self.can_previous_page() {
             *self.page_index -= 1;
         }
+
+        *self.page_index
     }
 
 

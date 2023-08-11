@@ -1,64 +1,33 @@
-use bevy::asset::Handle;
-use bevy::core::Name;
-use bevy::ecs::system::EntityCommands;
-use bevy::math::Vec2;
-use bevy::prelude::{Bundle, Commands, Component, Image, Transform};
-use bevy::sprite::SpriteBundle;
+use bevy::math::Vec3;
+use bevy::prelude::{Bundle, Commands, Component};
+
 use crate::assets::gimmick::GimmickAssets;
 use crate::page::page_index::PageIndex;
-use crate::stage::playing::gimmick::{GimmickCollide, move_linear, new_gimmick_sprite_bundle};
-use crate::stage::playing::move_direction::MoveDirection;
-use crate::stage::status::StageStatus;
+use crate::stage::playing::collide::GimmickCollide;
+use crate::stage::playing::gimmick::core::{GimmickCollideBundle, GimmickCoreBundle};
+use crate::stage::playing::move_position::MoveUp;
 
 #[derive(Default, Debug, Copy, Clone, Component)]
 pub struct NextPageProcessing;
 
 
-#[derive(Default, Debug, Copy, Clone, Component)]
-pub struct NextPageCollide;
-
-
-impl GimmickCollide for NextPageCollide {
-    fn move_player(
-        &self,
-        collide_cmd: &mut EntityCommands,
-        collide_transform: &mut Transform,
-        player_transform: &mut Transform,
-        _direction: &MoveDirection,
-    ) {
-        move_linear(
-            collide_cmd,
-            player_transform,
-            collide_transform.translation,
-            |commands| {
-                commands.commands().insert_resource(StageStatus::playing_next_page());
-            },
-        )
-    }
-}
-
-
 #[derive(Bundle, Clone)]
 pub struct NextPageBundle {
-    sprite: SpriteBundle,
-    collide: NextPageCollide,
-    page_index: PageIndex,
-    name: Name,
+    core: GimmickCoreBundle,
+    collide: GimmickCollideBundle<MoveUp>,
 }
 
 
 impl NextPageBundle {
     #[inline]
     pub fn new(
-        texture: Handle<Image>,
-        pos: Vec2,
+        assets: &GimmickAssets,
+        pos: Vec3,
         page_index: PageIndex,
     ) -> Self {
         Self {
-            sprite: new_gimmick_sprite_bundle(texture, pos),
-            collide: NextPageCollide,
-            page_index,
-            name: Name::new("NextPage"),
+            core: GimmickCoreBundle::new("NextPage", assets.next_page.clone(), pos, page_index),
+            collide: GimmickCollideBundle::new(GimmickCollide::NextPage),
         }
     }
 }
@@ -68,8 +37,8 @@ impl NextPageBundle {
 pub fn spawn(
     commands: &mut Commands,
     assets: &GimmickAssets,
-    pos: Vec2,
+    pos: Vec3,
     page_index: PageIndex,
 ) {
-    commands.spawn(NextPageBundle::new(assets.next_page.clone(), pos, page_index));
+    commands.spawn(NextPageBundle::new(assets, pos, page_index));
 }

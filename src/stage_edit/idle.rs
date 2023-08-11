@@ -1,6 +1,6 @@
 use bevy::app::{App, Plugin, Update};
 use bevy::input::Input;
-use bevy::prelude::{Button, Commands, Component, Condition, Entity, In, in_state, Interaction, IntoSystem, IntoSystemConfigs, KeyCode, Query, Res, resource_exists_and_equals, UiImage, With};
+use bevy::prelude::{Button, Commands, Component, Condition, Entity, In, in_state, Interaction, IntoSystem, IntoSystemConfigs, KeyCode, NextState, Query, Res, ResMut, resource_exists_and_equals, UiImage, With};
 
 use crate::assets::gimmick::GimmickAssets;
 use crate::cursor::GameCursor;
@@ -26,6 +26,7 @@ enum InputStatus {
     SaveStage,
     NextPage,
     PreviousPage,
+    Settings,
 }
 
 
@@ -33,7 +34,7 @@ impl Plugin for StageEditIdlePlugin {
     fn build(&self, app: &mut App) {
         app
             .add_systems(Update,
-                         click_pick_item
+                         user_input
                              .pipe(input_handle)
                              .run_if(in_state(GameState::StageEdit).and_then(resource_exists_and_equals(StageEditStatus::Idle))),
             );
@@ -41,10 +42,14 @@ impl Plugin for StageEditIdlePlugin {
 }
 
 
-fn click_pick_item(
+fn user_input(
     key: Res<Input<KeyCode>>,
     items: Query<(Entity, &Interaction, &GimmickItem), (With<Button>, With<GimmickItem>)>,
 ) -> InputStatus {
+    if key.just_pressed(KeyCode::Escape) {
+        return InputStatus::Settings;
+    }
+
     if key.just_pressed(KeyCode::Return) {
         return InputStatus::SaveStage;
     }
@@ -69,11 +74,12 @@ fn click_pick_item(
 
 fn input_handle(
     In(input_status): In<InputStatus>,
-    assets: Res<GimmickAssets>,
+    mut state: ResMut<NextState<GameState>>,
     mut commands: Commands,
     mut page_params: PageParams,
-    picked_item_params: PickedItemsParam,
     mut cursor: Query<&mut UiImage, With<GameCursor>>,
+    assets: Res<GimmickAssets>,
+    picked_item_params: PickedItemsParam,
 ) {
     match input_status {
         InputStatus::PickedItem(entity, gimmick_tag) => {
@@ -91,6 +97,10 @@ fn input_handle(
         }
         InputStatus::PreviousPage => {
             page_params.previous_page();
+        }
+        InputStatus::Settings => {
+            // TODO: Show settings panel
+            state.set(GameState::BeforeStageEdit);
         }
         _ => {}
     }

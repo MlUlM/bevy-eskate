@@ -8,35 +8,45 @@ use crate::assets::gimmick::GimmickAssets;
 #[derive(Eq, PartialEq, Debug, Copy, Clone, Deserialize, Serialize)]
 pub enum GimmickTag {
     Floor,
+    Wall,
+    WallSide,
     Rock,
     Player,
     NextPage,
     Goal,
+    Stop,
+    IceBox,
 }
 
 
 impl GimmickTag {
-    #[inline]
-    #[allow(unused)]
-    pub fn asset_path(&self) -> String {
-        match self {
-            GimmickTag::Floor => "gimmick/floor.png".to_string(),
-            GimmickTag::Rock => "gimmick/rock.png".to_string(),
-            GimmickTag::Player => "gimmick/player.png".to_string(),
-            GimmickTag::NextPage => "gimmick/next_page.png".to_string(),
-            GimmickTag::Goal => "gimmick/goal.png".to_string()
-        }
-    }
+    // #[inline]
+    // #[allow(unused)]
+    // pub fn asset_path(&self) -> String {
+    //     match self {
+    //         GimmickTag::Floor => "gimmick/floor.png".to_string(),
+    //         GimmickTag::Wall => "gimmick/wall.png".to_string(),
+    //         GimmickTag::WallSide => "gimmick/wall_side.png".to_string(),
+    //         GimmickTag::Rock => "gimmick/rock.png".to_string(),
+    //         GimmickTag::Player => "gimmick/player.png".to_string(),
+    //         GimmickTag::NextPage => "gimmick/next_page.png".to_string(),
+    //         GimmickTag::Goal => "gimmick/goal.png".to_string()
+    //     }
+    // }
 
 
     #[inline]
     pub fn image(&self, assets: &GimmickAssets) -> Handle<Image> {
         match self {
             GimmickTag::Floor => assets.floor.clone(),
+            GimmickTag::Wall => assets.wall.clone(),
+            GimmickTag::WallSide => assets.wall_side.clone(),
             GimmickTag::Rock => assets.rock.clone(),
             GimmickTag::Player => assets.player.clone(),
             GimmickTag::NextPage => assets.next_page.clone(),
-            GimmickTag::Goal => assets.goal.clone()
+            GimmickTag::Goal => assets.goal.clone(),
+            GimmickTag::Stop => assets.stop.clone(),
+            GimmickTag::IceBox => assets.ice_box.clone()
         }
     }
 

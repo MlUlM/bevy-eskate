@@ -1,10 +1,12 @@
 #![allow(clippy::type_complexity)]
 
+extern crate core;
+
 use bevy::app::{App, PluginGroup, Update};
 use bevy::asset::Assets;
 use bevy::DefaultPlugins;
 use bevy::input::Input;
-use bevy::prelude::{Camera, Camera2dBundle, Commands, Component, Entity, in_state, IntoSystemConfigs, KeyCode, not, OnExit, Query, Res, ResMut, With, Without};
+use bevy::prelude::{AssetServer, Camera, Camera2dBundle, Commands, Component, Entity, in_state, IntoSystemConfigs, KeyCode, not, OnExit, Query, Res, ResMut, UiImage, With, Without};
 use bevy::ui::{Style, Val};
 use bevy::utils::default;
 use bevy::window::{Cursor, Window, WindowPlugin, WindowResolution};
@@ -48,10 +50,10 @@ fn main() {
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 cursor: Cursor {
-                    visible: false,
+                    visible: true,
                     ..default()
                 },
-                resolution: WindowResolution::new(1431., 971.),
+                resolution: WindowResolution::new(800., 800.),
                 title: "Eskate".to_string(),
                 ..default()
             }),
@@ -95,12 +97,13 @@ fn setup(
     mut commands: Commands,
     stages: Res<StageAssets>,
     stage: ResMut<Assets<StageJson>>,
+    asset_server: Res<AssetServer>,
 ) {
     commands
         .spawn(Camera2dBundle::default())
         .insert(MainCamera);
 
-    commands.spawn(GameCursorBundle::new());
+    commands.spawn(GameCursorBundle::new(&asset_server));
 
     let stages = stages
         .stages
@@ -126,9 +129,18 @@ fn move_cursor(window: Query<&Window>, mut cursor: Query<&mut Style, With<GameCu
     let window: &Window = window.single();
     if let Some(position) = window.cursor_position() {
         let mut img_style = cursor.single_mut();
-        img_style.left = Val::Px(position.x);
-        img_style.top = Val::Px(position.y);
+        img_style.left = Val::Px(position.x - 15.);
+        img_style.top = Val::Px(position.y - 15.);
     }
+}
+
+
+#[inline]
+pub(crate) fn reset_game_cursor(
+    asset_server: Res<AssetServer>,
+    mut cursor: Query<&mut UiImage, With<GameCursor>>,
+) {
+    cursor.single_mut().texture = asset_server.load("game_cursor.png");
 }
 
 

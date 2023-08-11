@@ -4,11 +4,9 @@ use bevy::math::{Vec2, Vec3};
 use bevy::prelude::{Component, default, Image, Sprite, SpriteBundle, Transform};
 use bevy_tweening::{Animator, EaseMethod, Tween};
 use bevy_tweening::lens::TransformPositionLens;
-use bevy_undo::prelude::{EntityCommandsOnUndoExt, TweenOnUndoExt};
+use bevy_undo::prelude::TweenOnUndoExt;
 
 use crate::stage::playing::gimmick::tag::GimmickTag;
-use crate::stage::playing::move_direction::MoveDirection;
-use crate::stage::status::StageStatus;
 
 pub mod floor;
 pub mod player;
@@ -16,10 +14,14 @@ pub mod rock;
 pub mod next_page;
 pub mod tag;
 pub mod goal;
+pub mod wall;
+pub mod stop;
+pub mod ice_box;
+pub mod core;
 
 
-pub const GIMMICK_WIDTH: f32 = 50.;
-pub const GIMMICK_HEIGHT: f32 = 50.;
+pub const GIMMICK_WIDTH: f32 = 32.;
+pub const GIMMICK_HEIGHT: f32 = 32.;
 // pub const GIMMICK_WIDTH_PX: Val = Val::Px(GIMMICK_WIDTH);
 // pub const GIMMICK_HEIGHT_PX: Val = Val::Px(GIMMICK_HEIGHT);
 pub const GIMMICK_SIZE_VEC3: Vec3 = Vec3::new(GIMMICK_WIDTH, GIMMICK_HEIGHT, 0.);
@@ -40,69 +42,33 @@ pub struct GimmickItemSpawned(pub GimmickTag);
 pub struct Gimmick(pub GimmickTag);
 
 
-#[bevy_trait_query::queryable]
-pub trait GimmickCollide {
-    fn move_player(
-        &self,
-        collide_cmd: &mut EntityCommands,
-        collide_transform: &mut Transform,
-        player_transform: &mut Transform,
-        direction: &MoveDirection,
-    );
-}
+pub(crate) fn undo_move_linear(
+    cmd: &mut EntityCommands,
+    start: Vec3,
+    end: Vec3,
+) {
+    let distance = start.distance(end) * 0.3;
 
-
-#[derive(Default, Debug, Copy, Clone, Component)]
-pub struct MoveToFront;
-
-
-impl GimmickCollide for MoveToFront {
-    #[inline]
-    fn move_player(
-        &self,
-        commands: &mut EntityCommands,
-        collide_transform: &mut Transform,
-        player_transform: &mut Transform,
-        direction: &MoveDirection,
-    ) {
-        let start = player_transform.translation;
-        let end = collide_transform.translation + direction.reverse().vec3();
-        move_linear(
-            commands,
-            player_transform,
+    let tween = Tween::new(
+        EaseMethod::Linear,
+        std::time::Duration::from_millis(distance as u64),
+        TransformPositionLens {
+            start,
             end,
-            move |entity_cmd| {
-                entity_cmd
-                    .on_undo_with_entity_commands(move |cmd| {
-                        let tween = Tween::new(
-                            EaseMethod::Linear,
-                            std::time::Duration::from_secs(1),
-                            TransformPositionLens {
-                                start: end,
-                                end: start,
-                            },
-                        )
-                            .spawn_processing_and_remove_completed(cmd.commands());
+        },
+    )
+        .spawn_processing_and_remove_completed(cmd.commands());
 
-                        cmd.insert(Animator::new(tween));
-                    });
-
-                entity_cmd
-                    .commands()
-                    .insert_resource(StageStatus::playing_idle());
-            },
-        )
-    }
+    cmd.insert(Animator::new(tween));
 }
 
 
 pub(crate) fn move_linear(
     commands: &mut EntityCommands,
-    player_transform: &mut Transform,
+    start: Vec3,
     end: Vec3,
     on_completed: impl Fn(&mut EntityCommands) + Send + Sync + 'static + Clone,
 ) {
-    let start = player_transform.translation;
     let distance = end.distance(start) / 0.3;
     let tween = Tween::new(
         EaseMethod::Linear,
@@ -122,18 +88,9 @@ pub(crate) fn move_linear(
 #[inline]
 pub(crate) fn new_gimmick_sprite_bundle(
     texture: Handle<Image>,
-    pos: Vec2,
+    pos: Vec3,
 ) -> SpriteBundle {
-    create_gimmick_sprite_bundle(texture, Vec3::new(pos.x, pos.y, 1.))
-}
-
-
-#[inline]
-pub(crate) fn new_floor_sprite_bundle(
-    texture: Handle<Image>,
-    pos: Vec2,
-) -> SpriteBundle {
-    create_gimmick_sprite_bundle(texture, Vec3::new(pos.x, pos.y, 0.))
+    create_gimmick_sprite_bundle(texture, pos)
 }
 
 
@@ -143,7 +100,7 @@ pub(crate) fn create_gimmick_sprite_bundle(
 ) -> SpriteBundle {
     SpriteBundle {
         sprite: Sprite {
-            custom_size: Some(Vec2::new(50., 50.)),
+            custom_size: Some(Vec2::new(GIMMICK_WIDTH, GIMMICK_HEIGHT)),
             ..default()
         },
         texture,

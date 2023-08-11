@@ -1,5 +1,6 @@
+use bevy::asset::AssetServer;
 use bevy::core::Name;
-use bevy::prelude::{Bundle, Component, ImageBundle, PositionType};
+use bevy::prelude::{Bundle, Component, ImageBundle, PositionType, UiImage};
 use bevy::ui::{Style, Val, ZIndex};
 use bevy::utils::default;
 
@@ -17,7 +18,7 @@ pub struct GameCursorBundle {
 
 impl GameCursorBundle {
     #[inline]
-    pub fn new() -> Self {
+    pub fn new(asset_server: &AssetServer) -> Self {
         Self {
             image: ImageBundle {
                 style: Style {
@@ -26,6 +27,7 @@ impl GameCursorBundle {
                     height: Val::Px(30.),
                     ..default()
                 },
+                image: UiImage::new(asset_server.load("game_cursor.png")),
                 z_index: ZIndex::Global(15),
                 ..default()
             },

@@ -1,5 +1,5 @@
 use bevy::app::{App, Plugin};
-use bevy::math::Vec2;
+use bevy::math::Vec3;
 use bevy::prelude::{Commands, OnEnter, OnExit, Res};
 
 use crate::assets::gimmick::GimmickAssets;
@@ -9,7 +9,8 @@ use crate::loader::json::{StageCell, StageJson};
 use crate::page::page_count::PageCount;
 use crate::page::page_index::PageIndex;
 use crate::stage::playing::{gimmick, PlayingPlugin};
-use crate::stage::playing::gimmick::{floor, player, rock};
+use crate::stage::playing::gimmick::{floor, player, rock, stop, wall};
+use crate::stage::playing::gimmick::ice_box::IceBoxBundle;
 use crate::stage::playing::gimmick::tag::GimmickTag;
 use crate::stage::status::StageStatus;
 
@@ -24,6 +25,7 @@ pub struct StagePlugin;
 impl Plugin for StagePlugin {
     fn build(&self, app: &mut App) {
         app
+
             .add_plugins(PlayingPlugin)
             .add_systems(OnEnter(GameState::Stage), setup)
             .add_systems(OnExit(GameState::Stage), destroy_all);
@@ -55,11 +57,17 @@ fn spawn_gimmick(
     stage_cell: &StageCell,
     page_index: PageIndex,
 ) {
-    let pos = Vec2::new(stage_cell.x, stage_cell.y);
-    for tag in stage_cell.tags.iter() {
+    for (z, tag) in stage_cell.tags.iter().enumerate() {
+        let pos = Vec3::new(stage_cell.x, stage_cell.y, f32::from(z as u8));
         match tag {
             GimmickTag::Floor => {
                 floor::spawn(commands, assets, pos, page_index);
+            }
+            GimmickTag::Wall => {
+                wall::spawn(commands, assets, pos, page_index);
+            }
+            GimmickTag::WallSide => {
+                wall::spawn_side(commands, assets, pos, page_index);
             }
             GimmickTag::Rock => {
                 rock::spawn(commands, assets, pos, page_index);
@@ -72,6 +80,12 @@ fn spawn_gimmick(
             }
             GimmickTag::Goal => {
                 gimmick::goal::spawn(commands, assets, pos, page_index)
+            }
+            GimmickTag::Stop => {
+                commands.spawn(stop::StopCollide::new(assets, pos, page_index));
+            }
+            GimmickTag::IceBox => {
+                commands.spawn(IceBoxBundle::new(assets, pos, page_index));
             }
         }
     }

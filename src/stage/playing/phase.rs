@@ -18,6 +18,8 @@ pub enum PlayingPhase {
 
     NextPage,
 
+    PreviousPage,
+
     Goaled,
 }
 

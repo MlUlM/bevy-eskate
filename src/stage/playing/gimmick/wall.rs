@@ -1,5 +1,6 @@
+use bevy::asset::Handle;
 use bevy::math::Vec3;
-use bevy::prelude::{Bundle, Commands};
+use bevy::prelude::{Bundle, Commands, Image};
 
 use crate::assets::gimmick::GimmickAssets;
 use crate::page::page_index::PageIndex;
@@ -8,21 +9,21 @@ use crate::stage::playing::gimmick::core::{GimmickCollideBundle, GimmickCoreBund
 use crate::stage::playing::move_position::MoveToFront;
 
 #[derive(Bundle, Clone)]
-pub struct RockBundle {
+pub struct WallBundle {
     core: GimmickCoreBundle,
     collide: GimmickCollideBundle<MoveToFront>,
 }
 
 
-impl RockBundle {
+impl WallBundle {
     #[inline]
     pub fn new(
-        assets: &GimmickAssets,
+        texture: Handle<Image>,
         pos: Vec3,
         page_index: PageIndex,
     ) -> Self {
         Self {
-            core: GimmickCoreBundle::new("Rock", assets.rock.clone(), pos, page_index),
+            core: GimmickCoreBundle::new("Wall", texture, pos, page_index),
             collide: GimmickCollideBundle::new(GimmickCollide::StopMove),
         }
     }
@@ -36,7 +37,18 @@ pub fn spawn(
     pos: Vec3,
     page_index: PageIndex,
 ) {
-    commands.spawn(RockBundle::new(assets, pos, page_index));
+    commands.spawn(WallBundle::new(assets.wall.clone(), pos, page_index));
+}
+
+
+#[inline]
+pub fn spawn_side(
+    commands: &mut Commands,
+    assets: &GimmickAssets,
+    pos: Vec3,
+    page_index: PageIndex,
+) {
+    commands.spawn(WallBundle::new(assets.wall_side.clone(), pos, page_index));
 }
 
 

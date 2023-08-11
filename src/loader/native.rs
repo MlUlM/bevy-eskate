@@ -1,5 +1,5 @@
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use bevy_trait_query::imports::Component;
 
@@ -33,14 +33,18 @@ impl StageLoadable for NativeStageLoader {
 
 
 fn eskate_dir_path() -> GameResult<PathBuf> {
-    let base = directories::BaseDirs::new().unwrap();
-    let dir = base.data_local_dir();
-    let dir = dir.join("eskate");
-    if fs::metadata(&dir).is_err() {
-        fs::create_dir(&dir)?;
-    }
+    let path = r#"D://Programing/Rust/eskate/assets/stages"#;
 
-    Ok(dir)
+    Ok(Path::new(path).to_path_buf())
+
+    // let base = directories::BaseDirs::new().unwrap();
+    // let dir = base.data_local_dir();
+    // let dir = dir.join("eskate");
+    // if fs::metadata(&dir).is_err() {
+    //     fs::create_dir(&dir)?;
+    // }
+    //
+    // Ok(dir)
 }
 
 

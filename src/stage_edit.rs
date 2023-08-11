@@ -1,13 +1,13 @@
 use bevy::prelude::*;
 use bevy::utils::default;
 
+use crate::{destroy_all, reset_game_cursor};
 use crate::assets::gimmick::GimmickAssets;
 use crate::button::{SpriteButton, SpriteInteraction};
-use crate::destroy_all;
 use crate::gama_state::GameState;
 use crate::page::page_count::PageCount;
 use crate::page::page_index::PageIndex;
-use crate::stage::playing::gimmick::{Floor, Gimmick, GIMMICK_SIZE, GimmickItem};
+use crate::stage::playing::gimmick::{Floor, Gimmick, GIMMICK_HEIGHT, GIMMICK_SIZE, GIMMICK_WIDTH, GimmickItem};
 use crate::stage::playing::gimmick::tag::GimmickTag;
 use crate::stage_edit::idle::StageEditIdlePlugin;
 use crate::stage_edit::pick::StageEditPickedPlugin;
@@ -18,8 +18,6 @@ use crate::stage_edit::stage_name::StageName;
 pub enum StageEditStatus {
     #[default]
     Idle,
-
-    PickedItem,
 
     SaveStage,
 }
@@ -39,7 +37,7 @@ impl Plugin for StageEditPlugin {
     fn build(&self, app: &mut App) {
         app
             .add_systems(OnEnter(GameState::StageEdit), setup)
-            .add_systems(OnExit(GameState::StageEdit), destroy_all)
+            .add_systems(OnExit(GameState::StageEdit), (destroy_all, reset_game_cursor))
             .add_systems(Update, change_visible_gimmicks.run_if(in_state(GameState::StageEdit).and_then(resource_changed::<PageIndex>())))
             .add_plugins((
                 StageEditIdlePlugin,
@@ -55,9 +53,9 @@ fn setup(
     mut commands: Commands,
     assets: Res<GimmickAssets>,
 ) {
-    commands.init_resource::<StageEditStatus>();
-    commands.init_resource::<PageIndex>();
-    commands.init_resource::<StageName>();
+    commands.insert_resource(StageEditStatus::default());
+    commands.insert_resource(PageIndex::default());
+    commands.insert_resource(StageName::default());
 
     ui(&mut commands, &assets);
     spawn_stage_gimmicks(&mut commands, &assets, page_count.0);
@@ -92,14 +90,15 @@ fn spawn_stage_gimmicks(
         for x in 0..=24u8 {
             for y in 0..=12u8 {
                 if x == 0 || y == 0 || x == 24 || y == 12 {
-                    let x = f32::from(x) * 50. - 12. * 50.;
-                    let y = f32::from(y) * 50. - 3.5 * 50.;
+                    let tag = if (x == 0 || x == 24) && 0 < y { GimmickTag::WallSide } else { GimmickTag::Wall };
+                    let x = f32::from(x) * GIMMICK_WIDTH - 12. * GIMMICK_WIDTH;
+                    let y = f32::from(y) * GIMMICK_HEIGHT - 3.5 * GIMMICK_HEIGHT;
                     commands
-                        .spawn(gimmick_iem_sprite_bundle(Vec3::new(x, y, 0.), GimmickTag::Rock.image(assets)))
-                        .insert((Gimmick(GimmickTag::Rock), SpriteButton, SpriteInteraction::None, page_index));
+                        .spawn(gimmick_iem_sprite_bundle(Vec3::new(x, y, 0.), tag.image(assets)))
+                        .insert((Gimmick(tag), SpriteButton, SpriteInteraction::None, page_index));
                 } else {
-                    let x = f32::from(x) * 50. - 12. * 50.;
-                    let y = f32::from(y) * 50. - 3.5 * 50.;
+                    let x = f32::from(x) * GIMMICK_WIDTH - 12. * GIMMICK_WIDTH;
+                    let y = f32::from(y) * GIMMICK_HEIGHT - 3.5 * GIMMICK_HEIGHT;
                     commands
                         .spawn(gimmick_iem_sprite_bundle(Vec3::new(x, y, 0.), GimmickTag::Floor.image(assets)))
                         .insert((Floor, Gimmick(GimmickTag::Floor), SpriteButton, SpriteInteraction::None, page_index));
@@ -175,7 +174,7 @@ fn spawn_footer_gimmick_item(
 ) {
     parent.spawn(ButtonBundle {
         style: Style {
-            height: Val::Percent(80.),
+            height: Val::Px(GIMMICK_WIDTH),
             aspect_ratio: Some(1.),
             margin: UiRect::left(Val::Px(20.)),
             ..default()
