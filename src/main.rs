@@ -20,6 +20,7 @@ use bevy_undo::prelude::UndoPlugin;
 use crate::assets::font::FontAssets;
 use crate::assets::gimmick::GimmickAssets;
 use crate::assets::stage::{BuiltInStages, StageAssets};
+use crate::assets::stage_edit_assets::StageEditAssets;
 use crate::before_stage_edit::BeforeStageEditPlugin;
 use crate::button::SpriteButtonPlugin;
 use crate::cursor::{GameCursor, GameCursorBundle};
@@ -53,7 +54,7 @@ fn main() {
                     visible: false,
                     ..default()
                 },
-                resolution: WindowResolution::new(800., 800.),
+                resolution: WindowResolution::new(1200., 800.),
                 title: "Eskate".to_string(),
                 ..default()
             }),
@@ -65,6 +66,7 @@ fn main() {
         .add_collection_to_loading_state::<_, GimmickAssets>(GameState::AssetLoading)
         .add_collection_to_loading_state::<_, FontAssets>(GameState::AssetLoading)
         .add_collection_to_loading_state::<_, StageAssets>(GameState::AssetLoading)
+        .add_collection_to_loading_state::<_, StageEditAssets>(GameState::AssetLoading)
         .add_plugins((
             JsonAssetPlugin::<StageJson>::new(&["stage.json"]),
             WorldInspectorPlugin::new(),

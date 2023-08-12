@@ -13,9 +13,11 @@ use crate::stage::playing::gimmick::{floor, player, rock, stop, wall};
 use crate::stage::playing::gimmick::ice_box::IceBoxBundle;
 use crate::stage::playing::gimmick::tag::GimmickTag;
 use crate::stage::status::StageStatus;
+use crate::stage::ui::spawn_item_area;
 
 mod status;
 pub mod playing;
+mod ui;
 
 
 #[derive(Default, Clone)]
@@ -25,7 +27,6 @@ pub struct StagePlugin;
 impl Plugin for StagePlugin {
     fn build(&self, app: &mut App) {
         app
-
             .add_plugins(PlayingPlugin)
             .add_systems(OnEnter(GameState::Stage), setup)
             .add_systems(OnExit(GameState::Stage), destroy_all);
@@ -34,9 +35,9 @@ impl Plugin for StagePlugin {
 
 
 fn setup(
+      mut commands: Commands,
     assets: Res<GimmickAssets>,
     stage: Res<StageJson>,
-    mut commands: Commands,
 ) {
     commands.insert_resource(PageIndex::new(0));
     commands.insert_resource(StageStatus::default());
@@ -44,11 +45,15 @@ fn setup(
 
     for (page_index, page) in stage.pages.iter().enumerate() {
         let page_index = PageIndex(page_index);
+        spawn_item_area(&mut commands, &assets, page.items.clone(), page_index);
+
         for stage_cell in page.cells.iter() {
             spawn_gimmick(&mut commands, &assets, stage_cell, page_index);
         }
     }
 }
+
+
 
 
 fn spawn_gimmick(

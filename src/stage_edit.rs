@@ -1,18 +1,19 @@
 use bevy::prelude::*;
-use bevy::utils::default;
 
 use crate::{destroy_all, reset_game_cursor};
 use crate::assets::gimmick::GimmickAssets;
+use crate::assets::stage_edit_assets::StageEditAssets;
 use crate::button::{SpriteButton, SpriteInteraction};
 use crate::gama_state::GameState;
 use crate::page::page_count::PageCount;
 use crate::page::page_index::PageIndex;
-use crate::stage::playing::gimmick::{Floor, Gimmick, GIMMICK_HEIGHT, GIMMICK_SIZE, GIMMICK_WIDTH, GimmickItem};
+use crate::stage::playing::gimmick::{Floor, Gimmick, GIMMICK_HEIGHT, GIMMICK_WIDTH};
 use crate::stage::playing::gimmick::tag::GimmickTag;
 use crate::stage_edit::idle::StageEditIdlePlugin;
 use crate::stage_edit::pick::StageEditPickedPlugin;
 use crate::stage_edit::save::StageEditSavePlugin;
 use crate::stage_edit::stage_name::StageName;
+use crate::stage_edit::ui::{gimmick_iem_sprite_bundle, spawn_ui};
 
 #[derive(Default, Debug, Hash, Eq, PartialEq, Copy, Clone, Resource)]
 pub enum StageEditStatus {
@@ -20,6 +21,8 @@ pub enum StageEditStatus {
     Idle,
 
     SaveStage,
+
+    AddingItem,
 }
 
 
@@ -27,6 +30,7 @@ mod idle;
 mod pick;
 mod save;
 mod stage_name;
+pub mod ui;
 
 
 #[derive(Default, Debug, PartialEq, Copy, Clone)]
@@ -49,15 +53,16 @@ impl Plugin for StageEditPlugin {
 
 
 fn setup(
-    page_count: Res<PageCount>,
     mut commands: Commands,
+    page_count: Res<PageCount>,
     assets: Res<GimmickAssets>,
+    edit_assets: Res<StageEditAssets>,
 ) {
     commands.insert_resource(StageEditStatus::default());
     commands.insert_resource(PageIndex::default());
     commands.insert_resource(StageName::default());
 
-    ui(&mut commands, &assets);
+    spawn_ui(&mut commands, &assets, &edit_assets, *page_count);
     spawn_stage_gimmicks(&mut commands, &assets, page_count.0);
 }
 
@@ -66,7 +71,6 @@ fn change_visible_gimmicks(
     page_index: Res<PageIndex>,
     mut gimmicks: Query<(&PageIndex, &mut Visibility), (
         With<PageIndex>,
-        With<Gimmick>,
         With<Visibility>
     )>,
 ) {
@@ -105,104 +109,6 @@ fn spawn_stage_gimmicks(
                 };
             }
         }
-    }
-}
-
-
-fn ui(commands: &mut Commands, asset: &GimmickAssets) {
-    commands.spawn(NodeBundle {
-        style: Style {
-            width: Val::Percent(100.),
-            height: Val::Percent(100.),
-            flex_direction: FlexDirection::Column,
-            ..default()
-        },
-        ..default()
-    })
-        .with_children(|parent| {
-            parent.spawn(NodeBundle {
-                style: Style {
-                    height: Val::Percent(90.),
-                    width: Val::Percent(100.),
-                    ..default()
-                },
-                ..default()
-            });
-
-            footer(parent, asset);
-        });
-}
-
-
-macro_rules! spawn_footer_items {
-    ($parent: expr, $asset: expr, items => [
-        $($tag: expr),*
-    ]) => {
-        $(
-        spawn_footer_gimmick_item($parent, $asset, $tag);
-        )*
-    };
-}
-
-fn footer(parent: &mut ChildBuilder, asset: &GimmickAssets) {
-    parent.spawn(NodeBundle {
-        style: Style {
-            height: Val::Percent(10.),
-            width: Val::Percent(100.),
-            align_items: AlignItems::Center,
-            column_gap: Val::Px(10.),
-            ..default()
-        },
-        background_color: BackgroundColor(Color::BLACK),
-        ..default()
-    })
-        .with_children(|parent| {
-            spawn_footer_items!(parent, asset, items => [
-                GimmickTag::Player,
-                GimmickTag::Rock,
-                GimmickTag::NextPage,
-                GimmickTag::Goal,
-                GimmickTag::Stop,
-                GimmickTag::IceBox
-            ]);
-        });
-}
-
-
-fn spawn_footer_gimmick_item(
-    parent: &mut ChildBuilder,
-    asset: &GimmickAssets,
-    gimmick_tag: GimmickTag,
-) {
-    parent.spawn(ButtonBundle {
-        style: Style {
-            height: Val::Px(GIMMICK_WIDTH),
-            aspect_ratio: Some(1.),
-            margin: UiRect::left(Val::Px(20.)),
-            ..default()
-        },
-        image: gimmick_tag.ui_image(asset),
-        ..default()
-    })
-        .insert(GimmickItem(gimmick_tag));
-}
-
-
-#[inline]
-pub(crate) fn front(pos: Vec3) -> Vec3 {
-    Vec3::new(pos.x, pos.y, 1.)
-}
-
-
-pub(crate) fn gimmick_iem_sprite_bundle(pos: Vec3, texture: Handle<Image>) -> SpriteBundle {
-    SpriteBundle {
-        transform: Transform::from_xyz(pos.x, pos.y, pos.z),
-        texture,
-        sprite: Sprite {
-            custom_size: Some(GIMMICK_SIZE),
-            ..default()
-        },
-        ..default()
     }
 }
 

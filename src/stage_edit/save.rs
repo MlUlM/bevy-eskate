@@ -19,7 +19,7 @@ use crate::loader::{StageLoadable, StageLoader};
 use crate::loader::json::{Page, StageCell, StageJson};
 use crate::page::page_index::PageIndex;
 use crate::page::page_param::PageParams;
-use crate::stage::playing::gimmick::Gimmick;
+use crate::stage::playing::gimmick::{Gimmick, GimmickItem};
 use crate::stage::playing::gimmick::tag::GimmickTag;
 use crate::stage_edit::StageEditStatus;
 
@@ -40,7 +40,7 @@ impl Plugin for StageEditSavePlugin {
             )
             .add_systems(Update, (
                 input_key,
-                click_handle,
+                save_system,
                 despawn_ui_event
             )
                 .run_if(in_state(GameState::StageEdit).and_then(resource_exists_and_equals(StageEditStatus::SaveStage))),
@@ -189,6 +189,7 @@ struct SaveParams<'w, 's> {
     despawn_writer: EventWriter<'w, SaveUiDespawnEvent>,
     page_params: PageParams<'w>,
     stage_name: Query<'w, 's, &'static mut Text, With<StageNameText>>,
+    stage_items: Query<'w, 's, (&'static GimmickItem, &'static PageIndex)>,
     stage_cells: Query<'w, 's, (&'static Transform, &'static Gimmick, &'static PageIndex), (With<Transform>, With<Gimmick>, With<PageIndex>)>,
 }
 
@@ -197,7 +198,8 @@ impl<'w, 's> SaveParams<'w, 's> {
     #[inline]
     fn save_stage(&mut self) {
         let stage_name = self.stage_name.single().sections[0].value.clone();
-        save_stage(stage_name, &self.page_params, &self.stage_cells);
+        save_stage(stage_name, &self.page_params, &self.stage_items, &self.stage_cells);
+
         self.state.set(GameState::Title);
         self.despawn_writer.send(SaveUiDespawnEvent);
     }
@@ -242,7 +244,7 @@ fn despawn_ui_event(
 }
 
 
-fn click_handle(
+fn save_system(
     mut commands: Commands,
     mut save_params: SaveParams,
     button_params: ButtonsParams,
@@ -282,10 +284,11 @@ fn input_key(
 fn save_stage(
     stage_name: String,
     page_params: &PageParams,
+    stage_items: &Query<(&GimmickItem, &PageIndex)>,
     stage_cells: &Query<(&Transform, &Gimmick, &PageIndex), (With<Transform>, With<Gimmick>, With<PageIndex>)>,
 ) {
     let pages = (0..page_params.page_count())
-        .map(|page_index| create_page_asset(page_index, stage_cells))
+        .map(|page_index| create_page_asset(page_index, stage_items, stage_cells))
         .collect::<Vec<Page>>();
 
     let json = StageJson {
@@ -298,6 +301,7 @@ fn save_stage(
 
 fn create_page_asset(
     page_index: usize,
+    stage_items: &Query<(&GimmickItem, &PageIndex)>,
     stage_cells: &Query<(&Transform, &Gimmick, &PageIndex), (With<Transform>, With<Gimmick>, With<PageIndex>)>,
 ) -> Page {
     let mut cells = Vec::new();
@@ -305,9 +309,15 @@ fn create_page_asset(
     for (pos, tags) in cells_in_page(page_index, stage_cells) {
         cells.push(StageCell::new(Vec2::new(pos.x as f32, pos.y as f32), tags));
     }
+    let items = stage_items
+        .iter()
+        .filter(|(_, idx)| ***idx == page_index)
+        .map(|(tag, _)| tag.0)
+        .collect::<Vec<GimmickTag>>();
 
     Page {
-        cells
+        cells,
+        items,
     }
 }
 

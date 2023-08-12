@@ -1,14 +1,18 @@
+use bevy::ecs::bundle::DynamicBundle;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
-use bevy_undo::prelude::EntityCommandsOnUndoExt;
+use bevy_undo::prelude::{EntityCommandsOnUndoBuilderExt, EntityCommandsOnUndoExt};
 
 use crate::assets::gimmick::GimmickAssets;
 use crate::button::SpriteInteraction;
+use crate::extension::InteractionCondition;
 use crate::gama_state::GameState;
 use crate::page::page_index::PageIndex;
-use crate::stage::playing::gimmick::{Floor, Gimmick};
-use crate::stage_edit::{front, gimmick_iem_sprite_bundle, StageEditStatus};
+use crate::stage::playing::gimmick::{Floor, Gimmick, GimmickItem};
+use crate::stage_edit::{gimmick_iem_sprite_bundle, StageEditStatus};
 use crate::stage_edit::idle::OnPick;
+use crate::stage_edit::ui::{front, new_gimmick_ui_image};
+use crate::stage_edit::ui::item_area::{ItemArea, ItemPlusButton};
 
 #[derive(Debug, Default, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct StageEditPickedPlugin;
@@ -17,11 +21,16 @@ pub struct StageEditPickedPlugin;
 impl Plugin for StageEditPickedPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(Update, update
-                .run_if(in_state(GameState::StageEdit)
-                    .and_then(resource_exists_and_equals(StageEditStatus::Idle))
-                    .and_then(any_with_component::<OnPick>())
-                ),
+            .add_systems(
+                Update,
+                (
+                    spawn_gimmick_system,
+                    add_item_system
+                )
+                    .run_if(in_state(GameState::StageEdit)
+                        .and_then(resource_exists_and_equals(StageEditStatus::Idle))
+                        .and_then(any_with_component::<OnPick>())
+                    ),
             );
     }
 }
@@ -41,16 +50,16 @@ impl<'w, 's> PickedItemsParam<'w, 's> {
 }
 
 
-fn update(
+fn spawn_gimmick_system(
+    mut commands: Commands,
     assets: Res<GimmickAssets>,
     page_index: Res<PageIndex>,
-    mut commands: Commands,
-    item: Query<&OnPick, With<OnPick>>,
+    picked: Query<&OnPick, With<OnPick>>,
     floors: Query<(&Transform, &SpriteInteraction), (With<SpriteInteraction>, With<Floor>)>,
 ) {
     for (transform, interaction, ) in floors.iter() {
         if interaction.is_clicked() {
-            let OnPick(tag) = item.single();
+            let OnPick(tag) = picked.single();
             commands
                 .spawn(gimmick_iem_sprite_bundle(front(transform.translation), tag.image(&assets)))
                 .insert(Gimmick(*tag))
@@ -60,6 +69,44 @@ fn update(
                 });
             return;
         }
+    }
+}
+
+
+fn add_item_system(
+    mut commands: Commands,
+    page_index: Res<PageIndex>,
+    mouse: Res<Input<MouseButton>>,
+    assets: Res<GimmickAssets>,
+    picked: Query<&OnPick, With<OnPick>>,
+    item_area: Query<(Entity, &PageIndex), With<ItemArea>>,
+    item_plus: Query<(&Interaction, &PageIndex), With<ItemPlusButton>>,
+) {
+    let Some((interaction, page_index)) = item_plus
+        .iter().find(|(_, idx)| **idx == *page_index) else { return; };
+
+    let Some((item_area, _)) = item_area
+        .iter().find(|(_, idx)| **idx == *page_index) else { return; };
+
+    if mouse.just_pressed(MouseButton::Left) && interaction.pressed() {
+        let OnPick(tag) = picked.single();
+        let mut item = commands.spawn_empty();
+        item
+            .insert(new_gimmick_ui_image(*tag, &assets))
+            .insert(GimmickItem(*tag))
+            .insert(*page_index);
+
+        let item_entity = item.id();
+        commands
+            .entity(item_area)
+            .insert_children(0, &[item_entity])
+            .on_undo_builder()
+            .add_entity(item_entity)
+            .on_undo(|command, (item_area, item)| {
+                command
+                    .entity(item_area)
+                    .remove_children(&[item]);
+            });
     }
 }
 

@@ -16,6 +16,7 @@ pub struct StageJson {
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Page {
     pub cells: Vec<StageCell>,
+    pub items: Vec<GimmickTag>,
 }
 
 
