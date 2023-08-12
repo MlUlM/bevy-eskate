@@ -2,9 +2,15 @@ use bevy::app::{App, Plugin, Update};
 use bevy::input::Input;
 use bevy::prelude::*;
 
+use crate::assets::gimmick::GimmickAssets;
+use crate::cursor::GameCursor;
+use crate::extension::InteractionCondition;
 use crate::gama_state::GameState;
+use crate::mouse_just_pressed_left;
+use crate::page::page_index::PageIndex;
+use crate::stage::playing::gimmick::GimmickItem;
 use crate::stage::playing::move_direction::MoveDirection;
-use crate::stage::playing::phase::PlayingPhase;
+use crate::stage::playing::phase::picked_item::OnPickedItem;
 use crate::stage::status::StageStatus;
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
@@ -14,23 +20,17 @@ pub struct PlayingIdlePlugin;
 impl Plugin for PlayingIdlePlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(Update, input_move
-                .run_if(in_state(GameState::Stage).and_then(run_if_idle)),
+            .add_systems(Update, (
+                input_move_system,
+                picked_item_system.run_if(mouse_just_pressed_left)
+            )
+                .run_if(in_state(GameState::Stage).and_then(resource_exists_and_equals(StageStatus::playing_idle()))),
             );
     }
 }
 
 
-#[inline]
-fn run_if_idle(
-    phase: Res<StageStatus>,
-) -> bool
-{
-    matches!(*phase, StageStatus::Playing(PlayingPhase::Idle))
-}
-
-
-fn input_move(
+fn input_move_system(
     mut commands: Commands,
     keys: Res<Input<KeyCode>>,
 ) {
@@ -38,7 +38,7 @@ fn input_move(
         commands.insert_resource(StageStatus::playing_start_move(direction));
     };
 
-    if keys.any_just_pressed([KeyCode::Left, KeyCode::A])  {
+    if keys.any_just_pressed([KeyCode::Left, KeyCode::A]) {
         emit(MoveDirection::Left);
     } else if keys.any_just_pressed([KeyCode::Up, KeyCode::W]) {
         emit(MoveDirection::Up);
@@ -50,6 +50,27 @@ fn input_move(
 }
 
 
+fn picked_item_system(
+    mut commands: Commands,
+    mut cursor: Query<&mut UiImage, With<GameCursor>>,
+    assets: Res<GimmickAssets>,
+    page_index: Res<PageIndex>,
+    items: Query<(Entity, &Interaction, &GimmickItem, &PageIndex)>,
+) {
+    for (entity, interaction, GimmickItem(tag), _) in items
+        .iter()
+        .filter(|(_, _, _, idx)| **idx == *page_index)
+    {
+        if interaction.pressed() {
+            cursor.single_mut().texture = tag.image(&assets);
+            commands.entity(entity).insert(OnPickedItem);
+            commands.insert_resource(StageStatus::playing_picked_item());
+            return;
+        }
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
     use bevy::app::{App, Update};
@@ -57,7 +78,7 @@ mod tests {
     use bevy::prelude::KeyCode;
 
     use crate::stage::playing::move_direction::MoveDirection;
-    use crate::stage::playing::phase::idle::input_move;
+    use crate::stage::playing::phase::idle::input_move_system;
     use crate::stage::playing::phase::PlayingPhase;
     use crate::stage::status::StageStatus;
     use crate::stage::tests::new_playing_app;
@@ -65,7 +86,7 @@ mod tests {
     #[test]
     fn input_left() {
         let mut app = new_playing_app();
-        app.add_systems(Update, input_move);
+        app.add_systems(Update, input_move_system);
 
         input(&mut app, KeyCode::Left, MoveDirection::Left);
         input(&mut app, KeyCode::Up, MoveDirection::Up);

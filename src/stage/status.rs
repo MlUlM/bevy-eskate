@@ -56,6 +56,12 @@ impl StageStatus {
     pub const fn playing_goaled() -> Self {
         Self::Playing(PlayingPhase::Goaled)
     }
+
+
+    #[inline(always)]
+    pub const fn playing_picked_item() -> Self {
+        Self::Playing(PlayingPhase::PickedItem)
+    }
 }
 
 

@@ -6,6 +6,7 @@ pub mod idle;
 pub mod start_move;
 pub mod next_page;
 pub mod goaled;
+pub mod picked_item;
 
 #[derive(PartialEq, Default, Copy, Clone, Resource, Debug)]
 pub enum PlayingPhase {
@@ -21,6 +22,8 @@ pub enum PlayingPhase {
     PreviousPage,
 
     Goaled,
+
+    PickedItem,
 }
 
 

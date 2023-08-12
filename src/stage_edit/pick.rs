@@ -1,4 +1,3 @@
-use bevy::ecs::bundle::DynamicBundle;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy_undo::prelude::{EntityCommandsOnUndoBuilderExt, EntityCommandsOnUndoExt};

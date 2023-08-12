@@ -22,7 +22,6 @@ pub enum StageEditStatus {
 
     SaveStage,
 
-    AddingItem,
 }
 
 
@@ -118,8 +117,11 @@ mod tests {
     use bevy::prelude::*;
 
     use crate::assets::gimmick::GimmickAssets;
+    use crate::assets::stage_edit_assets::StageEditAssets;
+    use crate::gama_state::GameState;
     use crate::page::page_index::PageIndex;
     use crate::stage_edit::{change_visible_gimmicks, PageCount, setup, StageEditStatus};
+    use crate::stage_edit::idle::UserInputEvent;
 
     pub(crate) fn new_stage_edit_app(page_count: PageCount) -> App {
         let mut app = App::new();
@@ -127,7 +129,9 @@ mod tests {
         app.init_resource::<PageIndex>();
         app.init_resource::<GimmickAssets>();
         app.insert_resource(page_count);
-
+        app.add_event::<UserInputEvent>();
+        app.add_state::<GameState>();
+        app.insert_resource(StageEditAssets::default());
         app
     }
 
@@ -136,6 +140,7 @@ mod tests {
     fn setup_stage_editor_page2() {
         let mut app = App::new();
         app.add_systems(Startup, setup);
+        app.insert_resource(StageEditAssets::default());
         app.insert_resource(PageCount::new(2));
         app.insert_resource(GimmickAssets::default());
 
@@ -166,6 +171,7 @@ mod tests {
         ));
         app.insert_resource(PageCount::new(2));
         app.insert_resource(GimmickAssets::default());
+        app.insert_resource(StageEditAssets::default());
 
         app.update();
 
@@ -196,6 +202,7 @@ mod tests {
         ));
         app.insert_resource(PageCount::new(2));
         app.insert_resource(GimmickAssets::default());
+        app.insert_resource(StageEditAssets::default());
 
         app.update();
 

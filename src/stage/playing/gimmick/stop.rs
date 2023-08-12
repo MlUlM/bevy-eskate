@@ -8,13 +8,13 @@ use crate::stage::playing::gimmick::core::{GimmickCollideBundle, GimmickCoreBund
 use crate::stage::playing::move_position::MoveUp;
 
 #[derive(Bundle)]
-pub struct StopCollide {
+pub struct StopBundle {
     core: GimmickCoreBundle,
     collide: GimmickCollideBundle<MoveUp>,
 }
 
 
-impl StopCollide {
+impl StopBundle {
     #[inline]
     pub fn new(
         assets: &GimmickAssets,

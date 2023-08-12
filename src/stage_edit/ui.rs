@@ -1,7 +1,7 @@
 use bevy::asset::Handle;
 use bevy::hierarchy::{BuildChildren, ChildBuilder};
 use bevy::math::Vec3;
-use bevy::prelude::{AlignItems, BackgroundColor, ButtonBundle, Color, Commands, default, FlexDirection, Image, ImageBundle, JustifyContent, NodeBundle, PositionType, Sprite, SpriteBundle, Style, Transform, UiRect, Val};
+use bevy::prelude::{AlignItems, BackgroundColor, ButtonBundle, Color, Commands, default, FlexDirection, Image, ImageBundle, JustifyContent, NodeBundle, Sprite, SpriteBundle, Style, Transform, UiRect, Val};
 
 use crate::assets::gimmick::GimmickAssets;
 use crate::assets::stage_edit_assets::StageEditAssets;
@@ -18,7 +18,7 @@ pub fn spawn_ui(
     commands: &mut Commands,
     asset: &GimmickAssets,
     edit_assets: &StageEditAssets,
-    page_count: PageCount
+    page_count: PageCount,
 ) {
     commands.spawn(NodeBundle {
         style: Style {
@@ -42,7 +42,7 @@ pub fn spawn_ui(
                 ..default()
             })
                 .with_children(|parent| {
-                    for i in 0..*page_count{
+                    for i in 0..*page_count {
                         spawn_item_area(parent, edit_assets, PageIndex::new(i));
                     }
                 });
@@ -106,13 +106,11 @@ fn spawn_footer_gimmick_item(
 }
 
 
-
-
 pub(crate) fn new_gimmick_ui_image(
     gimmick_tag: GimmickTag,
     asset: &GimmickAssets,
 ) -> ImageBundle {
-    ImageBundle{
+    ImageBundle {
         style: Style {
             height: Val::Px(GIMMICK_HEIGHT),
             width: Val::Px(GIMMICK_WIDTH),

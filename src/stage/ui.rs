@@ -1,13 +1,13 @@
 use bevy::core::Name;
 use bevy::hierarchy::BuildChildren;
-use bevy::prelude::{ChildBuilder, Color, Commands, NodeBundle, Style};
+use bevy::prelude::{ButtonBundle, ChildBuilder, Color, Commands, NodeBundle, Style};
 use bevy::ui::{BackgroundColor, FlexDirection, PositionType, Val};
 use bevy::utils::default;
 
 use crate::assets::gimmick::GimmickAssets;
 use crate::page::page_index::PageIndex;
+use crate::stage::playing::gimmick::{GIMMICK_HEIGHT, GIMMICK_WIDTH, GimmickItem};
 use crate::stage::playing::gimmick::tag::GimmickTag;
-use crate::stage_edit::ui::new_gimmick_ui_image;
 
 pub fn spawn_item_area(
     commands: &mut Commands,
@@ -45,7 +45,27 @@ fn spawn_items(
         .iter()
         .for_each(|item_tag| {
             parent
-                .spawn(new_gimmick_ui_image(*item_tag, gimmick_asset))
-                .insert((Name::new(format!("Item {:?}", item_tag)), page_index));
+                .spawn(new_gimmick_button_bundle(*item_tag, gimmick_asset))
+                .insert((
+                    Name::new(format!("Item {:?}", item_tag)),
+                    page_index,
+                    GimmickItem(*item_tag)
+                ));
         });
+}
+
+
+fn new_gimmick_button_bundle(
+    tag: GimmickTag,
+    assets: &GimmickAssets,
+) -> ButtonBundle {
+    ButtonBundle {
+        style: Style {
+            width: Val::Px(GIMMICK_WIDTH),
+            height: Val::Px(GIMMICK_HEIGHT),
+            ..default()
+        },
+        image: tag.ui_image(assets),
+        ..default()
+    }
 }

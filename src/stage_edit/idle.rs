@@ -1,6 +1,6 @@
 use bevy::app::{App, Plugin, Update};
 use bevy::input::Input;
-use bevy::prelude::{Button, Commands, Component, Condition, Entity, Event, EventReader, EventWriter, in_state, Interaction, IntoSystem, IntoSystemConfigs, KeyCode, NextState, Query, Res, ResMut, resource_exists_and_equals, UiImage, With};
+use bevy::prelude::{Button, Commands, Component, Condition, Entity, Event, EventReader, EventWriter, in_state, Interaction, IntoSystemConfigs, KeyCode, NextState, Query, Res, ResMut, resource_exists_and_equals, UiImage, With};
 
 use crate::assets::gimmick::GimmickAssets;
 use crate::cursor::GameCursor;
@@ -20,8 +20,7 @@ pub struct StageEditIdlePlugin;
 
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Event)]
-enum UserInputEvent {
-    None,
+pub(crate) enum UserInputEvent {
     PickedItem(Entity, GimmickTag),
     SaveStage,
     NextPage,
@@ -113,7 +112,6 @@ fn user_input_event_system(
             // TODO: Show settings panel
             state.set(GameState::BeforeStageEdit);
         }
-        _ => {}
     }
 }
 
@@ -121,21 +119,19 @@ fn user_input_event_system(
 #[cfg(test)]
 mod tests {
     use bevy::app::Update;
-    use bevy::prelude::IntoSystem;
 
     use crate::page::page_index::PageIndex;
     use crate::stage_edit::idle::{user_input_event_system, UserInputEvent};
     use crate::stage_edit::PageCount;
     use crate::stage_edit::tests::new_stage_edit_app;
 
-    fn update_next_page() -> UserInputEvent {
-        UserInputEvent::NextPage
-    }
-
     #[test]
     fn unchanged_next_page_if_last_page() {
         let mut app = new_stage_edit_app(PageCount::new(2));
-        app.add_systems(Update, update_next_page.pipe(user_input_event_system));
+        app.add_systems(Update, user_input_event_system);
+
+        app.world.send_event(UserInputEvent::NextPage);
+
         *app
             .world
             .resource_mut::<PageIndex>()
@@ -154,8 +150,8 @@ mod tests {
     #[test]
     fn increment_page_index() {
         let mut app = new_stage_edit_app(PageCount::new(2));
-        app.add_systems(Update, update_next_page.pipe(user_input_event_system));
-
+        app.add_systems(Update, user_input_event_system);
+        app.world.send_event(UserInputEvent::NextPage);
         app.update();
 
         let page_index = app

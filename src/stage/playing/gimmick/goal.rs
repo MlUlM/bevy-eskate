@@ -1,5 +1,5 @@
 use bevy::math::Vec3;
-use bevy::prelude::{Bundle, Commands};
+use bevy::prelude::Bundle;
 use bevy_trait_query::imports::Component;
 
 use crate::assets::gimmick::GimmickAssets;
@@ -32,18 +32,6 @@ impl GoalBundle {
         }
     }
 }
-
-
-#[inline]
-pub fn spawn(
-    commands: &mut Commands,
-    assets: &GimmickAssets,
-    pos: Vec3,
-    page_index: PageIndex,
-) {
-    commands.spawn(GoalBundle::new(assets, pos, page_index));
-}
-
 
 
 

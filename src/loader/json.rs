@@ -40,20 +40,3 @@ impl StageCell {
 }
 
 
-#[cfg(test)]
-mod tests {
-    use crate::loader::json::{StageCell, StageJson};
-    use crate::stage::playing::gimmick::tag::GimmickTag;
-
-    #[test]
-    fn floor() {
-        let json = r#"{
-                "name": "stage1",
-                "pages" : [{
-                    "cells": [{ "x": 1, "y": 2, "tags": ["Floor"] }]
-                 }]
-            }"#;
-        let stage = serde_json::from_str::<StageJson>(json).unwrap();
-        assert_eq!(stage.pages[0].cells[0], StageCell { x: 1., y: 2., tags: vec![GimmickTag::Floor] });
-    }
-}

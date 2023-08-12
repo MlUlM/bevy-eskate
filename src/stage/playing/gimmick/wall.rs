@@ -1,8 +1,7 @@
 use bevy::asset::Handle;
 use bevy::math::Vec3;
-use bevy::prelude::{Bundle, Commands, Image};
+use bevy::prelude::{Bundle, Image};
 
-use crate::assets::gimmick::GimmickAssets;
 use crate::page::page_index::PageIndex;
 use crate::stage::playing::collide::GimmickCollide;
 use crate::stage::playing::gimmick::core::{GimmickCollideBundle, GimmickCoreBundle};
@@ -27,28 +26,6 @@ impl WallBundle {
             collide: GimmickCollideBundle::new(GimmickCollide::StopMove),
         }
     }
-}
-
-
-#[inline]
-pub fn spawn(
-    commands: &mut Commands,
-    assets: &GimmickAssets,
-    pos: Vec3,
-    page_index: PageIndex,
-) {
-    commands.spawn(WallBundle::new(assets.wall.clone(), pos, page_index));
-}
-
-
-#[inline]
-pub fn spawn_side(
-    commands: &mut Commands,
-    assets: &GimmickAssets,
-    pos: Vec3,
-    page_index: PageIndex,
-) {
-    commands.spawn(WallBundle::new(assets.wall_side.clone(), pos, page_index));
 }
 
 

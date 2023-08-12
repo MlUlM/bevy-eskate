@@ -1,5 +1,5 @@
 use bevy::math::Vec3;
-use bevy::prelude::{Bundle, Commands};
+use bevy::prelude::Bundle;
 
 use crate::assets::gimmick::GimmickAssets;
 use crate::page::page_index::PageIndex;
@@ -26,17 +26,6 @@ impl RockBundle {
             collide: GimmickCollideBundle::new(GimmickCollide::StopMove),
         }
     }
-}
-
-
-#[inline]
-pub fn spawn(
-    commands: &mut Commands,
-    assets: &GimmickAssets,
-    pos: Vec3,
-    page_index: PageIndex,
-) {
-    commands.spawn(RockBundle::new(assets, pos, page_index));
 }
 
 

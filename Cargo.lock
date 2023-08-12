@@ -400,8 +400,9 @@ dependencies = [
 
 [[package]]
 name = "bevy-undo"
-version = "0.1.0"
-source = "git+https://github.com/elm-register/bevy-undo#8c9d2a5827ab04a01c8fad59ac46dd9e11030fb5"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "59eacbd56a7961bbe132bc1d9709de99c8a602cdd8a7a599ab20844a785ea0ef"
 dependencies = [
  "bevy",
  "bevy_tweening",

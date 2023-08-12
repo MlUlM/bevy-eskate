@@ -1,5 +1,5 @@
 use bevy::math::Vec3;
-use bevy::prelude::{Bundle, Commands, Component};
+use bevy::prelude::{Bundle, Component};
 
 use crate::assets::gimmick::GimmickAssets;
 use crate::page::page_index::PageIndex;
@@ -33,12 +33,3 @@ impl NextPageBundle {
 }
 
 
-#[inline]
-pub fn spawn(
-    commands: &mut Commands,
-    assets: &GimmickAssets,
-    pos: Vec3,
-    page_index: PageIndex,
-) {
-    commands.spawn(NextPageBundle::new(assets, pos, page_index));
-}

@@ -6,13 +6,12 @@ use bevy::app::{App, PluginGroup, Update};
 use bevy::asset::Assets;
 use bevy::DefaultPlugins;
 use bevy::input::Input;
-use bevy::prelude::{AssetServer, Camera, Camera2dBundle, Commands, Component, Entity, in_state, IntoSystemConfigs, KeyCode, not, OnExit, Query, Res, ResMut, UiImage, With, Without};
+use bevy::prelude::{AssetServer, Camera, Camera2dBundle, Commands, Component, Entity, in_state, IntoSystemConfigs, KeyCode, MouseButton, not, OnExit, Query, Res, ResMut, UiImage, With, Without};
 use bevy::ui::{Style, Val};
 use bevy::utils::default;
 use bevy::window::{Cursor, Window, WindowPlugin, WindowResolution};
 use bevy_asset_loader::prelude::{LoadingState, LoadingStateAppExt};
 use bevy_common_assets::json::JsonAssetPlugin;
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_tweening::TweeningPlugin;
 use bevy_undo::prelude::*;
 use bevy_undo::prelude::UndoPlugin;
@@ -69,9 +68,10 @@ fn main() {
         .add_collection_to_loading_state::<_, StageEditAssets>(GameState::AssetLoading)
         .add_plugins((
             JsonAssetPlugin::<StageJson>::new(&["stage.json"]),
-            WorldInspectorPlugin::new(),
+            // bevy_inspector_egui::quick::WorldInspectorPlugin::new(),
             TweeningPlugin,
             UndoPlugin,
+            UndoTweenPlugin,
             SpriteButtonPlugin
         ))
         .add_plugins((
@@ -153,3 +153,7 @@ pub(crate) fn destroy_all(mut commands: Commands, entities: Query<Entity, (Witho
 }
 
 
+#[inline]
+pub(crate) fn mouse_just_pressed_left(mouse: Res<Input<MouseButton>>) -> bool {
+    mouse.just_pressed(MouseButton::Left)
+}

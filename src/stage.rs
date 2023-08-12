@@ -8,10 +8,7 @@ use crate::gama_state::GameState;
 use crate::loader::json::{StageCell, StageJson};
 use crate::page::page_count::PageCount;
 use crate::page::page_index::PageIndex;
-use crate::stage::playing::{gimmick, PlayingPlugin};
-use crate::stage::playing::gimmick::{floor, player, rock, stop, wall};
-use crate::stage::playing::gimmick::ice_box::IceBoxBundle;
-use crate::stage::playing::gimmick::tag::GimmickTag;
+use crate::stage::playing::PlayingPlugin;
 use crate::stage::status::StageStatus;
 use crate::stage::ui::spawn_item_area;
 
@@ -35,7 +32,7 @@ impl Plugin for StagePlugin {
 
 
 fn setup(
-      mut commands: Commands,
+    mut commands: Commands,
     assets: Res<GimmickAssets>,
     stage: Res<StageJson>,
 ) {
@@ -54,8 +51,6 @@ fn setup(
 }
 
 
-
-
 fn spawn_gimmick(
     commands: &mut Commands,
     assets: &GimmickAssets,
@@ -64,35 +59,7 @@ fn spawn_gimmick(
 ) {
     for (z, tag) in stage_cell.tags.iter().enumerate() {
         let pos = Vec3::new(stage_cell.x, stage_cell.y, f32::from(z as u8));
-        match tag {
-            GimmickTag::Floor => {
-                floor::spawn(commands, assets, pos, page_index);
-            }
-            GimmickTag::Wall => {
-                wall::spawn(commands, assets, pos, page_index);
-            }
-            GimmickTag::WallSide => {
-                wall::spawn_side(commands, assets, pos, page_index);
-            }
-            GimmickTag::Rock => {
-                rock::spawn(commands, assets, pos, page_index);
-            }
-            GimmickTag::Player => {
-                player::spawn(commands, assets, pos, page_index);
-            }
-            GimmickTag::NextPage => {
-                gimmick::next_page::spawn(commands, assets, pos, page_index);
-            }
-            GimmickTag::Goal => {
-                gimmick::goal::spawn(commands, assets, pos, page_index)
-            }
-            GimmickTag::Stop => {
-                commands.spawn(stop::StopCollide::new(assets, pos, page_index));
-            }
-            GimmickTag::IceBox => {
-                commands.spawn(IceBoxBundle::new(assets, pos, page_index));
-            }
-        }
+        tag.spawn(commands, assets, pos, page_index);
     }
 }
 
