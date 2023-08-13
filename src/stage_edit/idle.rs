@@ -134,17 +134,19 @@ fn user_input_event_system(
 
 #[cfg(test)]
 mod tests {
-    use bevy::app::Update;
+    use bevy::app::{Startup, Update};
 
     use crate::page::page_index::PageIndex;
+    use crate::stage_edit::{PageCount, setup};
     use crate::stage_edit::idle::{user_input_event_system, UserInputEvent};
-    use crate::stage_edit::PageCount;
     use crate::stage_edit::tests::new_stage_edit_app;
 
     #[test]
     fn unchanged_next_page_if_last_page() {
         let mut app = new_stage_edit_app(PageCount::new(2));
         app.add_systems(Update, user_input_event_system);
+        app.add_systems(Startup, setup);
+        app.update();
 
         app.world.send_event(UserInputEvent::NextPage);
 
@@ -166,6 +168,9 @@ mod tests {
     #[test]
     fn increment_page_index() {
         let mut app = new_stage_edit_app(PageCount::new(2));
+        app.add_systems(Startup, setup);
+        app.update();
+
         app.add_systems(Update, user_input_event_system);
         app.world.send_event(UserInputEvent::NextPage);
         app.update();

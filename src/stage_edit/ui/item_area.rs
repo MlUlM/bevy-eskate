@@ -4,9 +4,13 @@ use bevy::prelude::{ButtonBundle, ChildBuilder, NodeBundle, PositionType, UiImag
 use bevy::ui::{AlignItems, FlexDirection, Style, Val};
 use bevy::utils::default;
 use bevy_trait_query::imports::Component;
+use crate::assets::gimmick::GimmickAssets;
 
 use crate::assets::stage_edit_assets::StageEditAssets;
 use crate::page::page_index::PageIndex;
+use crate::stage::playing::gimmick::GimmickItem;
+use crate::stage::playing::gimmick::tag::GimmickTag;
+use crate::stage_edit::ui::new_gimmick_ui_image;
 
 #[derive(Component, Debug, Default, PartialEq, Eq, Copy, Clone)]
 pub struct ItemArea;
@@ -18,8 +22,10 @@ pub struct ItemPlusButton;
 
 pub fn spawn_item_area(
     parent: &mut ChildBuilder,
+    gimmick_assets: &GimmickAssets,
     assets: &StageEditAssets,
     page_index: PageIndex,
+    items: &[GimmickTag],
 ) {
     parent.spawn(
         NodeBundle {
@@ -38,6 +44,12 @@ pub fn spawn_item_area(
     )
         .insert((Name::new("ItemArea"), ItemArea, page_index))
         .with_children(|parent| {
+            for tag in items {
+                parent
+                    .spawn(new_gimmick_ui_image(*tag, gimmick_assets))
+                    .insert(GimmickItem(*tag))
+                    .insert(page_index);
+            }
             spawn_item_plus(parent, assets, page_index);
         });
 }

@@ -1,13 +1,15 @@
 use bevy::prelude::*;
+use itertools::Itertools;
 
 use crate::{destroy_all, reset_game_cursor};
 use crate::assets::gimmick::GimmickAssets;
 use crate::assets::stage_edit_assets::StageEditAssets;
 use crate::button::{SpriteButton, SpriteInteraction};
 use crate::gama_state::GameState;
+use crate::loader::json::StageJson;
 use crate::page::page_count::PageCount;
 use crate::page::page_index::PageIndex;
-use crate::stage::playing::gimmick::{Floor, Gimmick, GIMMICK_HEIGHT, GIMMICK_WIDTH};
+use crate::stage::playing::gimmick::{Floor, Gimmick, GimmickItemSpawned};
 use crate::stage::playing::gimmick::tag::GimmickTag;
 use crate::stage_edit::eraser::StageEditEraserPlugin;
 use crate::stage_edit::idle::StageEditIdlePlugin;
@@ -56,16 +58,17 @@ impl Plugin for StageEditPlugin {
 
 fn setup(
     mut commands: Commands,
-    page_count: Res<PageCount>,
+    stage: Res<StageJson>,
     assets: Res<GimmickAssets>,
     edit_assets: Res<StageEditAssets>,
 ) {
     commands.insert_resource(StageEditStatus::default());
     commands.insert_resource(PageIndex::default());
     commands.insert_resource(StageName::default());
+    commands.insert_resource(PageCount::new(stage.pages.len()));
 
-    spawn_ui(&mut commands, &assets, &edit_assets, *page_count);
-    spawn_stage_gimmicks(&mut commands, &assets, page_count.0);
+    spawn_ui(&mut commands, &assets, &edit_assets, PageCount::new(stage.pages.len()), &stage);
+    spawn_stage_gimmicks(&mut commands, &assets, &stage);
 }
 
 
@@ -89,26 +92,23 @@ fn change_visible_gimmicks(
 fn spawn_stage_gimmicks(
     commands: &mut Commands,
     assets: &GimmickAssets,
-    page_count: usize,
+    stage: &StageJson,
 ) {
-    for page_index in 0..page_count {
+    for (page_index, page) in stage.pages.iter().enumerate() {
         let page_index = PageIndex::new(page_index);
-        for x in 0..=24u8 {
-            for y in 0..=12u8 {
-                if x == 0 || y == 0 || x == 24 || y == 12 {
-                    let tag = if (x == 0 || x == 24) && 0 < y { GimmickTag::WallSide } else { GimmickTag::Wall };
-                    let x = f32::from(x) * GIMMICK_WIDTH - 12. * GIMMICK_WIDTH;
-                    let y = f32::from(y) * GIMMICK_HEIGHT - 3.5 * GIMMICK_HEIGHT;
+
+        for cell in page.cells.iter() {
+            for (index, tag) in cell.tags.iter().sorted().enumerate() {
+                if matches!(tag, GimmickTag::Floor) {
                     commands
-                        .spawn(gimmick_iem_sprite_bundle(Vec3::new(x, y, 0.), tag.image(assets)))
-                        .insert((Gimmick, tag, SpriteButton, SpriteInteraction::None, page_index));
+                        .spawn(gimmick_iem_sprite_bundle(Vec3::new(cell.x, cell.y, index as f32), tag.image(assets)))
+                        .insert((Gimmick, *tag, SpriteButton, SpriteInteraction::None, page_index))
+                        .insert(Floor);
                 } else {
-                    let x = f32::from(x) * GIMMICK_WIDTH - 12. * GIMMICK_WIDTH;
-                    let y = f32::from(y) * GIMMICK_HEIGHT - 3.5 * GIMMICK_HEIGHT;
                     commands
-                        .spawn(gimmick_iem_sprite_bundle(Vec3::new(x, y, 0.), GimmickTag::Floor.image(assets)))
-                        .insert((Floor, Gimmick, GimmickTag::Floor, SpriteButton, SpriteInteraction::None, page_index));
-                };
+                        .spawn(gimmick_iem_sprite_bundle(Vec3::new(cell.x, cell.y, index as f32), tag.image(assets)))
+                        .insert((Gimmick, *tag, SpriteButton, SpriteInteraction::None, page_index, GimmickItemSpawned(*tag)));
+                }
             }
         }
     }
@@ -122,6 +122,7 @@ mod tests {
     use crate::assets::gimmick::GimmickAssets;
     use crate::assets::stage_edit_assets::StageEditAssets;
     use crate::gama_state::GameState;
+    use crate::loader::json::StageJson;
     use crate::page::page_index::PageIndex;
     use crate::stage_edit::{change_visible_gimmicks, PageCount, setup, StageEditStatus};
     use crate::stage_edit::idle::UserInputEvent;
@@ -131,29 +132,28 @@ mod tests {
         app.init_resource::<StageEditStatus>();
         app.init_resource::<PageIndex>();
         app.init_resource::<GimmickAssets>();
-        app.insert_resource(page_count);
+        app.insert_resource(StageJson::empty_stage(page_count, 15, 25));
         app.add_event::<UserInputEvent>();
         app.add_state::<GameState>();
         app.insert_resource(StageEditAssets::default());
+
         app
     }
 
 
     #[test]
     fn setup_stage_editor_page2() {
-        let mut app = App::new();
+        let mut app = new_stage_edit_app(PageCount::new(2));
         app.add_systems(Startup, setup);
-        app.insert_resource(StageEditAssets::default());
-        app.insert_resource(PageCount::new(2));
-        app.insert_resource(GimmickAssets::default());
-
         app.update();
 
         let exists_page_0_gimmicks = app
             .world
             .query::<&PageIndex>()
             .iter(&app.world)
-            .any(|page_index| page_index.0 == 0);
+            .any(|page_index| {
+                page_index.0 == 0
+            });
         assert!(exists_page_0_gimmicks);
 
         let exists_page_1_gimmicks = app
@@ -167,14 +167,12 @@ mod tests {
 
     #[test]
     fn changed_invisible_page1_gimmicks() {
-        let mut app = App::new();
+        let mut app = new_stage_edit_app(PageCount::new(2));
         app.add_systems(Startup, setup);
         app.add_systems(Update, change_visible_gimmicks.run_if(
             resource_changed::<PageIndex>()
         ));
-        app.insert_resource(PageCount::new(2));
-        app.insert_resource(GimmickAssets::default());
-        app.insert_resource(StageEditAssets::default());
+
 
         app.update();
 
@@ -198,14 +196,11 @@ mod tests {
 
     #[test]
     fn changed_visible_gimmicks_if_page_index_changed() {
-        let mut app = App::new();
+        let mut app = new_stage_edit_app(PageCount::new(2));
         app.add_systems(Startup, setup);
         app.add_systems(Update, change_visible_gimmicks.run_if(
             resource_changed::<PageIndex>()
         ));
-        app.insert_resource(PageCount::new(2));
-        app.insert_resource(GimmickAssets::default());
-        app.insert_resource(StageEditAssets::default());
 
         app.update();
 

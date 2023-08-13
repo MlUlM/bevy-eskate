@@ -1,8 +1,10 @@
+use std::fs;
+
 use bevy::app::{App, Plugin, Update};
 use bevy::core::Name;
 use bevy::hierarchy::{BuildChildren, ChildBuilder};
 use bevy::input::Input;
-use bevy::prelude::{ButtonBundle, Color, Commands, Component, default, in_state, IntoSystemConfigs, MouseButton, NextState, NodeBundle, OnEnter, OnExit, Query, Res, ResMut, Style, Text, TextBundle, With};
+use bevy::prelude::{ButtonBundle, Color, Commands, Component, default, EventReader, FileDragAndDrop, in_state, IntoSystemConfigs, MouseButton, NextState, NodeBundle, OnEnter, OnExit, Query, Res, ResMut, Style, Text, TextBundle, With};
 use bevy::text::TextStyle;
 use bevy::ui::{AlignItems, BackgroundColor, Interaction, JustifyContent, Val};
 
@@ -10,6 +12,7 @@ use crate::assets::font::FontAssets;
 use crate::destroy_all;
 use crate::extension::InteractionCondition;
 use crate::gama_state::GameState;
+use crate::loader::json::StageJson;
 use crate::page::page_count::PageCount;
 
 #[derive(Default, Debug, PartialEq, Copy, Clone)]
@@ -21,7 +24,7 @@ impl Plugin for BeforeStageEditPlugin {
         app
             .add_systems(OnEnter(GameState::BeforeStageEdit), setup)
             .add_systems(OnExit(GameState::BeforeStageEdit), destroy_all)
-            .add_systems(Update, interaction
+            .add_systems(Update, (interaction, stage_file_drop_system)
                 .run_if(in_state(GameState::BeforeStageEdit)),
             )
         ;
@@ -53,26 +56,47 @@ fn setup(
 
 fn interaction(
     mut state: ResMut<NextState<GameState>>,
-    mouse: Res<Input<MouseButton>>,
     mut commands: Commands,
     mut page_count: Query<&mut Text, With<PageCountText>>,
+    mouse: Res<Input<MouseButton>>,
     down: Query<&Interaction, (With<Interaction>, With<PageDownButton>)>,
     up: Query<&Interaction, (With<Interaction>, With<PageUpButton>)>,
     start_button: Query<&Interaction, (With<Interaction>, With<StartButton>)>,
 ) {
     if mouse.just_pressed(MouseButton::Left) {
         let count = page_count.single().sections[0].value.parse::<usize>().unwrap();
-        if down.single().pressed() && 0 < count  {
+        if down.single().pressed() && 0 < count {
             page_count.single_mut().sections[0].value = (count - 1).to_string();
         } else if up.single().pressed() {
             page_count.single_mut().sections[0].value = (count + 1).to_string();
         } else if start_button.single().pressed() {
-            commands.insert_resource(PageCount::new(count));
+            commands.insert_resource(StageJson::empty_stage(
+                PageCount::new(count),
+                25,
+                15,
+            ));
+
             state.set(GameState::StageEdit);
         }
     }
 }
 
+
+fn stage_file_drop_system(
+    mut state: ResMut<NextState<GameState>>,
+    mut commands: Commands,
+    mut evr: EventReader<FileDragAndDrop>,
+) {
+    for ev in evr.iter() {
+        if let FileDragAndDrop::DroppedFile { window: _, path_buf } = ev {
+            let json = fs::read_to_string(path_buf).unwrap();
+            let json = serde_json::from_str::<StageJson>(&json).unwrap();
+
+            commands.insert_resource(json);
+            state.set(GameState::StageEdit);
+        }
+    }
+}
 
 #[derive(Default, Debug, PartialEq, Copy, Clone, Component)]
 struct PageCountText;

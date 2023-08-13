@@ -1,10 +1,7 @@
 use bevy::app::{App, Plugin, Update};
 use bevy::input::Input;
 use bevy::prelude::*;
-use bevy_undo::prelude::CommandsOnUndoExt;
 
-use crate::assets::gimmick::GimmickAssets;
-use crate::cursor::GameCursor;
 use crate::extension::InteractionCondition;
 use crate::gama_state::GameState;
 use crate::mouse_just_pressed_left;
@@ -59,7 +56,7 @@ fn picked_item_system(
     page_index: Res<PageIndex>,
     items: Query<(Entity, &Interaction, &GimmickItem, &PageIndex)>,
 ) {
-    for (item_entity, interaction, GimmickItem(tag), _) in items
+    for (item_entity, interaction, GimmickItem(_), _) in items
         .iter()
         .filter(|(_, _, _, idx)| **idx == *page_index)
     {

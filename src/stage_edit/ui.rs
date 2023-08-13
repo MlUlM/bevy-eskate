@@ -7,6 +7,7 @@ use bevy_trait_query::imports::Component;
 
 use crate::assets::gimmick::GimmickAssets;
 use crate::assets::stage_edit_assets::StageEditAssets;
+use crate::loader::json::StageJson;
 use crate::page::page_count::PageCount;
 use crate::page::page_index::PageIndex;
 use crate::stage::playing::gimmick::{GIMMICK_HEIGHT, GIMMICK_SIZE, GIMMICK_WIDTH, GimmickItem};
@@ -21,6 +22,7 @@ pub fn spawn_ui(
     asset: &GimmickAssets,
     edit_assets: &StageEditAssets,
     page_count: PageCount,
+    stage: &StageJson
 ) {
     commands.spawn(NodeBundle {
         style: Style {
@@ -45,7 +47,7 @@ pub fn spawn_ui(
             })
                 .with_children(|parent| {
                     for i in 0..*page_count {
-                        spawn_item_area(parent, edit_assets, PageIndex::new(i));
+                        spawn_item_area(parent, asset, edit_assets, PageIndex::new(i), &stage.pages[i].items);
                     }
                 });
 
@@ -85,7 +87,7 @@ fn footer(parent: &mut ChildBuilder, asset: &GimmickAssets, edit_assets: &StageE
                 GimmickTag::Stop,
                 GimmickTag::IceBox
             ]);
-            
+
             spawn_eraser(parent, edit_assets);
         });
 }

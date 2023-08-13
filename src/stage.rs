@@ -1,9 +1,6 @@
 use bevy::app::{App, Plugin};
 use bevy::math::Vec3;
-use bevy::prelude::{BackgroundColor, Color, Commands, NodeBundle, OnEnter, OnExit, Res, Sprite, Style};
-use bevy::sprite::SpriteBundle;
-use bevy::ui::Val;
-use bevy::utils::default;
+use bevy::prelude::{Commands, OnEnter, OnExit, Res};
 
 use crate::assets::gimmick::GimmickAssets;
 use crate::destroy_all;
@@ -83,7 +80,13 @@ mod tests {
         let mut app = App::new();
         app.insert_resource(GimmickAssets::default());
         let stages = StageLoader::new().load().unwrap();
-        let stage = stages.first().unwrap();
+        let stage = stages
+            .iter()
+            .find(|stage| {
+                stage.name == "test"
+            })
+            .unwrap();
+
         app.insert_resource(stage.clone());
 
         app

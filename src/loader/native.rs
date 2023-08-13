@@ -33,7 +33,7 @@ impl StageLoadable for NativeStageLoader {
 
 
 fn eskate_dir_path() -> GameResult<PathBuf> {
-    let path = r#"D://Programing/Rust/eskate/assets/stages"#;
+    let path = r#"assets/stages"#;
 
     Ok(Path::new(path).to_path_buf())
 

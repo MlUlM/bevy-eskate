@@ -149,6 +149,7 @@ mod tests {
     use bevy::prelude::Transform;
     use bevy_undo::prelude::{CommandsUndoExt, UndoPlugin};
 
+    use crate::assets::cursor::CursorAssets;
     use crate::assets::gimmick::GimmickAssets;
     use crate::button::SpriteInteraction;
     use crate::page::page_index::PageIndex;
@@ -160,7 +161,7 @@ mod tests {
     fn new_app() -> App {
         let mut app = App::new();
         app.add_plugins(UndoPlugin);
-
+        app.insert_resource(CursorAssets::default());
         app.insert_resource(PageIndex::new(0));
         app.insert_resource(GimmickAssets::default());
         app.add_systems(Update, spawn_item_system);

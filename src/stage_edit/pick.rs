@@ -70,6 +70,7 @@ fn spawn_gimmick_system(
                     SpriteInteraction::None,
                     GimmickItemSpawned(*tag),
                     Gimmick,
+                    *tag,
                     PageIndex::new(page_index.0)
                 ))
                 .on_undo(|cmd, entity| {

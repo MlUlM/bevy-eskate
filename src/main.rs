@@ -17,6 +17,7 @@ use bevy_tweening::TweeningPlugin;
 use bevy_undo::prelude::*;
 use bevy_undo::prelude::UndoPlugin;
 
+use crate::assets::cursor::CursorAssets;
 use crate::assets::font::FontAssets;
 use crate::assets::gimmick::GimmickAssets;
 use crate::assets::stage::{BuiltInStages, StageAssets};
@@ -67,6 +68,7 @@ fn main() {
         .add_collection_to_loading_state::<_, FontAssets>(GameState::AssetLoading)
         .add_collection_to_loading_state::<_, StageAssets>(GameState::AssetLoading)
         .add_collection_to_loading_state::<_, StageEditAssets>(GameState::AssetLoading)
+        .add_collection_to_loading_state::<_, CursorAssets>(GameState::AssetLoading)
         .add_plugins((
             JsonAssetPlugin::<StageJson>::new(&["stage.json"]),
             // bevy_inspector_egui::quick::WorldInspectorPlugin::new(),
@@ -106,7 +108,6 @@ fn setup(
         .spawn(Camera2dBundle::default())
         .insert(MainCamera);
 
-
     commands.spawn(GameCursorBundle::new(&asset_server));
 
     let stages = stages
@@ -141,7 +142,7 @@ fn move_cursor(window: Query<&Window>, mut cursor: Query<&mut Style, With<GameCu
 
 #[derive(SystemParam)]
 pub(crate) struct GameCursorParams<'w, 's> {
-    asset_server: Res<'w, AssetServer>,
+    assets: Res<'w, CursorAssets>,
     cursor: Query<'w, 's, &'static mut UiImage, With<GameCursor>>,
 }
 
@@ -149,13 +150,15 @@ pub(crate) struct GameCursorParams<'w, 's> {
 impl<'w, 's> GameCursorParams<'w, 's> {
     #[inline]
     pub fn reset(&mut self) {
-        self.cursor.single_mut().texture = self.asset_server.load("game_cursor.png");
+        let Some(mut cursor) = self.cursor.iter_mut().next() else { return; };
+        cursor.texture = self.assets.game_cursor.clone();
     }
 
 
     #[inline]
-    pub fn set_cursor(&mut self, texture: Handle<Image>){
-        self.cursor.single_mut().texture = texture;
+    pub fn set_cursor(&mut self, texture: Handle<Image>) {
+        let Some(mut cursor) = self.cursor.iter_mut().next() else { return; };
+        cursor.texture = texture;
     }
 }
 

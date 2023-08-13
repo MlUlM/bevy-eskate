@@ -17,17 +17,17 @@ use crate::stage::playing::gimmick::rock::RockBundle;
 use crate::stage::playing::gimmick::stop::StopBundle;
 use crate::stage::playing::gimmick::wall::WallBundle;
 
-#[derive(Eq, PartialEq, Debug, Copy, Clone, Deserialize, Serialize, Component)]
+#[derive(Eq, PartialEq, Debug, Copy, Clone, Deserialize, Serialize, Component, PartialOrd, Ord)]
 pub enum GimmickTag {
     Floor,
-    Wall,
-    WallSide,
-    Rock,
-    Player,
     NextPage,
     Goal,
     Stop,
+    Rock,
     IceBox,
+    Wall,
+    WallSide,
+    Player,
 }
 
 
