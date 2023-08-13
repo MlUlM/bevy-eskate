@@ -1,6 +1,7 @@
 use bevy::app::{App, Plugin};
 use bevy::math::Vec3;
 use bevy::prelude::{Commands, OnEnter, OnExit, Res};
+use itertools::Itertools;
 
 use crate::assets::gimmick::GimmickAssets;
 use crate::destroy_all;
@@ -57,7 +58,7 @@ fn spawn_gimmick(
     stage_cell: &StageCell,
     page_index: PageIndex,
 ) {
-    for (z, tag) in stage_cell.tags.iter().enumerate() {
+    for (z, tag) in stage_cell.tags.iter().sorted().enumerate() {
         let pos = Vec3::new(stage_cell.x, stage_cell.y, f32::from(z as u8));
         tag.spawn(commands, assets, pos, page_index);
     }

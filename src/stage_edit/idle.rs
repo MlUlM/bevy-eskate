@@ -106,6 +106,7 @@ fn user_input_event_system(
         UserInputEvent::PickedItem(entity, gimmick_tag) => {
             picked_item_params.remove_picked(&mut commands);
             cursor.single_mut().texture = gimmick_tag.image(&assets);
+            commands.remove_resource::<OnPickedEraser>();
             commands
                 .entity(*entity)
                 .insert(OnPick(*gimmick_tag));

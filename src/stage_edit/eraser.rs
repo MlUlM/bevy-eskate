@@ -32,10 +32,10 @@ fn erase_gimmick_system(
 ) {
     for (entity, interaction) in gimmicks.iter() {
         if interaction.is_clicked() {
-            commands.remove_resource::<OnPickedEraser>();
             commands
                 .entity(entity)
                 .despawn();
+
             return;
         }
     }
