@@ -1,6 +1,7 @@
 use bevy::app::{App, Plugin, Update};
 use bevy::input::Input;
 use bevy::prelude::*;
+use bevy_undo::prelude::CommandsOnUndoExt;
 
 use crate::assets::gimmick::GimmickAssets;
 use crate::cursor::GameCursor;
@@ -8,7 +9,7 @@ use crate::extension::InteractionCondition;
 use crate::gama_state::GameState;
 use crate::mouse_just_pressed_left;
 use crate::page::page_index::PageIndex;
-use crate::stage::playing::gimmick::GimmickItem;
+use crate::stage::playing::gimmick::{GimmickItem, GimmickItemDisabled};
 use crate::stage::playing::move_direction::MoveDirection;
 use crate::stage::playing::phase::picked_item::OnPickedItem;
 use crate::stage::status::StageStatus;
@@ -22,9 +23,12 @@ impl Plugin for PlayingIdlePlugin {
         app
             .add_systems(Update, (
                 input_move_system,
-                picked_item_system.run_if(mouse_just_pressed_left)
+                picked_item_system.run_if(mouse_just_pressed_left),
             )
                 .run_if(in_state(GameState::Stage).and_then(resource_exists_and_equals(StageStatus::playing_idle()))),
+            )
+            .add_systems(Update, update_item_colors_system
+                .run_if(in_state(GameState::Stage)),
             );
     }
 }
@@ -52,21 +56,32 @@ fn input_move_system(
 
 fn picked_item_system(
     mut commands: Commands,
-    mut cursor: Query<&mut UiImage, With<GameCursor>>,
-    assets: Res<GimmickAssets>,
     page_index: Res<PageIndex>,
     items: Query<(Entity, &Interaction, &GimmickItem, &PageIndex)>,
 ) {
-    for (entity, interaction, GimmickItem(tag), _) in items
+    for (item_entity, interaction, GimmickItem(tag), _) in items
         .iter()
         .filter(|(_, _, _, idx)| **idx == *page_index)
     {
         if interaction.pressed() {
-            cursor.single_mut().texture = tag.image(&assets);
-            commands.entity(entity).insert(OnPickedItem);
+            commands.entity(item_entity).insert(OnPickedItem);
             commands.insert_resource(StageStatus::playing_picked_item());
             return;
         }
+    }
+}
+
+
+fn update_item_colors_system(
+    mut active_items: Query<&mut BackgroundColor, (Added<GimmickItem>, Without<GimmickItemDisabled>)>,
+    mut deactive_items: Query<&mut BackgroundColor, (Added<GimmickItemDisabled>, Without<GimmickItem>)>,
+) {
+    for mut item in active_items.iter_mut() {
+        *item = BackgroundColor::default();
+    }
+
+    for mut item in deactive_items.iter_mut() {
+        *item = BackgroundColor::from(Color::GRAY);
     }
 }
 

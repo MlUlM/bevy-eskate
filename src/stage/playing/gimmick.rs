@@ -27,11 +27,16 @@ pub const GIMMICK_HEIGHT: f32 = 32.;
 pub const GIMMICK_SIZE_VEC3: Vec3 = Vec3::new(GIMMICK_WIDTH, GIMMICK_HEIGHT, 0.);
 pub const GIMMICK_SIZE: Vec2 = Vec2::new(GIMMICK_WIDTH, GIMMICK_HEIGHT);
 
-#[derive(Default, Debug, Hash, Copy, Clone, Component)]
+#[derive(Default, Debug, Hash, Copy, Clone, Component, Eq, PartialEq)]
 pub struct Floor;
 
-#[derive(Copy, Clone, Component)]
+
+#[derive(Copy, Clone, Component, Eq, PartialEq, Debug)]
 pub struct GimmickItem(pub GimmickTag);
+
+
+#[derive(Copy, Clone, Component, Eq, PartialEq, Debug)]
+pub struct GimmickItemDisabled(pub GimmickTag);
 
 
 #[derive(Copy, Clone, Component)]
@@ -39,7 +44,7 @@ pub struct GimmickItemSpawned(pub GimmickTag);
 
 
 #[derive(Copy, Clone, Component)]
-pub struct Gimmick(pub GimmickTag);
+pub struct Gimmick;
 
 
 pub(crate) fn undo_move_linear(

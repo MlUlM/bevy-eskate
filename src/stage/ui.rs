@@ -1,7 +1,7 @@
 use bevy::core::Name;
 use bevy::hierarchy::BuildChildren;
 use bevy::prelude::{ButtonBundle, ChildBuilder, Color, Commands, NodeBundle, Style};
-use bevy::ui::{BackgroundColor, FlexDirection, PositionType, Val};
+use bevy::ui::{AlignItems, BackgroundColor, FlexDirection, PositionType, UiRect, Val};
 use bevy::utils::default;
 
 use crate::assets::gimmick::GimmickAssets;
@@ -20,6 +20,8 @@ pub fn spawn_item_area(
             width: Val::Px(100.),
             height: Val::Percent(100.),
             flex_direction: FlexDirection::Column,
+            align_items: AlignItems::Center,
+            padding: UiRect::top(Val::Px(18.)),
             row_gap: Val::Px(10.),
             position_type: PositionType::Absolute,
             ..default()
@@ -49,7 +51,8 @@ fn spawn_items(
                 .insert((
                     Name::new(format!("Item {:?}", item_tag)),
                     page_index,
-                    GimmickItem(*item_tag)
+                    GimmickItem(*item_tag),
+                    *item_tag
                 ));
         });
 }

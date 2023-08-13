@@ -190,7 +190,7 @@ struct SaveParams<'w, 's> {
     page_params: PageParams<'w>,
     stage_name: Query<'w, 's, &'static mut Text, With<StageNameText>>,
     stage_items: Query<'w, 's, (&'static GimmickItem, &'static PageIndex)>,
-    stage_cells: Query<'w, 's, (&'static Transform, &'static Gimmick, &'static PageIndex), (With<Transform>, With<Gimmick>, With<PageIndex>)>,
+    stage_cells: Query<'w, 's, (&'static Transform, &'static GimmickTag, &'static PageIndex), (With<Transform>, With<Gimmick>, With<PageIndex>)>,
 }
 
 
@@ -285,7 +285,7 @@ fn save_stage(
     stage_name: String,
     page_params: &PageParams,
     stage_items: &Query<(&GimmickItem, &PageIndex)>,
-    stage_cells: &Query<(&Transform, &Gimmick, &PageIndex), (With<Transform>, With<Gimmick>, With<PageIndex>)>,
+    stage_cells: &Query<(&Transform, &GimmickTag, &PageIndex), (With<Transform>, With<Gimmick>, With<PageIndex>)>,
 ) {
     let pages = (0..page_params.page_count())
         .map(|page_index| create_page_asset(page_index, stage_items, stage_cells))
@@ -302,7 +302,7 @@ fn save_stage(
 fn create_page_asset(
     page_index: usize,
     stage_items: &Query<(&GimmickItem, &PageIndex)>,
-    stage_cells: &Query<(&Transform, &Gimmick, &PageIndex), (With<Transform>, With<Gimmick>, With<PageIndex>)>,
+    stage_cells: &Query<(&Transform, &GimmickTag, &PageIndex), (With<Transform>, With<Gimmick>, With<PageIndex>)>,
 ) -> Page {
     let mut cells = Vec::new();
 
@@ -324,7 +324,7 @@ fn create_page_asset(
 
 fn cells_in_page(
     page_index: usize,
-    stage_cells: &Query<(&Transform, &Gimmick, &PageIndex), (With<Transform>, With<Gimmick>, With<PageIndex>)>,
+    stage_cells: &Query<(&Transform, &GimmickTag, &PageIndex), (With<Transform>, With<Gimmick>, With<PageIndex>)>,
 ) -> HashMap<I64Vec2, Vec<GimmickTag>> {
     let mut stage = HashMap::<I64Vec2, Vec<GimmickTag>>::new();
 
@@ -334,12 +334,12 @@ fn cells_in_page(
         .for_each(|(transform, gimmick, _)| {
             let key = transform.translation.truncate().as_i64vec2();
             if let std::collections::hash_map::Entry::Vacant(e) = stage.entry(key) {
-                e.insert(vec![gimmick.0]);
+                e.insert(vec![*gimmick]);
             } else {
                 stage
                     .get_mut(&key)
                     .unwrap()
-                    .push(gimmick.0);
+                    .push(*gimmick);
             }
         });
 

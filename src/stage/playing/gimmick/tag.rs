@@ -3,6 +3,7 @@ use bevy::ecs::system::EntityCommands;
 use bevy::math::Vec3;
 use bevy::prelude::{Commands, Image};
 use bevy::ui::UiImage;
+use bevy_trait_query::imports::Component;
 use serde::{Deserialize, Serialize};
 
 use crate::assets::gimmick::GimmickAssets;
@@ -16,7 +17,7 @@ use crate::stage::playing::gimmick::rock::RockBundle;
 use crate::stage::playing::gimmick::stop::StopBundle;
 use crate::stage::playing::gimmick::wall::WallBundle;
 
-#[derive(Eq, PartialEq, Debug, Copy, Clone, Deserialize, Serialize)]
+#[derive(Eq, PartialEq, Debug, Copy, Clone, Deserialize, Serialize, Component)]
 pub enum GimmickTag {
     Floor,
     Wall,

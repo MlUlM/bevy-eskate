@@ -4,12 +4,16 @@ use bevy::prelude::{Button, Commands, Component, Condition, Entity, Event, Event
 
 use crate::assets::gimmick::GimmickAssets;
 use crate::cursor::GameCursor;
+use crate::extension::InteractionCondition;
 use crate::gama_state::GameState;
+use crate::mouse_just_pressed_left;
 use crate::page::page_param::PageParams;
 use crate::stage::playing::gimmick::GimmickItem;
 use crate::stage::playing::gimmick::tag::GimmickTag;
+use crate::stage_edit::eraser::OnPickedEraser;
 use crate::stage_edit::pick::PickedItemsParam;
 use crate::stage_edit::StageEditStatus;
+use crate::stage_edit::ui::GimmickEraser;
 
 #[derive(Debug, Copy, Clone, Component, Eq, PartialEq)]
 pub struct OnPick(pub GimmickTag);
@@ -22,6 +26,7 @@ pub struct StageEditIdlePlugin;
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Event)]
 pub(crate) enum UserInputEvent {
     PickedItem(Entity, GimmickTag),
+    PickedEraser,
     SaveStage,
     NextPage,
     PreviousPage,
@@ -37,7 +42,7 @@ impl Plugin for StageEditIdlePlugin {
                 Update,
                 (
                     input_key_system,
-                    picked_gimmick_system,
+                    picked_gimmick_system.run_if(mouse_just_pressed_left),
                     user_input_event_system
                 )
                     .run_if(in_state(GameState::StageEdit).and_then(resource_exists_and_equals(StageEditStatus::Idle))),
@@ -71,11 +76,17 @@ fn input_key_system(
 fn picked_gimmick_system(
     mut writer: EventWriter<UserInputEvent>,
     items: Query<(Entity, &Interaction, &GimmickItem), (With<Button>, With<GimmickItem>)>,
+    eraser: Query<&Interaction, With<GimmickEraser>>,
 ) {
     for (entity, interaction, GimmickItem(tag)) in items.iter() {
         if interaction == &Interaction::Pressed {
             return writer.send(UserInputEvent::PickedItem(entity, *tag));
         }
+    }
+
+    let Some(eraser) = eraser.iter().next() else { return; };
+    if eraser.pressed() {
+        writer.send(UserInputEvent::PickedEraser);
     }
 }
 
@@ -98,6 +109,11 @@ fn user_input_event_system(
             commands
                 .entity(*entity)
                 .insert(OnPick(*gimmick_tag));
+        }
+        UserInputEvent::PickedEraser => {
+            picked_item_params.remove_picked(&mut commands);
+            commands.insert_resource(OnPickedEraser);
+            cursor.single_mut().texture = picked_item_params.edit_assets.eraser.clone();
         }
         UserInputEvent::SaveStage => {
             commands.insert_resource(StageEditStatus::SaveStage);

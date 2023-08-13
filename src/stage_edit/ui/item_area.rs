@@ -1,6 +1,6 @@
 use bevy::core::Name;
 use bevy::hierarchy::BuildChildren;
-use bevy::prelude::{ButtonBundle, ChildBuilder, NodeBundle, PositionType, UiImage};
+use bevy::prelude::{ButtonBundle, ChildBuilder, NodeBundle, PositionType, UiImage, UiRect};
 use bevy::ui::{AlignItems, FlexDirection, Style, Val};
 use bevy::utils::default;
 use bevy_trait_query::imports::Component;
@@ -28,6 +28,7 @@ pub fn spawn_item_area(
                 height: Val::Percent(100.),
                 flex_direction: FlexDirection::Column,
                 position_type: PositionType::Absolute,
+                padding: UiRect::top(Val::Px(18.)),
                 row_gap: Val::Px(8.),
                 align_items: AlignItems::Center,
                 ..default()

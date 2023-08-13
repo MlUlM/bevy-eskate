@@ -1,5 +1,6 @@
 use bevy::math::Vec3;
 use bevy::prelude::Component;
+
 use crate::stage::playing::move_direction::MoveDirection;
 
 #[bevy_trait_query::queryable]
@@ -23,7 +24,7 @@ impl MovePosition for MoveToFront {
         collide: Vec3,
         move_direction: MoveDirection,
     ) -> Vec3 {
-        collide + move_direction.reverse().vec3()
+        collide + move_direction.reverse().vec3() + Vec3::new(0., 0., 1.)
     }
 }
 
@@ -38,6 +39,6 @@ impl MovePosition for MoveUp {
         collide: Vec3,
         _move_direction: MoveDirection,
     ) -> Vec3 {
-        collide
+        collide + Vec3::new(0., 0., 1.)
     }
 }

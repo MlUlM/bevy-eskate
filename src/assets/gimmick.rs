@@ -30,6 +30,7 @@ pub struct GimmickAssets {
 
     #[asset(path = "gimmick/stop.png")]
     pub stop: Handle<Image>,
+
 }
 
 

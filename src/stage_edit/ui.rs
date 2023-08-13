@@ -1,7 +1,9 @@
 use bevy::asset::Handle;
+use bevy::core::Name;
 use bevy::hierarchy::{BuildChildren, ChildBuilder};
 use bevy::math::Vec3;
-use bevy::prelude::{AlignItems, BackgroundColor, ButtonBundle, Color, Commands, default, FlexDirection, Image, ImageBundle, JustifyContent, NodeBundle, Sprite, SpriteBundle, Style, Transform, UiRect, Val};
+use bevy::prelude::{AlignItems, BackgroundColor, ButtonBundle, Color, Commands, default, FlexDirection, Image, ImageBundle, JustifyContent, NodeBundle, Sprite, SpriteBundle, Style, Transform, UiImage, UiRect, Val};
+use bevy_trait_query::imports::Component;
 
 use crate::assets::gimmick::GimmickAssets;
 use crate::assets::stage_edit_assets::StageEditAssets;
@@ -47,7 +49,7 @@ pub fn spawn_ui(
                     }
                 });
 
-            footer(parent, asset);
+            footer(parent, asset, edit_assets);
         });
 }
 
@@ -62,7 +64,7 @@ macro_rules! spawn_footer_items {
     };
 }
 
-fn footer(parent: &mut ChildBuilder, asset: &GimmickAssets) {
+fn footer(parent: &mut ChildBuilder, asset: &GimmickAssets, edit_assets: &StageEditAssets) {
     parent.spawn(NodeBundle {
         style: Style {
             height: Val::Percent(10.),
@@ -83,6 +85,8 @@ fn footer(parent: &mut ChildBuilder, asset: &GimmickAssets) {
                 GimmickTag::Stop,
                 GimmickTag::IceBox
             ]);
+            
+            spawn_eraser(parent, edit_assets);
         });
 }
 
@@ -106,6 +110,24 @@ fn spawn_footer_gimmick_item(
 }
 
 
+#[derive(Component, Copy, Clone, Eq, PartialEq, Default, Debug)]
+pub struct GimmickEraser;
+
+
+fn spawn_eraser(parent: &mut ChildBuilder, assets: &StageEditAssets) {
+    parent.spawn(ButtonBundle {
+        style: Style {
+            width: Val::Px(GIMMICK_WIDTH),
+            height: Val::Px(GIMMICK_HEIGHT),
+            ..default()
+        },
+        image: UiImage::new(assets.eraser.clone()),
+        ..default()
+    })
+        .insert((Name::new("Eraser"), GimmickEraser));
+}
+
+
 pub(crate) fn new_gimmick_ui_image(
     gimmick_tag: GimmickTag,
     asset: &GimmickAssets,
@@ -119,11 +141,6 @@ pub(crate) fn new_gimmick_ui_image(
         image: gimmick_tag.ui_image(asset),
         ..default()
     }
-}
-
-#[inline]
-pub(crate) fn front(pos: Vec3) -> Vec3 {
-    Vec3::new(pos.x, pos.y, 1.)
 }
 
 

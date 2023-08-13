@@ -9,6 +9,7 @@ use crate::page::page_count::PageCount;
 use crate::page::page_index::PageIndex;
 use crate::stage::playing::gimmick::{Floor, Gimmick, GIMMICK_HEIGHT, GIMMICK_WIDTH};
 use crate::stage::playing::gimmick::tag::GimmickTag;
+use crate::stage_edit::eraser::StageEditEraserPlugin;
 use crate::stage_edit::idle::StageEditIdlePlugin;
 use crate::stage_edit::pick::StageEditPickedPlugin;
 use crate::stage_edit::save::StageEditSavePlugin;
@@ -30,6 +31,7 @@ mod pick;
 mod save;
 mod stage_name;
 pub mod ui;
+mod eraser;
 
 
 #[derive(Default, Debug, PartialEq, Copy, Clone)]
@@ -45,7 +47,8 @@ impl Plugin for StageEditPlugin {
             .add_plugins((
                 StageEditIdlePlugin,
                 StageEditPickedPlugin,
-                StageEditSavePlugin
+                StageEditSavePlugin,
+                StageEditEraserPlugin
             ));
     }
 }
@@ -98,13 +101,13 @@ fn spawn_stage_gimmicks(
                     let y = f32::from(y) * GIMMICK_HEIGHT - 3.5 * GIMMICK_HEIGHT;
                     commands
                         .spawn(gimmick_iem_sprite_bundle(Vec3::new(x, y, 0.), tag.image(assets)))
-                        .insert((Gimmick(tag), SpriteButton, SpriteInteraction::None, page_index));
+                        .insert((Gimmick, tag, SpriteButton, SpriteInteraction::None, page_index));
                 } else {
                     let x = f32::from(x) * GIMMICK_WIDTH - 12. * GIMMICK_WIDTH;
                     let y = f32::from(y) * GIMMICK_HEIGHT - 3.5 * GIMMICK_HEIGHT;
                     commands
                         .spawn(gimmick_iem_sprite_bundle(Vec3::new(x, y, 0.), GimmickTag::Floor.image(assets)))
-                        .insert((Floor, Gimmick(GimmickTag::Floor), SpriteButton, SpriteInteraction::None, page_index));
+                        .insert((Floor, Gimmick, GimmickTag::Floor, SpriteButton, SpriteInteraction::None, page_index));
                 };
             }
         }

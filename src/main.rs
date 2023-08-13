@@ -3,10 +3,11 @@
 extern crate core;
 
 use bevy::app::{App, PluginGroup, Update};
-use bevy::asset::Assets;
+use bevy::asset::{Assets, Handle};
 use bevy::DefaultPlugins;
+use bevy::ecs::system::SystemParam;
 use bevy::input::Input;
-use bevy::prelude::{AssetServer, Camera, Camera2dBundle, Commands, Component, Entity, in_state, IntoSystemConfigs, KeyCode, MouseButton, not, OnExit, Query, Res, ResMut, UiImage, With, Without};
+use bevy::prelude::{AssetServer, Camera, Camera2dBundle, Commands, Component, Entity, Image, in_state, IntoSystemConfigs, KeyCode, MouseButton, not, OnExit, Query, Res, ResMut, UiImage, With, Without};
 use bevy::ui::{Style, Val};
 use bevy::utils::default;
 use bevy::window::{Cursor, Window, WindowPlugin, WindowResolution};
@@ -105,6 +106,7 @@ fn setup(
         .spawn(Camera2dBundle::default())
         .insert(MainCamera);
 
+
     commands.spawn(GameCursorBundle::new(&asset_server));
 
     let stages = stages
@@ -133,6 +135,27 @@ fn move_cursor(window: Query<&Window>, mut cursor: Query<&mut Style, With<GameCu
         let mut img_style = cursor.single_mut();
         img_style.left = Val::Px(position.x - 15.);
         img_style.top = Val::Px(position.y - 15.);
+    }
+}
+
+
+#[derive(SystemParam)]
+pub(crate) struct GameCursorParams<'w, 's> {
+    asset_server: Res<'w, AssetServer>,
+    cursor: Query<'w, 's, &'static mut UiImage, With<GameCursor>>,
+}
+
+
+impl<'w, 's> GameCursorParams<'w, 's> {
+    #[inline]
+    pub fn reset(&mut self) {
+        self.cursor.single_mut().texture = self.asset_server.load("game_cursor.png");
+    }
+
+
+    #[inline]
+    pub fn set_cursor(&mut self, texture: Handle<Image>){
+        self.cursor.single_mut().texture = texture;
     }
 }
 

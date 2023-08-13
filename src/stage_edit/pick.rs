@@ -3,15 +3,16 @@ use bevy::prelude::*;
 use bevy_undo::prelude::{EntityCommandsOnUndoBuilderExt, EntityCommandsOnUndoExt};
 
 use crate::assets::gimmick::GimmickAssets;
-use crate::button::SpriteInteraction;
+use crate::assets::stage_edit_assets::StageEditAssets;
+use crate::button::{SpriteButton, SpriteInteraction};
 use crate::extension::InteractionCondition;
 use crate::gama_state::GameState;
 use crate::page::page_index::PageIndex;
-use crate::stage::playing::gimmick::{Floor, Gimmick, GimmickItem};
+use crate::stage::playing::gimmick::{Floor, Gimmick, GimmickItem, GimmickItemSpawned};
 use crate::stage_edit::{gimmick_iem_sprite_bundle, StageEditStatus};
 use crate::stage_edit::idle::OnPick;
-use crate::stage_edit::ui::{front, new_gimmick_ui_image};
 use crate::stage_edit::ui::item_area::{ItemArea, ItemPlusButton};
+use crate::stage_edit::ui::new_gimmick_ui_image;
 
 #[derive(Debug, Default, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct StageEditPickedPlugin;
@@ -37,8 +38,10 @@ impl Plugin for StageEditPickedPlugin {
 
 #[derive(SystemParam, Debug)]
 pub struct PickedItemsParam<'w, 's> {
+    pub edit_assets: Res<'w, StageEditAssets>,
     picked_items: Query<'w, 's, Entity, With<OnPick>>,
 }
+
 
 impl<'w, 's> PickedItemsParam<'w, 's> {
     pub fn remove_picked(&self, commands: &mut Commands) {
@@ -59,10 +62,16 @@ fn spawn_gimmick_system(
     for (transform, interaction, ) in floors.iter() {
         if interaction.is_clicked() {
             let OnPick(tag) = picked.single();
+
             commands
-                .spawn(gimmick_iem_sprite_bundle(front(transform.translation), tag.image(&assets)))
-                .insert(Gimmick(*tag))
-                .insert(PageIndex::new(page_index.0))
+                .spawn(gimmick_iem_sprite_bundle(transform.translation + Vec3::new(0., 0., 1.), tag.image(&assets)))
+                .insert((
+                    SpriteButton,
+                    SpriteInteraction::None,
+                    GimmickItemSpawned(*tag),
+                    Gimmick,
+                    PageIndex::new(page_index.0)
+                ))
                 .on_undo(|cmd, entity| {
                     cmd.entity(entity).despawn();
                 });

@@ -1,6 +1,9 @@
 use bevy::app::{App, Plugin};
 use bevy::math::Vec3;
-use bevy::prelude::{Commands, OnEnter, OnExit, Res};
+use bevy::prelude::{BackgroundColor, Color, Commands, NodeBundle, OnEnter, OnExit, Res, Sprite, Style};
+use bevy::sprite::SpriteBundle;
+use bevy::ui::Val;
+use bevy::utils::default;
 
 use crate::assets::gimmick::GimmickAssets;
 use crate::destroy_all;

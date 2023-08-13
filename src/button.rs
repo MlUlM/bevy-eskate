@@ -75,13 +75,13 @@ fn clicked(
         .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
         .map(|ray| ray.origin.truncate())
     {
-        if let Some((_, _, mut interaction)) = buttons
+        for (_, _, mut interaction) in buttons
             .iter_mut()
             .filter(|(sprite, t, _)| {
                 sprite.custom_size.is_some_and(|size| Rect::from_center_size(t.translation().xy(), size).contains(position))
             })
             .sorted_by(|(_, t1, _), (_, t2, _)| t1.translation().z.partial_cmp(&t2.translation().z).unwrap())
-            .next() {
+        {
             *interaction = SpriteInteraction::Clicked;
         }
     }
