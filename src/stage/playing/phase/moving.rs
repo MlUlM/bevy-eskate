@@ -5,18 +5,22 @@ use bevy_trait_query::imports::Entity;
 use bevy_trait_query::One;
 use bevy_tweening::TweenCompleted;
 
-use crate::gama_state::GameState;
 use crate::page::page_index::PageIndex;
 use crate::stage::playing::collide::GimmickCollide;
 use crate::stage::playing::gimmick::move_linear;
 use crate::stage::playing::gimmick::player::Movable;
 use crate::stage::playing::move_direction::MoveDirection;
 use crate::stage::playing::move_position::MovePosition;
+use crate::stage::playing::phase::moving::goaled::{goaled_event_system, GoaledEvent};
+use crate::stage::playing::phase::moving::next_page::{next_page_event, NextPageEvent};
 use crate::stage::playing::phase::moving::stop_move::{stop_move_event_system, StopMoveEvent};
 use crate::stage::playing::phase::moving::turn::{turn_completed, turn_event_system, turn_pipe_system, TurnEvent};
+use crate::stage::state::StageState;
 
 pub mod stop_move;
 pub mod turn;
+mod next_page;
+pub mod goaled;
 
 #[derive(Event, Copy, Clone, Eq, PartialEq)]
 pub struct MoveEvent {
@@ -48,19 +52,23 @@ impl Plugin for PlayingMovingPlugin {
         app
             .add_event::<MoveDoneEvent>()
             .add_event::<TurnEvent>()
+            .add_event::<NextPageEvent>()
+            .add_event::<GoaledEvent>()
             .add_systems(Update, move_event_system)
             .add_systems(Update, (
                 move_done_system,
                 collide_system,
                 stop_move_event_system,
                 turn_event_system.pipe(turn_pipe_system),
-                turn_completed
-            ).run_if(in_state(GameState::StagePlayingMove)));
+                turn_completed,
+                next_page_event,
+                goaled_event_system
+            ).run_if(in_state(StageState::Moving)));
     }
 }
 
 fn move_event_system(
-    mut state: ResMut<NextState<GameState>>,
+    mut state: ResMut<NextState<StageState>>,
     mut commands: Commands,
     mut er: EventReader<MoveEvent>,
     mut players: Query<(Entity, &mut Transform), With<Movable>>,
@@ -70,11 +78,10 @@ fn move_event_system(
         let Some((ce, ct, move_position)) = collides.get_mut(col_entity).ok() else { continue; };
 
         for (pe, mut pt) in players.iter_mut() {
-            let start = pt.translation;
             let end = move_position.move_pos(ct.translation, move_direction);
             move_linear(&mut commands.entity(pe), &mut pt, end, move_direction);
             commands.entity(ce).insert(CollisionTarget);
-            state.set(GameState::StagePlayingMove);
+            state.set(StageState::Moving);
         }
     }
 }
@@ -103,6 +110,8 @@ fn move_done_system(
 struct CollideWriters<'w> {
     stop_move: EventWriter<'w, StopMoveEvent>,
     turn: EventWriter<'w, TurnEvent>,
+    next_page: EventWriter<'w, NextPageEvent>,
+    goaled: EventWriter<'w, GoaledEvent>,
 }
 
 
@@ -115,6 +124,18 @@ impl<'w> CollideWriters<'w> {
     #[inline]
     pub fn turn(&mut self, turn_entity: Entity) {
         self.turn.send(TurnEvent(turn_entity));
+    }
+
+
+    #[inline]
+    pub fn next_page(&mut self) {
+        self.next_page.send(NextPageEvent);
+    }
+
+
+    #[inline]
+    pub fn goaled(&mut self) {
+        self.goaled.send(GoaledEvent);
     }
 }
 
@@ -133,6 +154,12 @@ fn collide_system(
             }
             GimmickCollide::Turn => {
                 collide_writers.turn(ce);
+            }
+            GimmickCollide::NextPage => {
+                collide_writers.next_page();
+            }
+            GimmickCollide::Goal => {
+                collide_writers.goaled();
             }
             _ => {}
         }

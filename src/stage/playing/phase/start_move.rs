@@ -1,7 +1,6 @@
 use bevy::app::{App, Plugin, Update};
 use bevy::math::Vec3;
-use bevy::prelude::{Entity, Event, EventReader, EventWriter, in_state, IntoSystemConfigs, Query, Res, Resource, Transform, With, Without};
-use bevy_trait_query::imports::Component;
+use bevy::prelude::{Entity, Event, EventReader, EventWriter, in_state, IntoSystemConfigs, Query, Res, Transform, With, Without};
 use itertools::Itertools;
 
 use crate::gama_state::GameState;
@@ -22,18 +21,13 @@ impl Plugin for PlayingStartMovePlugin {
     fn build(&self, app: &mut App) {
         app
             .add_event::<UndoPlayerPosEvent>()
-            .insert_resource(OnCollide { player_start_pos: Vec3::ZERO })
-            .insert_resource(MoveDirection::Right)
-            .add_systems(Update, start_move)
-            .add_systems(Update, undo_player_pos_event_system.run_if(in_state(GameState::StageSetup)));
+            .add_systems(Update, (
+                start_move,
+                undo_player_pos_event_system
+            ).run_if(in_state(GameState::Stage)));
     }
 }
 
-
-#[derive(Component, Resource, Copy, Clone, PartialEq, Debug)]
-pub struct OnCollide {
-    pub player_start_pos: Vec3,
-}
 
 #[derive(Event, Copy, Clone, PartialEq, Debug)]
 pub struct StartMoveEvent(pub MoveDirection);

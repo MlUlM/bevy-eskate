@@ -1,13 +1,11 @@
 use bevy::math::Quat;
-use bevy::prelude::{Commands, Entity, Event, EventReader, EventWriter, In, IntoSystem, IntoSystemConfigs, Query, Res, Transform, With};
+use bevy::prelude::{Commands, Entity, Event, EventReader, EventWriter, In, IntoSystemConfigs, Query, Transform, With};
 use bevy_tweening::{Animator, EaseMethod, Tween, TweenCompleted};
 use bevy_tweening::lens::TransformRotationLens;
-use crate::stage::playing::collide::GimmickCollide::StopMove;
 
 use crate::stage::playing::gimmick::player::Player;
 use crate::stage::playing::move_direction::MoveDirection;
-use crate::stage::playing::phase::moving::stop_move::StopMoveEvent;
-use crate::stage::playing::phase::start_move::{OnCollide, StartMoveEvent};
+use crate::stage::playing::phase::start_move::StartMoveEvent;
 
 #[derive(Event, Debug, Copy, Clone, PartialEq)]
 pub struct TurnEvent(pub Entity);
@@ -24,8 +22,7 @@ pub fn turn_event_system(
     let TurnEvent(ce) = er.iter().next().copied()?;
 
     let (_, pt) = player.single();
-    let ct= turn.get(ce).ok()?;
-
+    let ct = turn.get(ce).ok()?;
     let pd = MoveDirection::from_angle(pt.rotation.to_axis_angle().1);
     let td = MoveDirection::from_angle(ct.rotation.to_axis_angle().1);
 
@@ -44,12 +41,9 @@ pub fn turn_pipe_system(
     let start = transform.rotation;
     let end = next_dir.quat();
 
-    commands.insert_resource(next_dir);
-
     commands
         .entity(pe)
-        .insert(Animator::new(turn_tween(start, end).with_completed_event(TURN_CODE)))
-        .insert(next_dir);
+        .insert(Animator::new(turn_tween(start, end).with_completed_event(TURN_CODE)));
 }
 
 

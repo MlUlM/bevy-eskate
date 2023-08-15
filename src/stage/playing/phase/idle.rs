@@ -3,14 +3,13 @@ use bevy::input::Input;
 use bevy::prelude::*;
 
 use crate::extension::InteractionCondition;
-use crate::gama_state::GameState;
 use crate::mouse_just_pressed_left;
 use crate::page::page_index::PageIndex;
 use crate::stage::playing::gimmick::{GimmickItem, GimmickItemDisabled};
 use crate::stage::playing::move_direction::MoveDirection;
 use crate::stage::playing::phase::picked_item::OnPickedItem;
 use crate::stage::playing::phase::start_move::StartMoveEvent;
-use crate::stage::status::StageStatus;
+use crate::stage::state::StageState;
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct PlayingIdlePlugin;
@@ -26,7 +25,7 @@ impl Plugin for PlayingIdlePlugin {
                     input_move_system,
                     picked_item_system.run_if(mouse_just_pressed_left)
                 )
-                    .run_if(in_state(GameState::StagePlayingIdle)),
+                    .run_if(in_state(StageState::Idle)),
             );
     }
 }
@@ -64,7 +63,7 @@ fn picked_item_system(
     {
         if interaction.pressed() {
             commands.entity(item_entity).insert(OnPickedItem);
-            commands.insert_resource(StageStatus::playing_picked_item());
+
             return;
         }
     }
@@ -94,7 +93,7 @@ mod tests {
     use crate::stage::playing::move_direction::MoveDirection;
     use crate::stage::playing::phase::idle::input_move_system;
     use crate::stage::playing::phase::PlayingPhase;
-    use crate::stage::status::StageStatus;
+    use crate::stage::state::StageState;
     use crate::stage::tests::new_playing_app;
 
     #[test]
@@ -115,7 +114,7 @@ mod tests {
         app.insert_resource(input);
 
         app.update();
-        let phase = app.world.resource::<StageStatus>();
-        assert_eq!(*phase, StageStatus::Playing(PlayingPhase::StartMove(expect)));
+        let phase = app.world.resource::<StageState>();
+        assert_eq!(*phase, StageState::Playing(PlayingPhase::StartMove(expect)));
     }
 }

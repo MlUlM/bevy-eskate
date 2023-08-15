@@ -1,18 +1,17 @@
-use bevy::app::{App, Update};
+use bevy::app::App;
 use bevy::input::Input;
 use bevy::math::Vec2;
-use bevy::prelude::{any_with_component, Color, Commands, Condition, default, in_state, IntoSystemConfigs, KeyCode, Plugin, Query, Res, resource_changed, resource_equals, resource_exists_and_equals, Transform, Vec3, With};
+use bevy::prelude::{Color, Commands, Condition, default, IntoSystemConfigs, KeyCode, Plugin, Query, Res, Transform, Vec3, With};
 use bevy::sprite::{Sprite, SpriteBundle};
 use bevy_trait_query::imports::{Component, Entity};
 
 use crate::assets::gimmick::GimmickAssets;
 use crate::button::SpriteInteraction;
-use crate::gama_state::GameState;
 use crate::GameCursorParams;
 use crate::page::page_index::PageIndex;
 use crate::stage::playing::gimmick::{Floor, GimmickItem, GimmickItemDisabled, GimmickItemSpawned};
 use crate::stage::playing::gimmick::tag::GimmickTag;
-use crate::stage::status::StageStatus;
+use crate::stage::state::StageState;
 
 #[derive(Component, Copy, Clone, Eq, PartialEq, Default, Debug)]
 pub struct OnPickedItem;
@@ -24,30 +23,27 @@ pub struct PlayingPickedItemPlugin;
 
 impl Plugin for PlayingPickedItemPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_systems(
-                Update,
-                (spawn_item_system, cancel_item_system)
-                    .run_if(in_state(GameState::StageSetup)
-                        .and_then(resource_exists_and_equals(StageStatus::playing_picked_item()))
-                    ),
-            )
-            .add_systems(
-                Update,
-                stage_focus_system
-                    .run_if(in_state(GameState::StageSetup)
-                        .and_then(resource_changed::<StageStatus>())
-                        .and_then(resource_equals(StageStatus::playing_picked_item()))),
-            )
-            .add_systems(
-                Update,
-                stage_un_focus_system
-                    .run_if(in_state(GameState::StageSetup)
-                        .and_then(any_with_component::<FocusScreen>())
-                        .and_then(resource_changed::<StageStatus>())
-                        .and_then(resource_equals(StageStatus::playing_idle()))),
-            )
-        ;
+        // app
+        //     .add_systems(
+        //         Update,
+        //         (spawn_item_system, cancel_item_system)
+        //            ,
+        //     )
+        //     .add_systems(
+        //         Update,
+        //         stage_focus_system
+        //             .run_if(in_state(GameState::Stage)
+        //                 .and_then(resource_changed::<StageState>())
+        //                 .and_then(resource_equals(StageState::playing_picked_item()))),
+        //     )
+        //     .add_systems(
+        //         Update,
+        //         stage_un_focus_system
+        //             .run_if(in_state(GameState::Stage)
+        //                 .and_then(any_with_component::<FocusScreen>())
+        //                 .and_then(resource_changed::<StageState>())
+        //                 .and_then(resource_equals(StageState::playing_idle()))),
+        //     )
     }
 }
 
@@ -87,7 +83,6 @@ fn cancel_item_system(
             commands.entity(item).remove::<OnPickedItem>();
         }
         cursor.reset();
-        commands.insert_resource(StageStatus::playing_idle());
     }
 }
 
@@ -134,7 +129,7 @@ fn spawn_item_system(
             // });
 
             commands.entity(item_entity).remove::<OnPickedItem>();
-            commands.insert_resource(StageStatus::playing_idle());
+
             cursor.reset();
             return;
         }
@@ -147,7 +142,6 @@ mod tests {
     use bevy::app::{App, Update};
     use bevy::prelude::Transform;
 
-    use bevy_undo::prelude::{CommandsUndoExt, UndoPlugin};
 
     use crate::assets::cursor::CursorAssets;
     use crate::assets::gimmick::GimmickAssets;
@@ -156,7 +150,7 @@ mod tests {
     use crate::stage::playing::gimmick::{Floor, GimmickItem, GimmickItemDisabled, GimmickItemSpawned};
     use crate::stage::playing::gimmick::tag::GimmickTag;
     use crate::stage::playing::phase::picked_item::{OnPickedItem, spawn_item_system};
-    use crate::stage::status::StageStatus;
+    use crate::stage::state::StageState;
 
     fn new_app() -> App {
         let mut app = App::new();
@@ -200,7 +194,7 @@ mod tests {
             .is_some()
         );
 
-        assert_eq!(*app.world.resource::<StageStatus>(), StageStatus::playing_idle());
+        assert_eq!(*app.world.resource::<StageState>(), StageState::playing_idle());
     }
 
 
@@ -228,7 +222,7 @@ mod tests {
             .is_none()
         );
 
-        assert_eq!(*app.world.resource::<StageStatus>(), StageStatus::playing_picked_item());
+        assert_eq!(*app.world.resource::<StageState>(), StageState::playing_picked_item());
     }
 
 

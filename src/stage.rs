@@ -12,9 +12,10 @@ use crate::stage::playing::phase::moving::MoveEvent;
 use crate::stage::playing::phase::moving::stop_move::StopMoveEvent;
 use crate::stage::playing::phase::start_move::StartMoveEvent;
 use crate::stage::playing::PlayingPlugin;
+use crate::stage::state::StageState;
 use crate::stage::ui::spawn_item_area;
 
-mod status;
+mod state;
 pub mod playing;
 mod ui;
 
@@ -27,12 +28,13 @@ impl Plugin for StagePlugin {
     fn build(&self, app: &mut App) {
         app
             .add_plugins(PlayingPlugin)
+            .add_state::<StageState>()
             .add_event::<StartMoveEvent>()
             .add_event::<MoveEvent>()
             .add_event::<StopMoveEvent>()
             .init_resource::<PageIndex>()
             .init_resource::<PageCount>()
-            .add_systems(OnEnter(GameState::StageSetup), setup);
+            .add_systems(OnEnter(GameState::Stage), setup);
     }
 }
 
@@ -54,8 +56,6 @@ fn setup(
             spawn_gimmick(&mut commands, &assets, stage_cell, page_index);
         }
     }
-
-    state.set(GameState::StagePlayingIdle);
 }
 
 
@@ -82,7 +82,7 @@ mod tests {
     use crate::page::page_index::PageIndex;
     use crate::stage::playing::phase::PlayingPhase;
     use crate::stage::setup;
-    use crate::stage::status::StageStatus;
+    use crate::stage::state::StageState;
 
     pub(crate) fn new_playing_app() -> App {
         let mut app = App::new();
@@ -110,6 +110,6 @@ mod tests {
 
         assert_eq!(app.world.resource::<PageIndex>().0, 0);
         assert_eq!(app.world.resource::<PageCount>().0, 0);
-        assert_eq!(*app.world.resource::<StageStatus>(), StageStatus::Playing(PlayingPhase::Idle));
+        assert_eq!(*app.world.resource::<StageState>(), StageState::Playing(PlayingPhase::Idle));
     }
 }
