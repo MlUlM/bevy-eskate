@@ -399,14 +399,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "bevy-undo"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "59eacbd56a7961bbe132bc1d9709de99c8a602cdd8a7a599ab20844a785ea0ef"
+name = "bevy-undo2"
+version = "0.0.2"
+source = "git+https://github.com/elm-register/bevy-undo2#00e87b0c6b52c5f9c56cbf7bc3bee0c5f6c086b0"
 dependencies = [
  "bevy",
- "bevy_tweening",
- "itertools",
 ]
 
 [[package]]
@@ -1810,7 +1807,7 @@ dependencies = [
  "bevy",
  "bevy-inspector-egui",
  "bevy-trait-query",
- "bevy-undo",
+ "bevy-undo2",
  "bevy_asset_loader",
  "bevy_common_assets",
  "bevy_editor_pls",

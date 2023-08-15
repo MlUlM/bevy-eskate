@@ -4,7 +4,6 @@ use bevy::math::Vec2;
 use bevy::prelude::{any_with_component, Color, Commands, Condition, default, in_state, IntoSystemConfigs, KeyCode, Plugin, Query, Res, resource_changed, resource_equals, resource_exists_and_equals, Transform, Vec3, With};
 use bevy::sprite::{Sprite, SpriteBundle};
 use bevy_trait_query::imports::{Component, Entity};
-use bevy_undo::prelude::EntityCommandsOnUndoBuilderExt;
 
 use crate::assets::gimmick::GimmickAssets;
 use crate::button::SpriteInteraction;
@@ -29,21 +28,21 @@ impl Plugin for PlayingPickedItemPlugin {
             .add_systems(
                 Update,
                 (spawn_item_system, cancel_item_system)
-                    .run_if(in_state(GameState::Stage)
+                    .run_if(in_state(GameState::StageSetup)
                         .and_then(resource_exists_and_equals(StageStatus::playing_picked_item()))
                     ),
             )
             .add_systems(
                 Update,
                 stage_focus_system
-                    .run_if(in_state(GameState::Stage)
+                    .run_if(in_state(GameState::StageSetup)
                         .and_then(resource_changed::<StageStatus>())
                         .and_then(resource_equals(StageStatus::playing_picked_item()))),
             )
             .add_systems(
                 Update,
                 stage_un_focus_system
-                    .run_if(in_state(GameState::Stage)
+                    .run_if(in_state(GameState::StageSetup)
                         .and_then(any_with_component::<FocusScreen>())
                         .and_then(resource_changed::<StageStatus>())
                         .and_then(resource_equals(StageStatus::playing_idle()))),
@@ -121,18 +120,18 @@ fn spawn_item_system(
 
             tag
                 .spawn(&mut commands, &assets, transform.translation + Vec3::new(0., 0., 1.), *page_index)
-                .insert(GimmickItemSpawned(*tag))
-                .on_undo_builder()
-                .add_entity(item_entity)
-                .on_undo(move |cmd, (gimmick, item)| {
-                    cmd.entity(gimmick).despawn();
-                    cmd
-                        .entity(item)
-                        .insert(OnPickedItem)
-                        .insert(GimmickItem(gimmick_tag))
-                        .remove::<GimmickItemDisabled>();
-                    cmd.insert_resource(StageStatus::playing_picked_item());
-                });
+                .insert(GimmickItemSpawned(*tag));
+            // .on_undo_builder()
+            // .add_entity(item_entity)
+            // .on_undo(move |cmd, (gimmick, item)| {
+            //     cmd.entity(gimmick).despawn();
+            //     cmd
+            //         .entity(item)
+            //         .insert(OnPickedItem)
+            //         .insert(GimmickItem(gimmick_tag))
+            //         .remove::<GimmickItemDisabled>();
+            //     cmd.insert_resource(StageStatus::playing_picked_item());
+            // });
 
             commands.entity(item_entity).remove::<OnPickedItem>();
             commands.insert_resource(StageStatus::playing_idle());
@@ -147,6 +146,7 @@ fn spawn_item_system(
 mod tests {
     use bevy::app::{App, Update};
     use bevy::prelude::Transform;
+
     use bevy_undo::prelude::{CommandsUndoExt, UndoPlugin};
 
     use crate::assets::cursor::CursorAssets;

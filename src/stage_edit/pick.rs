@@ -1,6 +1,6 @@
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
-use bevy_undo::prelude::{EntityCommandsOnUndoBuilderExt, EntityCommandsOnUndoExt};
+use bevy_undo2::prelude::UndoCallbackScheduler;
 
 use crate::assets::gimmick::GimmickAssets;
 use crate::assets::stage_edit_assets::StageEditAssets;
@@ -54,6 +54,7 @@ impl<'w, 's> PickedItemsParam<'w, 's> {
 
 fn spawn_gimmick_system(
     mut commands: Commands,
+    mut scheduler: UndoCallbackScheduler,
     assets: Res<GimmickAssets>,
     page_index: Res<PageIndex>,
     picked: Query<&OnPick, With<OnPick>>,
@@ -63,7 +64,7 @@ fn spawn_gimmick_system(
         if interaction.is_clicked() {
             let OnPick(tag) = picked.single();
 
-            commands
+            let gimmick = commands
                 .spawn(gimmick_iem_sprite_bundle(transform.translation + Vec3::new(0., 0., 1.), tag.image(&assets)))
                 .insert((
                     SpriteButton,
@@ -73,9 +74,11 @@ fn spawn_gimmick_system(
                     *tag,
                     PageIndex::new(page_index.0)
                 ))
-                .on_undo(|cmd, entity| {
-                    cmd.entity(entity).despawn();
-                });
+                .id();
+
+            scheduler.register(move |cmd| {
+                cmd.entity(gimmick).despawn();
+            });
             return;
         }
     }
@@ -84,6 +87,7 @@ fn spawn_gimmick_system(
 
 fn add_item_system(
     mut commands: Commands,
+    mut scheduler: UndoCallbackScheduler,
     page_index: Res<PageIndex>,
     mouse: Res<Input<MouseButton>>,
     assets: Res<GimmickAssets>,
@@ -108,14 +112,13 @@ fn add_item_system(
         let item_entity = item.id();
         commands
             .entity(item_area)
-            .insert_children(0, &[item_entity])
-            .on_undo_builder()
-            .add_entity(item_entity)
-            .on_undo(|command, (item_area, item)| {
-                command
-                    .entity(item_area)
-                    .remove_children(&[item]);
-            });
+            .insert_children(0, &[item_entity]);
+        
+        scheduler.register(move |cmd| {
+            cmd
+                .entity(item_area)
+                .remove_children(&[item_entity]);
+        });
     }
 }
 

@@ -7,6 +7,7 @@ pub mod start_move;
 pub mod next_page;
 pub mod goaled;
 pub mod picked_item;
+pub mod moving;
 
 #[derive(PartialEq, Default, Copy, Clone, Resource, Debug)]
 pub enum PlayingPhase {

@@ -16,7 +16,7 @@ pub struct PlayingGoaledPlugin;
 impl Plugin for PlayingGoaledPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, (goaled)
-            .run_if(in_state(GameState::Stage).and_then(run_if_goaled_phase)),
+            .run_if(in_state(GameState::StageSetup).and_then(run_if_goaled_phase)),
         );
     }
 }

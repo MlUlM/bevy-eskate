@@ -14,8 +14,8 @@ use bevy::window::{Cursor, Window, WindowPlugin, WindowResolution};
 use bevy_asset_loader::prelude::{LoadingState, LoadingStateAppExt};
 use bevy_common_assets::json::JsonAssetPlugin;
 use bevy_tweening::TweeningPlugin;
-use bevy_undo::prelude::*;
-use bevy_undo::prelude::UndoPlugin;
+use bevy_undo2::prelude::UndoRequester;
+use bevy_undo2::UndoPlugin;
 
 use crate::assets::cursor::CursorAssets;
 use crate::assets::font::FontAssets;
@@ -45,6 +45,7 @@ mod extension;
 mod stage_select;
 mod before_stage_edit;
 mod cursor;
+mod undo;
 
 
 fn main() {
@@ -74,7 +75,6 @@ fn main() {
             // bevy_inspector_egui::quick::WorldInspectorPlugin::new(),
             TweeningPlugin,
             UndoPlugin,
-            UndoTweenPlugin,
             SpriteButtonPlugin
         ))
         .add_plugins((
@@ -121,11 +121,11 @@ fn setup(
 
 
 fn undo_if_input_keycode(
+    mut requester: UndoRequester,
     keycode: Res<Input<KeyCode>>,
-    mut commands: Commands,
 ) {
     if keycode.just_pressed(KeyCode::R) {
-        commands.undo();
+        requester.undo();
     }
 }
 

@@ -4,9 +4,9 @@ use bevy::math::{Vec2, Vec3};
 use bevy::prelude::{Component, default, Image, Sprite, SpriteBundle, Transform};
 use bevy_tweening::{Animator, EaseMethod, Tween};
 use bevy_tweening::lens::TransformPositionLens;
-use bevy_undo::prelude::TweenOnUndoExt;
 
 use crate::stage::playing::gimmick::tag::GimmickTag;
+use crate::stage::playing::move_direction::MoveDirection;
 
 pub mod floor;
 pub mod player;
@@ -18,6 +18,7 @@ pub mod wall;
 pub mod stop;
 pub mod ice_box;
 pub mod core;
+pub mod turn;
 
 
 pub const GIMMICK_WIDTH: f32 = 32.;
@@ -47,32 +48,14 @@ pub struct GimmickItemSpawned(pub GimmickTag);
 pub struct Gimmick;
 
 
-pub(crate) fn undo_move_linear(
-    cmd: &mut EntityCommands,
-    start: Vec3,
-    end: Vec3,
-) {
-    let distance = start.distance(end) * 0.3;
-    let tween = Tween::new(
-        EaseMethod::Linear,
-        std::time::Duration::from_millis(distance as u64),
-        TransformPositionLens {
-            start,
-            end,
-        },
-    )
-        .spawn_processing_and_remove_completed(cmd.commands());
-
-    cmd.insert(Animator::new(tween));
-}
-
-
 pub(crate) fn move_linear(
     commands: &mut EntityCommands,
-    start: Vec3,
+    player_transform: &mut Transform,
     end: Vec3,
-    on_completed: impl Fn(&mut EntityCommands) + Send + Sync + 'static + Clone,
+    move_direction: MoveDirection,
 ) {
+    player_transform.rotation = move_direction.quat();
+    let start = player_transform.translation;
     let distance = end.distance(start) / 0.3;
     let tween = Tween::new(
         EaseMethod::Linear,
@@ -82,8 +65,7 @@ pub(crate) fn move_linear(
             end,
         },
     )
-        .spawn_processing_and_remove_completed(commands.commands())
-        .with_completed_entity_commands(commands.commands(), on_completed);
+        .with_completed_event(1);
 
     commands.insert(Animator::new(tween));
 }

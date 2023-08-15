@@ -1,5 +1,5 @@
 use bevy::asset::Handle;
-use bevy::prelude::{AssetServer, Image, Resource};
+use bevy::prelude::{Image, Resource, AssetServer};
 use bevy_asset_loader::prelude::*;
 
 #[derive(AssetCollection, Resource, Default)]
@@ -31,6 +31,8 @@ pub struct GimmickAssets {
     #[asset(path = "gimmick/stop.png")]
     pub stop: Handle<Image>,
 
+    #[asset(path = "gimmick/turn.png")]
+    pub turn: Handle<Image>,
 }
 
 

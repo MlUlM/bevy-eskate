@@ -1,16 +1,17 @@
 use bevy::app::{App, Plugin};
 use bevy::math::Vec3;
-use bevy::prelude::{Commands, OnEnter, OnExit, Res};
+use bevy::prelude::{Commands, NextState, OnEnter, Res, ResMut};
 use itertools::Itertools;
 
 use crate::assets::gimmick::GimmickAssets;
-use crate::destroy_all;
 use crate::gama_state::GameState;
 use crate::loader::json::{StageCell, StageJson};
 use crate::page::page_count::PageCount;
 use crate::page::page_index::PageIndex;
+use crate::stage::playing::phase::moving::MoveEvent;
+use crate::stage::playing::phase::moving::stop_move::StopMoveEvent;
+use crate::stage::playing::phase::start_move::StartMoveEvent;
 use crate::stage::playing::PlayingPlugin;
-use crate::stage::status::StageStatus;
 use crate::stage::ui::spawn_item_area;
 
 mod status;
@@ -26,19 +27,23 @@ impl Plugin for StagePlugin {
     fn build(&self, app: &mut App) {
         app
             .add_plugins(PlayingPlugin)
-            .add_systems(OnEnter(GameState::Stage), setup)
-            .add_systems(OnExit(GameState::Stage), destroy_all);
+            .add_event::<StartMoveEvent>()
+            .add_event::<MoveEvent>()
+            .add_event::<StopMoveEvent>()
+            .init_resource::<PageIndex>()
+            .init_resource::<PageCount>()
+            .add_systems(OnEnter(GameState::StageSetup), setup);
     }
 }
 
 
 fn setup(
+    mut state: ResMut<NextState<GameState>>,
     mut commands: Commands,
     assets: Res<GimmickAssets>,
     stage: Res<StageJson>,
 ) {
     commands.insert_resource(PageIndex::new(0));
-    commands.insert_resource(StageStatus::default());
     commands.insert_resource(PageCount::new(stage.pages.len()));
 
     for (page_index, page) in stage.pages.iter().enumerate() {
@@ -49,6 +54,8 @@ fn setup(
             spawn_gimmick(&mut commands, &assets, stage_cell, page_index);
         }
     }
+
+    state.set(GameState::StagePlayingIdle);
 }
 
 

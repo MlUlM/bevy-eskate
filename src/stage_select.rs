@@ -124,7 +124,7 @@ fn select_stage(
         if interaction.pressed() {
             commands.insert_resource(stage_json.clone());
             commands.insert_resource(PageCount::new(stage_json.pages.len()));
-            state.set(GameState::Stage);
+            state.set(GameState::StageSetup);
             return;
         }
     }

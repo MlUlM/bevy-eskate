@@ -13,7 +13,9 @@ pub enum GameState {
 
     StageSelect,
 
-    Stage,
+    StageSetup,
+    StagePlayingIdle,
+    StagePlayingMove,
 }
 
 

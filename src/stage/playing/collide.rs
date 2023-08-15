@@ -6,4 +6,5 @@ pub enum GimmickCollide {
     IceBox,
     NextPage,
     Goal,
+    Turn,
 }

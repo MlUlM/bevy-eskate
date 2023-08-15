@@ -9,6 +9,7 @@ use crate::page::page_index::PageIndex;
 use crate::stage::playing::gimmick::{GimmickItem, GimmickItemDisabled};
 use crate::stage::playing::move_direction::MoveDirection;
 use crate::stage::playing::phase::picked_item::OnPickedItem;
+use crate::stage::playing::phase::start_move::StartMoveEvent;
 use crate::stage::status::StageStatus;
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
@@ -18,25 +19,26 @@ pub struct PlayingIdlePlugin;
 impl Plugin for PlayingIdlePlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(Update, (
-                input_move_system,
-                picked_item_system.run_if(mouse_just_pressed_left),
-            )
-                .run_if(in_state(GameState::Stage).and_then(resource_exists_and_equals(StageStatus::playing_idle()))),
-            )
-            .add_systems(Update, update_item_colors_system
-                .run_if(in_state(GameState::Stage)),
+            .add_systems(
+                Update,
+                (
+                    update_item_colors_system,
+                    input_move_system,
+                    picked_item_system.run_if(mouse_just_pressed_left)
+                )
+                    .run_if(in_state(GameState::StagePlayingIdle)),
             );
     }
 }
 
 
 fn input_move_system(
-    mut commands: Commands,
+    mut ew: EventWriter<StartMoveEvent>,
     keys: Res<Input<KeyCode>>,
 ) {
     let mut emit = |direction: MoveDirection| {
-        commands.insert_resource(StageStatus::playing_start_move(direction));
+        println!("send -> {:?}", StartMoveEvent(direction));
+        ew.send(StartMoveEvent(direction));
     };
 
     if keys.any_just_pressed([KeyCode::Left, KeyCode::A]) {

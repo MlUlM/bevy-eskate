@@ -18,17 +18,13 @@ pub struct PlayingNextPagePlugin;
 impl Plugin for PlayingNextPagePlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(Update, next_page
-                .run_if(in_state(GameState::Stage).and_then(resource_exists_and_equals(StageStatus::playing_next_page()))),
-            )
-            .add_systems(Update, previous_page
-                .run_if(in_state(GameState::Stage).and_then(resource_exists_and_equals(StageStatus::playing_previous_page()))),
-            );
+            .add_systems(Update, next_page_system)
+            .add_systems(Update, previous_page);
     }
 }
 
 
-fn next_page(
+fn next_page_system(
     mut commands: Commands,
     mut page_params: PageParams,
     items: Query<(Entity, &mut PageIndex), (With<GimmickItemSpawned>, With<PageIndex>)>,
