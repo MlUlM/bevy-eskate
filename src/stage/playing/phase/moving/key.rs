@@ -1,4 +1,4 @@
-use std::ops::{Deref, SubAssign};
+use std::ops::{AddAssign, Deref, SubAssign};
 
 use bevy::app::{App, Plugin, Update};
 use bevy::math::Vec3;
@@ -49,12 +49,18 @@ impl Deref for KeyCounter {
 }
 
 
+impl AddAssign<usize> for KeyCounter {
+    fn add_assign(&mut self, rhs: usize) {
+        self.0 += rhs;
+    }
+}
+
+
 impl SubAssign<usize> for KeyCounter {
     fn sub_assign(&mut self, rhs: usize) {
         self.0 -= rhs;
     }
 }
-
 
 
 #[derive(Default, Debug, Copy, Clone, Hash, Eq, PartialEq)]

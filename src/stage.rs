@@ -12,7 +12,6 @@ use crate::page::page_count::PageCount;
 use crate::page::page_index::PageIndex;
 use crate::stage::playing::phase::moving::MoveEvent;
 use crate::stage::playing::phase::moving::stop_move::StopMoveEvent;
-use crate::stage::playing::phase::start_move::StartMoveEvent;
 use crate::stage::playing::PlayingPlugin;
 use crate::stage::state::StageState;
 use crate::stage::ui::spawn_item_area;
@@ -31,7 +30,6 @@ impl Plugin for StagePlugin {
         app
             .add_plugins(PlayingPlugin)
             .add_state::<StageState>()
-            .add_event::<StartMoveEvent>()
             .add_event::<MoveEvent>()
             .add_event::<StopMoveEvent>()
             .init_resource::<PageIndex>()

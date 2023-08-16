@@ -1,4 +1,5 @@
 use bevy::app::{App, Plugin, Update};
+use bevy::math::Vec3Swizzles;
 use bevy::prelude::{Component, Entity, Event, EventReader, EventWriter, in_state, IntoSystemConfigs, Query, Res, Transform, With, Without};
 use bevy_undo2::prelude::{AppUndoEx, UndoScheduler};
 use itertools::Itertools;
@@ -20,6 +21,11 @@ impl UndoPlayerEvent {
     }
 }
 
+
+#[derive(Event, Copy, Clone)]
+pub struct StartMoveDownEvent(pub f32);
+
+
 #[derive(Debug, Default, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct PlayingStartMovePlugin;
 
@@ -27,8 +33,11 @@ impl Plugin for PlayingStartMovePlugin {
     fn build(&self, app: &mut App) {
         app
             .add_undo_event::<UndoPlayerEvent>()
+            .add_event::<StartMoveEvent>()
+            .add_event::<StartMoveDownEvent>()
             .add_systems(Update, (
                 start_move,
+                start_move_down_event_system,
                 undo_player_pos_event_system
             ).run_if(in_state(GameState::Stage)));
     }
@@ -39,9 +48,9 @@ impl Plugin for PlayingStartMovePlugin {
 pub struct StartMoveEvent(pub MoveDirection);
 
 fn start_move(
+    mut scheduler: UndoScheduler<UndoPlayerEvent>,
     mut er: EventReader<StartMoveEvent>,
     mut ew: EventWriter<MoveEvent>,
-    mut scheduler: UndoScheduler<UndoPlayerEvent>,
     mut collides: Query<(Entity, &mut Transform, &PageIndex), (Without<Movable>, With<PageIndex>, With<GimmickCollide>)>,
     players: Query<&Transform, With<Movable>>,
     page_index: Res<PageIndex>,
@@ -63,6 +72,31 @@ fn start_move(
                 scheduler.reserve(UndoPlayerEvent(*player_transform));
                 ew.send(MoveEvent::new(move_direction, col_entity));
             }
+        }
+    }
+}
+
+
+fn start_move_down_event_system(
+    mut start_move_down_reader: EventReader<StartMoveDownEvent>,
+    mut start_move_writer: EventWriter<StartMoveEvent>,
+    mut move_writer: EventWriter<MoveEvent>,
+    page_index: Res<PageIndex>,
+    player: Query<&Transform, With<Player>>,
+    collides: Query<(Entity, &Transform, &PageIndex), (Without<Player>, With<PageIndex>, With<GimmickCollide>)>,
+) {
+    for StartMoveDownEvent(z) in start_move_down_reader.iter().copied() {
+        let pt = player.single();
+        if let Some((ce, _, _)) = collides
+            .iter()
+            .filter(|(_, _, idx)| **idx == *page_index)
+            .filter(|(_, ct, _)| ct.translation.xy().abs_diff_eq(pt.translation.xy(), 0.1))
+            .filter(|(_, ct, _)| ct.translation.z < z)
+            .sorted_by(|(_, prev, _), (_, next, _)| prev.translation.z.partial_cmp(&next.translation.z).unwrap())
+            .last() {
+            move_writer.send(MoveEvent::new(MoveDirection::from_transform(pt), ce));
+        } else {
+            start_move_writer.send(StartMoveEvent(MoveDirection::from_transform(pt)));
         }
     }
 }

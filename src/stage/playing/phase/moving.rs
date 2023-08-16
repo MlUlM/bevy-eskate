@@ -1,6 +1,5 @@
 use bevy::app::{App, Plugin, Update};
 use bevy::ecs::system::SystemParam;
-use bevy::math::Vec3Swizzles;
 use bevy::prelude::{Commands, Component, Event, EventReader, EventWriter, in_state, IntoSystem, IntoSystemConfigs, NextState, Query, ResMut, Transform, With, Without};
 use bevy_trait_query::imports::Entity;
 use bevy_trait_query::One;

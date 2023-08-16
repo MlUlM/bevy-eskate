@@ -1,18 +1,25 @@
 use bevy::app::{App, Plugin, Update};
-use bevy::prelude::{Entity, Event, EventReader, EventWriter, in_state, IntoSystemConfigs, Query, Res, ResMut, Transform, With};
+use bevy::prelude::{Commands, Entity, Event, EventReader, EventWriter, in_state, IntoSystemConfigs, Query, Res, ResMut, Transform, With};
+use bevy_undo2::prelude::{AppUndoEx, UndoScheduler};
 
-use crate::stage::playing::gimmick::lock::RequireKeys;
+use crate::assets::gimmick::GimmickAssets;
+use crate::gama_state::GameState;
+use crate::page::page_index::PageIndex;
+use crate::stage::playing::gimmick::lock::{LockBundle, RequireKeys};
 use crate::stage::playing::gimmick::player::Player;
 use crate::stage::playing::move_direction::MoveDirection;
 use crate::stage::playing::phase::moving::key::KeyCounter;
-use crate::stage::playing::phase::start_move::StartMoveEvent;
+use crate::stage::playing::phase::start_move::{StartMoveDownEvent, StartMoveEvent};
 use crate::stage::state::StageState;
 
 #[derive(Event, Copy, Clone, Debug)]
 pub struct LockEvent(pub Entity);
 
 #[derive(Event, Copy, Clone, Debug)]
-pub struct UnLockEvent(Entity, RequireKeys);
+pub struct UnLockEvent(Entity, Transform, RequireKeys, PageIndex);
+
+#[derive(Event, Copy, Clone, Debug)]
+pub struct UndoUnLockEvent(Transform, RequireKeys, PageIndex);
 
 
 pub struct MovingLockPlugin;
@@ -22,10 +29,14 @@ impl Plugin for MovingLockPlugin {
         app
             .add_event::<LockEvent>()
             .add_event::<UnLockEvent>()
+            .add_undo_event::<UndoUnLockEvent>()
             .add_systems(Update, (
                 lock_event_system,
-                unlock_event_system
-            ).run_if(in_state(StageState::Moving)));
+                unlock_event_system,
+            ).run_if(in_state(StageState::Moving)))
+            .add_systems(Update, undo_unlock_event_system
+                .run_if(in_state(GameState::Stage)),
+            );
     }
 }
 
@@ -36,12 +47,12 @@ fn lock_event_system(
     mut unlock_writer: EventWriter<UnLockEvent>,
     key_counter: Res<KeyCounter>,
     player: Query<&Transform, With<Player>>,
-    locks: Query<&RequireKeys>,
+    locks: Query<(&Transform, &RequireKeys, &PageIndex)>,
 ) {
     for LockEvent(le) in er.iter().copied() {
-        let Ok(require_keys) = locks.get(le).copied() else { continue; };
+        let Ok((lt, require_keys, page_index)) = locks.get(le) else { continue; };
         if require_keys.0 <= **key_counter {
-            unlock_writer.send(UnLockEvent(le, require_keys));
+            unlock_writer.send(UnLockEvent(le, *lt, *require_keys, *page_index));
         } else {
             start_move_writer.send(StartMoveEvent(MoveDirection::from_transform(player.single())));
         }
@@ -50,12 +61,32 @@ fn lock_event_system(
 
 
 fn unlock_event_system(
-    mut er: EventReader<UnLockEvent>,
+    mut commands: Commands,
+    mut scheduler: UndoScheduler<UndoUnLockEvent>,
+    mut unlock_reader: EventReader<UnLockEvent>,
+    mut start_move_down_writer: EventWriter<StartMoveDownEvent>,
     mut key_counter: ResMut<KeyCounter>,
 ) {
-    for UnLockEvent(e, require_keys) in er.iter().copied() {
+    for UnLockEvent(e, transform, require_keys, page_index) in unlock_reader.iter().copied() {
         *key_counter -= require_keys.0;
-
+        start_move_down_writer.send(StartMoveDownEvent(transform.translation.z));
+        commands.entity(e).despawn();
+        scheduler.reserve(UndoUnLockEvent(transform, require_keys, page_index));
         println!("unlock {e:?}");
+    }
+}
+
+
+fn undo_unlock_event_system(
+    mut commands: Commands,
+    mut er: EventReader<UndoUnLockEvent>,
+    mut key_counter: ResMut<KeyCounter>,
+    assets: Res<GimmickAssets>,
+) {
+    for UndoUnLockEvent(transform, require_keys, page_index) in er.iter().copied() {
+        // println!("undo: unlock {transform:?}");
+        *key_counter += require_keys.0;
+
+        commands.spawn(LockBundle::new(&assets, transform.translation, page_index));
     }
 }
