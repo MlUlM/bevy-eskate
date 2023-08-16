@@ -15,6 +15,7 @@ pub fn stop_move_event_system(
     for _ in er.iter() {
         committer.commit();
         state.set(StageState::Idle);
+
         println!("stop move");
     }
 }

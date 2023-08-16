@@ -7,4 +7,5 @@ pub enum GimmickCollide {
     NextPage,
     Goal,
     Turn,
+    Key
 }

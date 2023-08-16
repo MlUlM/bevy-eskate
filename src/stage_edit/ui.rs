@@ -22,7 +22,7 @@ pub fn spawn_ui(
     asset: &GimmickAssets,
     edit_assets: &StageEditAssets,
     page_count: PageCount,
-    stage: &StageJson
+    stage: &StageJson,
 ) {
     commands.spawn(NodeBundle {
         style: Style {
@@ -86,7 +86,8 @@ fn footer(parent: &mut ChildBuilder, asset: &GimmickAssets, edit_assets: &StageE
                 GimmickTag::Goal,
                 GimmickTag::Stop,
                 GimmickTag::IceBox,
-                GimmickTag::Turn
+                GimmickTag::Turn,
+                GimmickTag::Key
             ]);
 
             spawn_eraser(parent, edit_assets);

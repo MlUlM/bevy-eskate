@@ -33,6 +33,12 @@ pub struct GimmickAssets {
 
     #[asset(path = "gimmick/turn.png")]
     pub turn: Handle<Image>,
+
+    #[asset(path = "gimmick/key.png")]
+    pub key: Handle<Image>,
+
+    #[asset(path = "gimmick/lock1.png")]
+    pub lock1: Handle<Image>,
 }
 
 

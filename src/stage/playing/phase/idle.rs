@@ -88,18 +88,17 @@ fn update_item_colors_system(
 mod tests {
     use bevy::app::{App, Update};
     use bevy::input::Input;
-    use bevy::prelude::KeyCode;
+    use bevy::prelude::{Commands, EventReader, IntoSystemConfigs, KeyCode};
 
     use crate::stage::playing::move_direction::MoveDirection;
     use crate::stage::playing::phase::idle::input_move_system;
-    use crate::stage::playing::phase::PlayingPhase;
-    use crate::stage::state::StageState;
+    use crate::stage::playing::phase::start_move::StartMoveEvent;
     use crate::stage::tests::new_playing_app;
 
     #[test]
-    fn input_left() {
+    fn input_keycodes() {
         let mut app = new_playing_app();
-        app.add_systems(Update, input_move_system);
+        app.add_systems(Update, (input_move_system, read).chain());
 
         input(&mut app, KeyCode::Left, MoveDirection::Left);
         input(&mut app, KeyCode::Up, MoveDirection::Up);
@@ -114,7 +113,14 @@ mod tests {
         app.insert_resource(input);
 
         app.update();
-        let phase = app.world.resource::<StageState>();
-        assert_eq!(*phase, StageState::Playing(PlayingPhase::StartMove(expect)));
+
+        assert!(app.world.query::<&MoveDirection>().iter(&app.world).any(|d|*d == expect));
+    }
+
+
+    fn read(mut commands: Commands, mut er: EventReader<StartMoveEvent>) {
+        for StartMoveEvent(dir) in er.iter().copied() {
+            commands.spawn(dir);
+        }
     }
 }

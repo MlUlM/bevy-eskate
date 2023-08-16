@@ -1,5 +1,5 @@
 use bevy::math::Quat;
-use bevy::prelude::{Commands, Entity, Event, EventReader, EventWriter, In,  Query, Transform, With};
+use bevy::prelude::{Commands, Entity, Event, EventReader, EventWriter, In, Query, Transform, With};
 use bevy_tweening::{Animator, EaseMethod, Tween, TweenCompleted};
 use bevy_tweening::lens::TransformRotationLens;
 
@@ -93,7 +93,7 @@ mod test {
 
     use crate::stage::playing::gimmick::player::Player;
     use crate::stage::playing::move_direction::MoveDirection;
-    use crate::stage::playing::phase::moving::turn::{OnCollideTurn, turn_event_system, TurnEvent};
+    use crate::stage::playing::phase::moving::turn::{turn_event_system, TurnEvent};
 
     macro_rules! turn_test {
         ($name: ident, $player: expr, $col: expr, $expect: expr) => {
@@ -106,9 +106,9 @@ mod test {
                 }));
 
                 app.world.spawn(SpriteBundle { transform: Transform::from_rotation(Quat::from_rotation_z($player * PI)), ..default() }).insert(Player);
-                app.world.spawn(SpriteBundle { transform: Transform::from_rotation(Quat::from_rotation_z($col * PI)), ..default() }).insert(OnCollideTurn);
+                let id = app.world.spawn(SpriteBundle { transform: Transform::from_rotation(Quat::from_rotation_z($col * PI)), ..default() }).id();
 
-                app.world.send_event(TurnEvent);
+                app.world.send_event(TurnEvent(id));
 
                 app.update();
             }

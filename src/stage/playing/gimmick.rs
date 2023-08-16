@@ -19,6 +19,7 @@ pub mod stop;
 pub mod ice_box;
 pub mod core;
 pub mod turn;
+pub mod key;
 
 
 pub const GIMMICK_WIDTH: f32 = 32.;

@@ -93,12 +93,12 @@ mod tests {
     use crate::loader::{StageLoadable, StageLoader};
     use crate::page::page_count::PageCount;
     use crate::page::page_index::PageIndex;
-    use crate::stage::playing::phase::PlayingPhase;
+    use crate::stage::playing::phase::start_move::StartMoveEvent;
     use crate::stage::setup;
-    use crate::stage::state::StageState;
 
     pub(crate) fn new_playing_app() -> App {
         let mut app = App::new();
+        app.add_event::<StartMoveEvent>();
         app.insert_resource(GimmickAssets::default());
         let stages = StageLoader::new().load().unwrap();
         let stage = stages
@@ -123,6 +123,5 @@ mod tests {
 
         assert_eq!(app.world.resource::<PageIndex>().0, 0);
         assert_eq!(app.world.resource::<PageCount>().0, 0);
-        assert_eq!(*app.world.resource::<StageState>(), StageState::Playing(PlayingPhase::Idle));
     }
 }

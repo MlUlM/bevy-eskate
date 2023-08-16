@@ -13,6 +13,7 @@ use crate::stage::playing::gimmick::player::Movable;
 use crate::stage::playing::move_direction::MoveDirection;
 use crate::stage::playing::move_position::MovePosition;
 use crate::stage::playing::phase::moving::goaled::{goaled_event_system, GoaledEvent};
+use crate::stage::playing::phase::moving::key::{KeyEvent, PlayingKeyPlugin};
 use crate::stage::playing::phase::moving::next_page::{next_page_event, NextPageEvent};
 use crate::stage::playing::phase::moving::stop_move::{stop_move_event_system, StopMoveEvent};
 use crate::stage::playing::phase::moving::turn::{turn_completed, turn_event_system, turn_pipe_system, TurnEvent};
@@ -22,6 +23,7 @@ pub mod stop_move;
 pub mod turn;
 mod next_page;
 pub mod goaled;
+mod key;
 
 #[derive(Event, Copy, Clone, Eq, PartialEq)]
 pub struct MoveEvent {
@@ -51,7 +53,10 @@ pub struct PlayingMovingPlugin;
 impl Plugin for PlayingMovingPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_event::<MoveDoneEvent>()
+            .add_plugins(
+                PlayingKeyPlugin
+            )
+            .add_event::<CollisionEvent>()
             .add_event::<TurnEvent>()
             .add_event::<NextPageEvent>()
             .add_event::<GoaledEvent>()
@@ -94,20 +99,20 @@ fn move_event_system(
 
 
 #[derive(Event, Copy, Clone, Debug, Eq, PartialEq)]
-struct MoveDoneEvent(Entity);
+struct CollisionEvent(Entity);
 
 
 fn move_done_system(
     mut commands: Commands,
     mut er: EventReader<TweenCompleted>,
-    mut ew: EventWriter<MoveDoneEvent>,
+    mut ew: EventWriter<CollisionEvent>,
     col: Query<Entity, With<CollisionTarget>>,
 ) {
     for _ in er.iter().filter(|e| e.user_data == 1) {
         println!("move done");
         let ce = col.single();
         commands.entity(ce).remove::<CollisionTarget>();
-        ew.send(MoveDoneEvent(ce));
+        ew.send(CollisionEvent(ce));
     }
 }
 
@@ -118,6 +123,7 @@ struct CollideWriters<'w> {
     turn: EventWriter<'w, TurnEvent>,
     next_page: EventWriter<'w, NextPageEvent>,
     goaled: EventWriter<'w, GoaledEvent>,
+    key: EventWriter<'w, KeyEvent>,
 }
 
 
@@ -148,10 +154,10 @@ impl<'w> CollideWriters<'w> {
 
 fn collide_system(
     mut collide_writers: CollideWriters,
-    mut er: EventReader<MoveDoneEvent>,
+    mut er: EventReader<CollisionEvent>,
     cols: Query<&GimmickCollide>,
 ) {
-    for MoveDoneEvent(ce) in er.iter().copied() {
+    for CollisionEvent(ce) in er.iter().copied() {
         let Some(collide) = cols.get(ce).ok() else { continue; };
         println!("collide_system {collide:?}");
 
@@ -167,6 +173,9 @@ fn collide_system(
             }
             GimmickCollide::Goal => {
                 collide_writers.goaled();
+            }
+            GimmickCollide::Key => {
+                collide_writers.key.send(KeyEvent(ce));
             }
             _ => {}
         }
