@@ -10,6 +10,7 @@ use crate::stage::playing::gimmick::GimmickItemSpawned;
 use crate::stage::playing::move_position::{MovePosition, MoveToFront, MoveUp};
 use crate::stage::playing::phase::moving::PlayingMovingPlugin;
 use crate::stage::playing::phase::next_page::PlayingNextPagePlugin;
+use crate::stage::playing::phase::picked_item::PlayingPickedItemPlugin;
 use crate::stage::playing::phase::start_move::PlayingStartMovePlugin;
 
 pub mod phase;
@@ -30,7 +31,8 @@ impl Plugin for PlayingPlugin {
                 PlayingIdlePlugin,
                 PlayingStartMovePlugin,
                 PlayingMovingPlugin,
-                PlayingNextPagePlugin
+                PlayingNextPagePlugin,
+                PlayingPickedItemPlugin
             ))
             .register_component_as::<dyn MovePosition, MoveToFront>()
             .register_component_as::<dyn MovePosition, MoveUp>()

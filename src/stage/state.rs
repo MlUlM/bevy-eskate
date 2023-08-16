@@ -6,5 +6,6 @@ pub enum StageState {
     Idle,
     Moving,
     NextPage,
-    Goaled
+    Goaled,
+    PickedItem
 }

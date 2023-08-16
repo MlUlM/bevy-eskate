@@ -1,6 +1,6 @@
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
-use bevy_undo2::prelude::UndoCallbackScheduler;
+use bevy_undo2::prelude::{UndoCallbackEvent, UndoScheduler};
 
 use crate::assets::gimmick::GimmickAssets;
 use crate::assets::stage_edit_assets::StageEditAssets;
@@ -54,7 +54,7 @@ impl<'w, 's> PickedItemsParam<'w, 's> {
 
 fn spawn_gimmick_system(
     mut commands: Commands,
-    mut scheduler: UndoCallbackScheduler,
+    mut scheduler: UndoScheduler<UndoCallbackEvent>,
     assets: Res<GimmickAssets>,
     page_index: Res<PageIndex>,
     picked: Query<&OnPick, With<OnPick>>,
@@ -76,9 +76,9 @@ fn spawn_gimmick_system(
                 ))
                 .id();
 
-            scheduler.register(move |cmd| {
+            scheduler.register(UndoCallbackEvent::new(move |cmd| {
                 cmd.entity(gimmick).despawn();
-            });
+            }));
             return;
         }
     }
@@ -87,7 +87,7 @@ fn spawn_gimmick_system(
 
 fn add_item_system(
     mut commands: Commands,
-    mut scheduler: UndoCallbackScheduler,
+    mut scheduler: UndoScheduler<UndoCallbackEvent>,
     page_index: Res<PageIndex>,
     mouse: Res<Input<MouseButton>>,
     assets: Res<GimmickAssets>,
@@ -113,12 +113,12 @@ fn add_item_system(
         commands
             .entity(item_area)
             .insert_children(0, &[item_entity]);
-        
-        scheduler.register(move |cmd| {
+
+        scheduler.register(UndoCallbackEvent::new(move |cmd| {
             cmd
                 .entity(item_area)
                 .remove_children(&[item_entity]);
-        });
+        }));
     }
 }
 

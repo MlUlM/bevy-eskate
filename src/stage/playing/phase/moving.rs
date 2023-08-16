@@ -1,5 +1,6 @@
 use bevy::app::{App, Plugin, Update};
 use bevy::ecs::system::SystemParam;
+use bevy::math::Vec3Swizzles;
 use bevy::prelude::{Commands, Component, Event, EventReader, EventWriter, in_state, IntoSystem, IntoSystemConfigs, NextState, Query, ResMut, Transform, With, Without};
 use bevy_trait_query::imports::Entity;
 use bevy_trait_query::One;
@@ -67,6 +68,7 @@ impl Plugin for PlayingMovingPlugin {
     }
 }
 
+
 fn move_event_system(
     mut state: ResMut<NextState<StageState>>,
     mut commands: Commands,
@@ -79,6 +81,10 @@ fn move_event_system(
 
         for (pe, mut pt) in players.iter_mut() {
             let end = move_position.move_pos(ct.translation, move_direction);
+            if pt.translation.xy().abs_diff_eq(end.xy(), 0.1) {
+                continue;
+            }
+
             move_linear(&mut commands.entity(pe), &mut pt, end, move_direction);
             commands.entity(ce).insert(CollisionTarget);
             state.set(StageState::Moving);
@@ -146,8 +152,9 @@ fn collide_system(
     cols: Query<&GimmickCollide>,
 ) {
     for MoveDoneEvent(ce) in er.iter().copied() {
-        println!("collide_system");
         let Some(collide) = cols.get(ce).ok() else { continue; };
+        println!("collide_system {collide:?}");
+
         match collide {
             GimmickCollide::StopMove => {
                 collide_writers.stop_move();

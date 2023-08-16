@@ -7,7 +7,7 @@ use crate::mouse_just_pressed_left;
 use crate::page::page_index::PageIndex;
 use crate::stage::playing::gimmick::{GimmickItem, GimmickItemDisabled};
 use crate::stage::playing::move_direction::MoveDirection;
-use crate::stage::playing::phase::picked_item::OnPickedItem;
+use crate::stage::playing::phase::picked_item::PickedItemEvent;
 use crate::stage::playing::phase::start_move::StartMoveEvent;
 use crate::stage::state::StageState;
 
@@ -53,7 +53,7 @@ fn input_move_system(
 
 
 fn picked_item_system(
-    mut commands: Commands,
+    mut ew: EventWriter<PickedItemEvent>,
     page_index: Res<PageIndex>,
     items: Query<(Entity, &Interaction, &GimmickItem, &PageIndex)>,
 ) {
@@ -62,7 +62,7 @@ fn picked_item_system(
         .filter(|(_, _, _, idx)| **idx == *page_index)
     {
         if interaction.pressed() {
-            commands.entity(item_entity).insert(OnPickedItem);
+            ew.send(PickedItemEvent(item_entity));
 
             return;
         }

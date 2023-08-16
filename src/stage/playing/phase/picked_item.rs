@@ -1,20 +1,38 @@
-use bevy::app::App;
+use bevy::app::{App, FixedUpdate, Update};
 use bevy::input::Input;
 use bevy::math::Vec2;
-use bevy::prelude::{Color, Commands, Condition, default, IntoSystemConfigs, KeyCode, Plugin, Query, Res, Transform, Vec3, With};
+use bevy::prelude::{Color, Commands, default, Event, EventReader, EventWriter, in_state, IntoSystemConfigs, KeyCode, NextState, OnEnter, OnExit, Plugin, Query, Res, ResMut, Resource, Transform, Vec3, With};
 use bevy::sprite::{Sprite, SpriteBundle};
 use bevy_trait_query::imports::{Component, Entity};
+use bevy_undo2::prelude::{AppUndoEx, UndoScheduler};
 
 use crate::assets::gimmick::GimmickAssets;
 use crate::button::SpriteInteraction;
+use crate::gama_state::GameState;
 use crate::GameCursorParams;
 use crate::page::page_index::PageIndex;
 use crate::stage::playing::gimmick::{Floor, GimmickItem, GimmickItemDisabled, GimmickItemSpawned};
 use crate::stage::playing::gimmick::tag::GimmickTag;
 use crate::stage::state::StageState;
 
-#[derive(Component, Copy, Clone, Eq, PartialEq, Default, Debug)]
-pub struct OnPickedItem;
+#[derive(Resource, Default, Copy, Clone, Eq, PartialEq, Debug)]
+pub struct PickItem(Option<(Entity, GimmickTag)>);
+
+
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Event)]
+pub struct PickedItemEvent(pub Entity);
+
+
+#[derive(Copy, Clone, PartialEq, Debug, Event)]
+struct SpawnGimmickEvent(Vec3, Entity, GimmickTag);
+
+
+#[derive(Copy, Clone, PartialEq, Debug, Event)]
+struct UndoSpawnGimmickEvent {
+    gimmick_entity: Entity,
+    item_entity: Entity,
+    tag: GimmickTag,
+}
 
 
 #[derive(Debug, Default, Copy, Clone, Hash, Eq, PartialEq)]
@@ -23,42 +41,48 @@ pub struct PlayingPickedItemPlugin;
 
 impl Plugin for PlayingPickedItemPlugin {
     fn build(&self, app: &mut App) {
-        // app
-        //     .add_systems(
-        //         Update,
-        //         (spawn_item_system, cancel_item_system)
-        //            ,
-        //     )
-        //     .add_systems(
-        //         Update,
-        //         stage_focus_system
-        //             .run_if(in_state(GameState::Stage)
-        //                 .and_then(resource_changed::<StageState>())
-        //                 .and_then(resource_equals(StageState::playing_picked_item()))),
-        //     )
-        //     .add_systems(
-        //         Update,
-        //         stage_un_focus_system
-        //             .run_if(in_state(GameState::Stage)
-        //                 .and_then(any_with_component::<FocusScreen>())
-        //                 .and_then(resource_changed::<StageState>())
-        //                 .and_then(resource_equals(StageState::playing_idle()))),
-        //     )
+        app
+            .add_event::<PickedItemEvent>()
+            .add_event::<SpawnGimmickEvent>()
+            .add_undo_event::<UndoSpawnGimmickEvent>()
+            .init_resource::<PickItem>()
+            .add_systems(OnEnter(StageState::PickedItem), stage_focus_system)
+            .add_systems(OnExit(StageState::PickedItem), stage_un_focus_system)
+            .add_systems(FixedUpdate, (
+                pick_event_item_system,
+                undo_spawn_item_event_system
+            ).run_if(in_state(GameState::Stage)))
+            .add_systems(Update, (
+                click_floor_system,
+                spawn_item_system,
+                cancel_item_system
+            ).run_if(in_state(StageState::PickedItem)));
     }
 }
+
 
 #[derive(Component)]
 struct FocusScreen;
 
 
-fn stage_focus_system(
+fn pick_event_item_system(
+    mut state: ResMut<NextState<StageState>>,
+    mut er: EventReader<PickedItemEvent>,
+    mut pick_item: ResMut<PickItem>,
     mut cursor: GameCursorParams,
-    mut commands: Commands,
     assets: Res<GimmickAssets>,
-    picked: Query<&GimmickTag, With<OnPickedItem>>,
+    items: Query<&GimmickItem>,
 ) {
-    cursor.set_cursor(picked.single().image(&assets));
+    for PickedItemEvent(item_entity) in er.iter().copied() {
+        let Some(GimmickItem(tag)) = items.get(item_entity).ok() else { continue; };
+        pick_item.0 = Some((item_entity, *tag));
+        cursor.set_cursor(tag.image(&assets));
+        state.set(StageState::PickedItem);
+    }
+}
 
+
+fn stage_focus_system(mut commands: Commands) {
     commands.spawn(SpriteBundle {
         sprite: Sprite {
             custom_size: Some(Vec2::new(1920., 1080.)),
@@ -73,66 +97,84 @@ fn stage_focus_system(
 
 
 fn cancel_item_system(
-    mut commands: Commands,
-    mut cursor: GameCursorParams,
+    mut state: ResMut<NextState<StageState>>,
     key: Res<Input<KeyCode>>,
-    picked_item: Query<Entity, With<OnPickedItem>>,
 ) {
     if key.just_released(KeyCode::Escape) {
-        for item in picked_item.iter() {
-            commands.entity(item).remove::<OnPickedItem>();
-        }
-        cursor.reset();
+        state.set(StageState::Idle);
     }
 }
 
 
 fn stage_un_focus_system(
     mut commands: Commands,
+    mut cursor: GameCursorParams,
+    mut pick_item: ResMut<PickItem>,
     focus: Query<Entity, With<FocusScreen>>,
 ) {
     commands.entity(focus.single()).despawn();
+    pick_item.0 = None;
+    cursor.reset();
+}
+
+
+fn click_floor_system(
+    mut ew: EventWriter<SpawnGimmickEvent>,
+    pick_item: Res<PickItem>,
+    floors: Query<(&SpriteInteraction, &Transform), With<Floor>>,
+) {
+    let Some((entity, tag)) = pick_item.0 else { return; };
+
+    for (interaction, transform) in floors.iter() {
+        if interaction.is_clicked() {
+            ew.send(SpawnGimmickEvent(transform.translation, entity, tag));
+            return;
+        }
+    }
 }
 
 
 fn spawn_item_system(
+    mut state: ResMut<NextState<StageState>>,
     mut commands: Commands,
+    mut er: EventReader<SpawnGimmickEvent>,
     mut cursor: GameCursorParams,
+    mut scheduler: UndoScheduler<UndoSpawnGimmickEvent>,
     assets: Res<GimmickAssets>,
     page_index: Res<PageIndex>,
-    picked_item: Query<(Entity, &GimmickItem), With<OnPickedItem>>,
-    floors: Query<(&SpriteInteraction, &Transform), With<Floor>>,
 ) {
-    let Some((item_entity, GimmickItem(tag))) = picked_item.iter().next() else { return; };
+    for SpawnGimmickEvent(spawn_pos, item_entity, tag) in er.iter().copied() {
+        commands
+            .entity(item_entity)
+            .remove::<GimmickItem>()
+            .insert(GimmickItemDisabled(tag));
 
-    for (interaction, transform) in floors.iter() {
-        if interaction.is_clicked() {
-            let gimmick_tag = *tag;
-            commands
-                .entity(item_entity)
-                .remove::<GimmickItem>()
-                .insert(GimmickItemDisabled(gimmick_tag));
+        let gimmick_entity = tag
+            .spawn(&mut commands, &assets, spawn_pos + Vec3::Z, *page_index)
+            .insert((GimmickItemSpawned(tag), tag))
+            .id();
 
-            tag
-                .spawn(&mut commands, &assets, transform.translation + Vec3::new(0., 0., 1.), *page_index)
-                .insert(GimmickItemSpawned(*tag));
-            // .on_undo_builder()
-            // .add_entity(item_entity)
-            // .on_undo(move |cmd, (gimmick, item)| {
-            //     cmd.entity(gimmick).despawn();
-            //     cmd
-            //         .entity(item)
-            //         .insert(OnPickedItem)
-            //         .insert(GimmickItem(gimmick_tag))
-            //         .remove::<GimmickItemDisabled>();
-            //     cmd.insert_resource(StageStatus::playing_picked_item());
-            // });
+        scheduler.register(UndoSpawnGimmickEvent { gimmick_entity, item_entity, tag });
+        cursor.reset();
+        state.set(StageState::Idle);
+    }
+}
 
-            commands.entity(item_entity).remove::<OnPickedItem>();
 
-            cursor.reset();
-            return;
-        }
+fn undo_spawn_item_event_system(
+    mut commands: Commands,
+    mut er: EventReader<UndoSpawnGimmickEvent>,
+) {
+    for UndoSpawnGimmickEvent { gimmick_entity, item_entity, tag } in er.iter().copied() {
+        println!("undo: undo_spawn_item_event_system");
+        commands
+            .entity(gimmick_entity)
+            .despawn();
+
+        commands
+            .entity(item_entity)
+            .remove::<GimmickItemDisabled>()
+            .insert(GimmickItem(tag));
     }
 }
 
@@ -142,14 +184,13 @@ mod tests {
     use bevy::app::{App, Update};
     use bevy::prelude::Transform;
 
-
     use crate::assets::cursor::CursorAssets;
     use crate::assets::gimmick::GimmickAssets;
     use crate::button::SpriteInteraction;
     use crate::page::page_index::PageIndex;
     use crate::stage::playing::gimmick::{Floor, GimmickItem, GimmickItemDisabled, GimmickItemSpawned};
     use crate::stage::playing::gimmick::tag::GimmickTag;
-    use crate::stage::playing::phase::picked_item::{OnPickedItem, spawn_item_system};
+    use crate::stage::playing::phase::picked_item::{PickItem, spawn_item_system};
     use crate::stage::state::StageState;
 
     fn new_app() -> App {
@@ -163,7 +204,7 @@ mod tests {
         app
             .world
             .spawn(GimmickItem(GimmickTag::Rock))
-            .insert(OnPickedItem);
+            .insert(PickItem);
 
         app.world
             .spawn(Transform::from_xyz(10., 0., 0.))
@@ -179,7 +220,7 @@ mod tests {
         app.update();
         assert!(app
             .world
-            .query::<&OnPickedItem>()
+            .query::<&PickItem>()
             .iter(&app.world)
             .next()
             .is_none()
@@ -209,7 +250,7 @@ mod tests {
 
         assert!(app
             .world
-            .query::<&OnPickedItem>()
+            .query::<&PickItem>()
             .iter(&app.world)
             .next()
             .is_some()

@@ -7,14 +7,13 @@ use bevy::asset::{Assets, Handle};
 use bevy::DefaultPlugins;
 use bevy::ecs::system::SystemParam;
 use bevy::input::Input;
-use bevy::prelude::{AssetServer, Camera, Camera2dBundle, Commands, Component, Entity, Image, in_state, IntoSystemConfigs, KeyCode, MouseButton, not, OnExit, Query, Res, ResMut, UiImage, With, Without};
+use bevy::prelude::{AssetServer, Camera, Camera2dBundle, Commands, Component, Entity, Image, in_state, IntoSystemConfigs, MouseButton, not, OnExit, Query, Res, ResMut, UiImage, With, Without};
 use bevy::ui::{Style, Val};
 use bevy::utils::default;
 use bevy::window::{Cursor, Window, WindowPlugin, WindowResolution};
 use bevy_asset_loader::prelude::{LoadingState, LoadingStateAppExt};
 use bevy_common_assets::json::JsonAssetPlugin;
 use bevy_tweening::TweeningPlugin;
-use bevy_undo2::prelude::UndoRequester;
 use bevy_undo2::UndoPlugin;
 
 use crate::assets::cursor::CursorAssets;
@@ -85,10 +84,7 @@ fn main() {
             StagePlugin
         ))
         .add_systems(OnExit(GameState::AssetLoading), setup)
-        .add_systems(Update, (
-            undo_if_input_keycode,
-            move_cursor
-        ).run_if(not(in_state(GameState::AssetLoading))))
+        .add_systems(Update, move_cursor.run_if(not(in_state(GameState::AssetLoading))))
         .add_state::<GameState>()
         .run();
 }
@@ -117,16 +113,6 @@ fn setup(
         .collect::<Vec<StageJson>>();
 
     commands.insert_resource(BuiltInStages(stages));
-}
-
-
-fn undo_if_input_keycode(
-    mut requester: UndoRequester,
-    keycode: Res<Input<KeyCode>>,
-) {
-    if keycode.just_pressed(KeyCode::R) {
-        requester.undo();
-    }
 }
 
 

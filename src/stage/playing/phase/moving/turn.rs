@@ -1,11 +1,11 @@
 use bevy::math::Quat;
-use bevy::prelude::{Commands, Entity, Event, EventReader, EventWriter, In, IntoSystemConfigs, Query, Transform, With};
+use bevy::prelude::{Commands, Entity, Event, EventReader, EventWriter, In,  Query, Transform, With};
 use bevy_tweening::{Animator, EaseMethod, Tween, TweenCompleted};
 use bevy_tweening::lens::TransformRotationLens;
 
 use crate::stage::playing::gimmick::player::Player;
 use crate::stage::playing::move_direction::MoveDirection;
-use crate::stage::playing::phase::start_move::StartMoveEvent;
+use crate::stage::playing::phase::start_move::{StartMoveEvent, UndoPlayerEvent};
 
 #[derive(Event, Debug, Copy, Clone, PartialEq)]
 pub struct TurnEvent(pub Entity);
@@ -15,13 +15,15 @@ const TURN_CODE: u64 = 52123;
 
 
 pub fn turn_event_system(
+    mut commands: Commands,
     mut er: EventReader<TurnEvent>,
     player: Query<(Entity, &Transform), With<Player>>,
     turn: Query<&Transform>,
 ) -> Option<MoveDirection> {
     let TurnEvent(ce) = er.iter().next().copied()?;
 
-    let (_, pt) = player.single();
+    let (pe, pt) = player.single();
+    commands.entity(pe).insert(UndoPlayerEvent::new(*pt));
     let ct = turn.get(ce).ok()?;
     let pd = MoveDirection::from_angle(pt.rotation.to_axis_angle().1);
     let td = MoveDirection::from_angle(ct.rotation.to_axis_angle().1);
@@ -62,12 +64,19 @@ pub fn turn_tween(start: Quat, end: Quat) -> Tween<Transform> {
 
 #[inline]
 pub fn turn_completed(
+    mut commands: Commands,
     mut er: EventReader<TweenCompleted>,
-    mut ew: EventWriter<StartMoveEvent>,
-    player: Query<&Transform, With<Player>>,
+    mut start_move_writer: EventWriter<StartMoveEvent>,
+    mut undo_player_writer: EventWriter<UndoPlayerEvent>,
+    player: Query<(Entity, &Transform, &UndoPlayerEvent), With<Player>>,
 ) {
     for _ in er.iter().filter(|e| e.user_data == TURN_CODE) {
-        ew.send(StartMoveEvent(MoveDirection::from_transform(player.single())))
+        let (pe, pt, undo_player_event) = player.single();
+
+        start_move_writer.send(StartMoveEvent(MoveDirection::from_transform(pt)));
+
+        commands.entity(pe).remove::<UndoPlayerEvent>();
+        undo_player_writer.send(*undo_player_event);
     }
 }
 

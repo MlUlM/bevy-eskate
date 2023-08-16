@@ -1,6 +1,8 @@
-use bevy::app::{App, Plugin};
+use bevy::app::{App, Plugin, Update};
+use bevy::input::Input;
 use bevy::math::Vec3;
-use bevy::prelude::{Commands, NextState, OnEnter, Res, ResMut};
+use bevy::prelude::{Commands, Condition, in_state, IntoSystemConfigs, KeyCode, OnEnter, Res};
+use bevy_undo2::prelude::UndoRequester;
 use itertools::Itertools;
 
 use crate::assets::gimmick::GimmickAssets;
@@ -34,13 +36,15 @@ impl Plugin for StagePlugin {
             .add_event::<StopMoveEvent>()
             .init_resource::<PageIndex>()
             .init_resource::<PageCount>()
-            .add_systems(OnEnter(GameState::Stage), setup);
+            .add_systems(OnEnter(GameState::Stage), setup)
+            .add_systems(Update, undo_if_input_keycode
+                .run_if(in_state(GameState::Stage).and_then(in_state(StageState::Idle))),
+            );
     }
 }
 
 
 fn setup(
-    mut state: ResMut<NextState<GameState>>,
     mut commands: Commands,
     assets: Res<GimmickAssets>,
     stage: Res<StageJson>,
@@ -71,6 +75,15 @@ fn spawn_gimmick(
     }
 }
 
+
+fn undo_if_input_keycode(
+    mut requester: UndoRequester,
+    keycode: Res<Input<KeyCode>>,
+) {
+    if keycode.just_pressed(KeyCode::R) {
+        requester.undo();
+    }
+}
 
 #[cfg(test)]
 mod tests {
