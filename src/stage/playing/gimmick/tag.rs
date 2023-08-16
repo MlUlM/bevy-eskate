@@ -12,6 +12,7 @@ use crate::stage::playing::gimmick::floor::FloorBundle;
 use crate::stage::playing::gimmick::goal::GoalBundle;
 use crate::stage::playing::gimmick::ice_box::IceBoxBundle;
 use crate::stage::playing::gimmick::key::KeyBundle;
+use crate::stage::playing::gimmick::lock::LockBundle;
 use crate::stage::playing::gimmick::next_page::NextPageBundle;
 use crate::stage::playing::gimmick::player::PlayerBundle;
 use crate::stage::playing::gimmick::rock::RockBundle;
@@ -31,7 +32,8 @@ pub enum GimmickTag {
     WallSide,
     Player,
     Turn,
-    Key
+    Key,
+    Lock
 }
 
 
@@ -54,7 +56,8 @@ impl GimmickTag {
             GimmickTag::Stop => commands.spawn(StopBundle::new(assets, pos, page_index)),
             GimmickTag::IceBox => commands.spawn(IceBoxBundle::new(assets, pos, page_index)),
             GimmickTag::Turn => commands.spawn(TurnBundle::new(assets, pos, page_index)),
-            GimmickTag::Key => commands.spawn(KeyBundle::new(assets, pos, page_index))
+            GimmickTag::Key => commands.spawn(KeyBundle::new(assets, pos, page_index)),
+            GimmickTag::Lock => commands.spawn(LockBundle::new(assets, pos, page_index))
         }
     }
 
@@ -72,7 +75,8 @@ impl GimmickTag {
             GimmickTag::Stop => assets.stop.clone(),
             GimmickTag::IceBox => assets.ice_box.clone(),
             GimmickTag::Turn => assets.turn.clone(),
-            GimmickTag::Key => assets.key.clone()
+            GimmickTag::Key => assets.key.clone(),
+            GimmickTag::Lock => assets.lock1.clone()
         }
     }
 

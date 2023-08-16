@@ -1,4 +1,4 @@
-use std::ops::Deref;
+use std::ops::{Deref, SubAssign};
 
 use bevy::app::{App, Plugin, Update};
 use bevy::math::Vec3;
@@ -49,11 +49,19 @@ impl Deref for KeyCounter {
 }
 
 
+impl SubAssign<usize> for KeyCounter {
+    fn sub_assign(&mut self, rhs: usize) {
+        self.0 -= rhs;
+    }
+}
+
+
+
 #[derive(Default, Debug, Copy, Clone, Hash, Eq, PartialEq)]
-pub struct PlayingKeyPlugin;
+pub struct MovingKeyPlugin;
 
 
-impl Plugin for PlayingKeyPlugin {
+impl Plugin for MovingKeyPlugin {
     fn build(&self, app: &mut App) {
         app
             .add_event::<KeyEvent>()
@@ -95,5 +103,34 @@ fn undo_key_event_system(
     for UndoKeyEvent(pos, page_index) in er.iter().copied() {
         commands.spawn(KeyBundle::new(&assets, pos, page_index));
         key_counter.decrement();
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use bevy::math::Vec3;
+    use bevy::prelude::{NextState, Transform};
+
+    use crate::assets::gimmick::GimmickAssets;
+    use crate::page::page_index::PageIndex;
+    use crate::stage::playing::gimmick::key::KeyBundle;
+    use crate::stage::playing::gimmick::player::PlayerBundle;
+    use crate::stage::playing::phase::moving::key::{KeyCounter, KeyEvent, MovingKeyPlugin};
+    use crate::stage::state::StageState;
+    use crate::stage::tests::new_playing_app;
+
+    #[test]
+    fn key_increment() {
+        let mut app = new_playing_app();
+        app.world.resource_mut::<NextState<StageState>>().set(StageState::Moving);
+        app.add_plugins(MovingKeyPlugin);
+        let key = app.world.spawn(KeyBundle::new(&GimmickAssets::default(), Vec3::ZERO, PageIndex::default())).id();
+        app.world.spawn(PlayerBundle::new(&GimmickAssets::default(), Vec3::ZERO, PageIndex::default()));
+        app.world.send_event(KeyEvent(key));
+        app.update();
+
+        assert_eq!(app.world.resource::<KeyCounter>().0, 1);
+        assert!(app.world.get::<Transform>(key).is_none());
     }
 }

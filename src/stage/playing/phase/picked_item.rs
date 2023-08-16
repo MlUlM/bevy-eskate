@@ -89,7 +89,6 @@ fn stage_focus_system(mut commands: Commands) {
             color: Color::from([0.0, 0.0, 0.0, 0.3]),
             ..default()
         },
-
         ..default()
     })
         .insert(FocusScreen);

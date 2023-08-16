@@ -13,7 +13,8 @@ use crate::stage::playing::gimmick::player::Movable;
 use crate::stage::playing::move_direction::MoveDirection;
 use crate::stage::playing::move_position::MovePosition;
 use crate::stage::playing::phase::moving::goaled::{goaled_event_system, GoaledEvent};
-use crate::stage::playing::phase::moving::key::{KeyEvent, PlayingKeyPlugin};
+use crate::stage::playing::phase::moving::key::{KeyEvent, MovingKeyPlugin};
+use crate::stage::playing::phase::moving::lock::{LockEvent, MovingLockPlugin};
 use crate::stage::playing::phase::moving::next_page::{next_page_event, NextPageEvent};
 use crate::stage::playing::phase::moving::stop_move::{stop_move_event_system, StopMoveEvent};
 use crate::stage::playing::phase::moving::turn::{turn_completed, turn_event_system, turn_pipe_system, TurnEvent};
@@ -24,6 +25,7 @@ pub mod turn;
 mod next_page;
 pub mod goaled;
 mod key;
+mod lock;
 
 #[derive(Event, Copy, Clone, Eq, PartialEq)]
 pub struct MoveEvent {
@@ -53,9 +55,10 @@ pub struct PlayingMovingPlugin;
 impl Plugin for PlayingMovingPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_plugins(
-                PlayingKeyPlugin
-            )
+            .add_plugins((
+                MovingKeyPlugin,
+                MovingLockPlugin
+            ))
             .add_event::<CollisionEvent>()
             .add_event::<TurnEvent>()
             .add_event::<NextPageEvent>()
@@ -78,6 +81,7 @@ fn move_event_system(
     mut state: ResMut<NextState<StageState>>,
     mut commands: Commands,
     mut er: EventReader<MoveEvent>,
+    mut tween_writer: EventWriter<TweenCompleted>,
     mut players: Query<(Entity, &mut Transform), With<Movable>>,
     mut collides: Query<(Entity, &mut Transform, One<&dyn MovePosition>), (Without<Movable>, With<PageIndex>)>,
 ) {
@@ -86,11 +90,8 @@ fn move_event_system(
 
         for (pe, mut pt) in players.iter_mut() {
             let end = move_position.move_pos(ct.translation, move_direction);
-            if pt.translation.xy().abs_diff_eq(end.xy(), 0.1) {
-                continue;
-            }
 
-            move_linear(&mut commands.entity(pe), &mut pt, end, move_direction);
+            move_linear(&mut commands.entity(pe), &mut tween_writer, &mut pt, end, move_direction);
             commands.entity(ce).insert(CollisionTarget);
             state.set(StageState::Moving);
         }
@@ -124,31 +125,7 @@ struct CollideWriters<'w> {
     next_page: EventWriter<'w, NextPageEvent>,
     goaled: EventWriter<'w, GoaledEvent>,
     key: EventWriter<'w, KeyEvent>,
-}
-
-
-impl<'w> CollideWriters<'w> {
-    #[inline]
-    pub fn stop_move(&mut self) {
-        self.stop_move.send(StopMoveEvent);
-    }
-
-    #[inline]
-    pub fn turn(&mut self, turn_entity: Entity) {
-        self.turn.send(TurnEvent(turn_entity));
-    }
-
-
-    #[inline]
-    pub fn next_page(&mut self) {
-        self.next_page.send(NextPageEvent);
-    }
-
-
-    #[inline]
-    pub fn goaled(&mut self) {
-        self.goaled.send(GoaledEvent);
-    }
+    lock: EventWriter<'w, LockEvent>,
 }
 
 
@@ -163,21 +140,26 @@ fn collide_system(
 
         match collide {
             GimmickCollide::StopMove => {
-                collide_writers.stop_move();
+                collide_writers.stop_move.send(StopMoveEvent);
             }
             GimmickCollide::Turn => {
-                collide_writers.turn(ce);
+                collide_writers.turn.send(TurnEvent(ce));
             }
             GimmickCollide::NextPage => {
-                collide_writers.next_page();
+                collide_writers.next_page.send(NextPageEvent);
             }
             GimmickCollide::Goal => {
-                collide_writers.goaled();
+                collide_writers.goaled.send(GoaledEvent);
             }
             GimmickCollide::Key => {
                 collide_writers.key.send(KeyEvent(ce));
             }
-            _ => {}
+            GimmickCollide::Lock => {
+                collide_writers.lock.send(LockEvent(ce));
+            }
+            GimmickCollide::IceBox => {
+                todo!("IceBoxCollisionEvent")
+            }
         }
     }
 }

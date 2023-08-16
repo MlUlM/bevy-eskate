@@ -87,7 +87,8 @@ fn footer(parent: &mut ChildBuilder, asset: &GimmickAssets, edit_assets: &StageE
                 GimmickTag::Stop,
                 GimmickTag::IceBox,
                 GimmickTag::Turn,
-                GimmickTag::Key
+                GimmickTag::Key,
+                GimmickTag::Lock
             ]);
 
             spawn_eraser(parent, edit_assets);

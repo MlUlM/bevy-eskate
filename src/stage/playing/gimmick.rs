@@ -1,8 +1,8 @@
 use bevy::asset::Handle;
 use bevy::ecs::system::EntityCommands;
-use bevy::math::{Vec2, Vec3};
-use bevy::prelude::{Component, default, Image, Sprite, SpriteBundle, Transform};
-use bevy_tweening::{Animator, EaseMethod, Tween};
+use bevy::math::{Vec2, Vec3, Vec3Swizzles};
+use bevy::prelude::{Component, default, EventWriter, Image, Sprite, SpriteBundle, Transform};
+use bevy_tweening::{Animator, EaseMethod, Tween, TweenCompleted};
 use bevy_tweening::lens::TransformPositionLens;
 
 use crate::stage::playing::gimmick::tag::GimmickTag;
@@ -20,6 +20,7 @@ pub mod ice_box;
 pub mod core;
 pub mod turn;
 pub mod key;
+pub mod lock;
 
 
 pub const GIMMICK_WIDTH: f32 = 32.;
@@ -51,24 +52,32 @@ pub struct Gimmick;
 
 pub(crate) fn move_linear(
     commands: &mut EntityCommands,
+    tween_writer: &mut EventWriter<TweenCompleted>,
     player_transform: &mut Transform,
     end: Vec3,
     move_direction: MoveDirection,
 ) {
     player_transform.rotation = move_direction.quat();
-    let start = player_transform.translation;
-    let distance = end.distance(start) / 0.3;
-    let tween = Tween::new(
-        EaseMethod::Linear,
-        std::time::Duration::from_millis(distance as u64),
-        TransformPositionLens {
-            start,
-            end,
-        },
-    )
-        .with_completed_event(1);
+    if player_transform.translation.xy().abs_diff_eq(end.xy(), 0.1) {
+        tween_writer.send(TweenCompleted {
+            entity: commands.id(),
+            user_data: 1,
+        });
+    } else {
+        let start = player_transform.translation;
+        let distance = end.distance(start) / 0.3;
+        let tween = Tween::new(
+            EaseMethod::Linear,
+            std::time::Duration::from_millis(distance as u64),
+            TransformPositionLens {
+                start,
+                end,
+            },
+        )
+            .with_completed_event(1);
 
-    commands.insert(Animator::new(tween));
+        commands.insert(Animator::new(tween));
+    }
 }
 
 

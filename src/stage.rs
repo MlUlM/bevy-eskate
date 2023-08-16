@@ -88,6 +88,7 @@ fn undo_if_input_keycode(
 #[cfg(test)]
 mod tests {
     use bevy::app::{App, Startup};
+    use bevy_undo2::UndoPlugin;
 
     use crate::assets::gimmick::GimmickAssets;
     use crate::loader::{StageLoadable, StageLoader};
@@ -95,9 +96,12 @@ mod tests {
     use crate::page::page_index::PageIndex;
     use crate::stage::playing::phase::start_move::StartMoveEvent;
     use crate::stage::setup;
+    use crate::stage::state::StageState;
 
     pub(crate) fn new_playing_app() -> App {
         let mut app = App::new();
+        app.add_state::<StageState>();
+        app.add_plugins(UndoPlugin);
         app.add_event::<StartMoveEvent>();
         app.insert_resource(GimmickAssets::default());
         let stages = StageLoader::new().load().unwrap();
