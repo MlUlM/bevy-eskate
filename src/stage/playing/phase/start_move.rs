@@ -56,7 +56,6 @@ fn start_move(
     page_index: Res<PageIndex>,
 ) {
     for StartMoveEvent(move_direction) in er.into_iter().copied() {
-        println!("start_move {move_direction:?}");
         for player_transform in players.iter() {
             if let Some((col_entity, _, _)) = collides
                 .iter_mut()
@@ -66,6 +65,7 @@ fn start_move(
                 })
                 .sorted_by(|(_, prev, _), (_, next, _)| {
                     distance(player_transform, prev, &move_direction).partial_cmp(&distance(player_transform, next, &move_direction)).unwrap()
+                        .then(prev.translation.z.partial_cmp(&next.translation.y).unwrap())
                 })
                 .next()
             {

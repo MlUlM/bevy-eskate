@@ -6,6 +6,7 @@ use bevy::prelude::{Commands, Entity, Event, EventReader, EventWriter, in_state,
 use bevy_undo2::prelude::{AppUndoEx, UndoScheduler};
 
 use crate::assets::gimmick::GimmickAssets;
+use crate::gama_state::GameState;
 use crate::page::page_index::PageIndex;
 use crate::stage::playing::collide::GimmickCollide;
 use crate::stage::playing::gimmick::key::KeyBundle;
@@ -74,9 +75,11 @@ impl Plugin for MovingKeyPlugin {
             .add_undo_event::<UndoKeyEvent>()
             .init_resource::<KeyCounter>()
             .add_systems(Update, (
-                key_event_system,
+                key_event_system
+            ).run_if(in_state(StageState::Moving)))
+            .add_systems(Update, (
                 undo_key_event_system
-            ).run_if(in_state(StageState::Moving)));
+            ).run_if(in_state(GameState::Stage)));
     }
 }
 
@@ -94,8 +97,8 @@ fn key_event_system(
         let Ok((kt, key_page_index)) = keys.get(ke) else { continue; };
         key_counter.increment();
         commands.entity(ke).despawn();
-        start_move_writer.send(StartMoveEvent(MoveDirection::from_transform(player.single())));
         scheduler.reserve(UndoKeyEvent(kt.translation, *key_page_index));
+        start_move_writer.send(StartMoveEvent(MoveDirection::from_transform(player.single())));
     }
 }
 
@@ -107,7 +110,7 @@ fn undo_key_event_system(
     assets: Res<GimmickAssets>,
 ) {
     for UndoKeyEvent(pos, page_index) in er.iter().copied() {
-        commands.spawn(KeyBundle::new(&assets, pos, page_index));
+        commands.spawn(KeyBundle::new(&assets, pos + Vec3::Z, page_index));
         key_counter.decrement();
     }
 }

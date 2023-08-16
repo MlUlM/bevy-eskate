@@ -72,7 +72,6 @@ fn unlock_event_system(
         start_move_down_writer.send(StartMoveDownEvent(transform.translation.z));
         commands.entity(e).despawn();
         scheduler.reserve(UndoUnLockEvent(transform, require_keys, page_index));
-        println!("unlock {e:?}");
     }
 }
 
