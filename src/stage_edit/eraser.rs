@@ -31,7 +31,7 @@ fn erase_gimmick_system(
     gimmicks: Query<(Entity, &SpriteInteraction), With<GimmickItemSpawned>>,
 ) {
     for (entity, interaction) in gimmicks.iter() {
-        if interaction.is_clicked() {
+        if interaction.just_pressed() {
             commands
                 .entity(entity)
                 .despawn();

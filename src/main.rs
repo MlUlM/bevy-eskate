@@ -45,6 +45,7 @@ mod stage_select;
 mod before_stage_edit;
 mod cursor;
 mod undo;
+mod window;
 
 
 fn main() {
@@ -55,7 +56,7 @@ fn main() {
                     visible: false,
                     ..default()
                 },
-                resolution: WindowResolution::new(1200., 800.),
+                resolution: WindowResolution::new(1400., 800.),
                 title: "Eskate".to_string(),
                 ..default()
             }),
@@ -71,7 +72,7 @@ fn main() {
         .add_collection_to_loading_state::<_, CursorAssets>(GameState::AssetLoading)
         .add_plugins((
             JsonAssetPlugin::<StageJson>::new(&["stage.json"]),
-            // bevy_inspector_egui::quick::WorldInspectorPlugin::new(),
+            bevy_inspector_egui::quick::WorldInspectorPlugin::new(),
             TweeningPlugin,
             UndoPlugin,
             SpriteButtonPlugin

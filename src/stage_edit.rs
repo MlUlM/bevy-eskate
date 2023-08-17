@@ -1,22 +1,19 @@
 use bevy::prelude::*;
-use itertools::Itertools;
 
 use crate::{destroy_all, reset_game_cursor};
 use crate::assets::gimmick::GimmickAssets;
 use crate::assets::stage_edit_assets::StageEditAssets;
-use crate::button::{SpriteButton, SpriteInteraction};
 use crate::gama_state::GameState;
 use crate::loader::json::StageJson;
 use crate::page::page_count::PageCount;
 use crate::page::page_index::PageIndex;
-use crate::stage::playing::gimmick::{Floor, Gimmick, GimmickItemSpawned};
-use crate::stage::playing::gimmick::tag::GimmickTag;
 use crate::stage_edit::eraser::StageEditEraserPlugin;
 use crate::stage_edit::idle::StageEditIdlePlugin;
+use crate::stage_edit::page::spawn_page;
 use crate::stage_edit::pick::StageEditPickedPlugin;
 use crate::stage_edit::save::StageEditSavePlugin;
 use crate::stage_edit::stage_name::StageName;
-use crate::stage_edit::ui::{gimmick_iem_sprite_bundle, spawn_ui};
+use crate::stage_edit::ui::{gimmick_sprite_bundle, spawn_ui};
 
 #[derive(Default, Debug, Hash, Eq, PartialEq, Copy, Clone, Resource)]
 pub enum StageEditStatus {
@@ -34,6 +31,7 @@ mod save;
 mod stage_name;
 pub mod ui;
 mod eraser;
+pub mod page;
 
 
 #[derive(Default, Debug, PartialEq, Copy, Clone)]
@@ -45,7 +43,7 @@ impl Plugin for StageEditPlugin {
         app
             .add_systems(OnEnter(GameState::StageEdit), setup)
             .add_systems(OnExit(GameState::StageEdit), (destroy_all, reset_game_cursor))
-            .add_systems(Update, change_visible_gimmicks.run_if(in_state(GameState::StageEdit).and_then(resource_changed::<PageIndex>())))
+            // .add_systems(Update, change_visible_gimmicks.run_if(in_state(GameState::StageEdit).and_then(resource_changed::<PageIndex>())))
             .add_plugins((
                 StageEditIdlePlugin,
                 StageEditPickedPlugin,
@@ -67,51 +65,10 @@ fn setup(
     commands.insert_resource(StageName::default());
     commands.insert_resource(PageCount::new(stage.pages.len()));
 
-    spawn_ui(&mut commands, &assets, &edit_assets, PageCount::new(stage.pages.len()), &stage);
-    spawn_stage_gimmicks(&mut commands, &assets, &stage);
-}
-
-
-fn change_visible_gimmicks(
-    page_index: Res<PageIndex>,
-    mut gimmicks: Query<(&PageIndex, &mut Visibility), (
-        With<PageIndex>,
-        With<Visibility>
-    )>,
-) {
-    for (idx, mut visibility) in gimmicks.iter_mut() {
-        if idx.0 == page_index.0 {
-            *visibility = Visibility::Visible;
-        } else {
-            *visibility = Visibility::Hidden;
-        }
-    }
-}
-
-
-fn spawn_stage_gimmicks(
-    commands: &mut Commands,
-    assets: &GimmickAssets,
-    stage: &StageJson,
-) {
     for (page_index, page) in stage.pages.iter().enumerate() {
-        let page_index = PageIndex::new(page_index);
-
-        for cell in page.cells.iter() {
-            for (index, tag) in cell.tags.iter().sorted().enumerate() {
-                if matches!(tag, GimmickTag::Floor) {
-                    commands
-                        .spawn(gimmick_iem_sprite_bundle(Vec3::new(cell.x, cell.y, index as f32), tag.image(assets)))
-                        .insert((Gimmick, *tag, SpriteButton, SpriteInteraction::None, page_index))
-                        .insert(Floor);
-                } else {
-                    commands
-                        .spawn(gimmick_iem_sprite_bundle(Vec3::new(cell.x, cell.y, index as f32), tag.image(assets)))
-                        .insert((Gimmick, *tag, SpriteButton, SpriteInteraction::None, page_index, GimmickItemSpawned(*tag)));
-                }
-            }
-        }
+        spawn_page(&mut commands, page, PageIndex::new(page_index), &assets);
     }
+    spawn_ui(&mut commands, &assets, &edit_assets);
 }
 
 
@@ -132,7 +89,7 @@ mod tests {
         app.init_resource::<StageEditStatus>();
         app.init_resource::<PageIndex>();
         app.init_resource::<GimmickAssets>();
-        app.insert_resource(StageJson::empty_stage(page_count, 15, 25));
+        app.insert_resource(StageJson::empty_stage(page_count, 15, 25, Vec2::ZERO));
         app.add_event::<UserInputEvent>();
         app.add_state::<GameState>();
         app.insert_resource(StageEditAssets::default());

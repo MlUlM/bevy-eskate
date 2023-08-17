@@ -97,7 +97,7 @@ fn releases(
 ) {
     for (_, _, mut interaction) in buttons
         .iter_mut()
-        .filter(|(_, _, interaction)| interaction.is_clicked()) {
+        .filter(|(_, _, interaction)| interaction.just_pressed()) {
         *interaction = SpriteInteraction::None;
     }
 }
@@ -116,7 +116,7 @@ pub enum SpriteInteraction {
 
 impl SpriteInteraction {
     #[inline]
-    pub const fn is_clicked(&self) -> bool {
+    pub const fn just_pressed(&self) -> bool {
         matches!(self, Self::Clicked)
     }
 }

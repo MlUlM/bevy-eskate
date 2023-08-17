@@ -3,17 +3,17 @@ use std::fs;
 use bevy::app::{App, Plugin, Update};
 use bevy::core::Name;
 use bevy::hierarchy::{BuildChildren, ChildBuilder};
-use bevy::input::Input;
-use bevy::prelude::{ButtonBundle, Color, Commands, Component, default, EventReader, FileDragAndDrop, in_state, IntoSystemConfigs, MouseButton, NextState, NodeBundle, OnEnter, OnExit, Query, Res, ResMut, Style, Text, TextBundle, With};
+use bevy::prelude::{ButtonBundle, Color, Commands, Component, default, EventReader, FileDragAndDrop, in_state, IntoSystemConfigs, NextState, NodeBundle, OnEnter, OnExit, Query, Res, ResMut, Style, Text, TextBundle, With};
 use bevy::text::TextStyle;
 use bevy::ui::{AlignItems, BackgroundColor, Interaction, JustifyContent, Val};
 
 use crate::assets::font::FontAssets;
-use crate::destroy_all;
+use crate::{destroy_all, mouse_just_pressed_left};
 use crate::extension::InteractionCondition;
 use crate::gama_state::GameState;
 use crate::loader::json::StageJson;
 use crate::page::page_count::PageCount;
+use crate::window::WindowParams;
 
 #[derive(Default, Debug, PartialEq, Copy, Clone)]
 pub struct BeforeStageEditPlugin;
@@ -24,7 +24,7 @@ impl Plugin for BeforeStageEditPlugin {
         app
             .add_systems(OnEnter(GameState::BeforeStageEdit), setup)
             .add_systems(OnExit(GameState::BeforeStageEdit), destroy_all)
-            .add_systems(Update, (interaction, stage_file_drop_system)
+            .add_systems(Update, (interaction.run_if(mouse_just_pressed_left), stage_file_drop_system)
                 .run_if(in_state(GameState::BeforeStageEdit)),
             )
         ;
@@ -58,26 +58,25 @@ fn interaction(
     mut state: ResMut<NextState<GameState>>,
     mut commands: Commands,
     mut page_count: Query<&mut Text, With<PageCountText>>,
-    mouse: Res<Input<MouseButton>>,
+    window_params: WindowParams,
     down: Query<&Interaction, (With<Interaction>, With<PageDownButton>)>,
     up: Query<&Interaction, (With<Interaction>, With<PageUpButton>)>,
     start_button: Query<&Interaction, (With<Interaction>, With<StartButton>)>,
 ) {
-    if mouse.just_pressed(MouseButton::Left) {
-        let count = page_count.single().sections[0].value.parse::<usize>().unwrap();
-        if down.single().pressed() && 0 < count {
-            page_count.single_mut().sections[0].value = (count - 1).to_string();
-        } else if up.single().pressed() {
-            page_count.single_mut().sections[0].value = (count + 1).to_string();
-        } else if start_button.single().pressed() {
-            commands.insert_resource(StageJson::empty_stage(
-                PageCount::new(count),
-                25,
-                15,
-            ));
+    let count = page_count.single().sections[0].value.parse::<usize>().unwrap();
+    if down.single().pressed() && 0 < count {
+        page_count.single_mut().sections[0].value = (count - 1).to_string();
+    } else if up.single().pressed() {
+        page_count.single_mut().sections[0].value = (count + 1).to_string();
+    } else if start_button.single().pressed() {
+        commands.insert_resource(StageJson::empty_stage(
+            PageCount::new(count),
+            25,
+            14,
+            window_params.top_left(),
+        ));
 
-            state.set(GameState::StageEdit);
-        }
+        state.set(GameState::StageEdit);
     }
 }
 

@@ -1,7 +1,7 @@
 use bevy::asset::Handle;
 use bevy::ecs::system::EntityCommands;
 use bevy::math::Vec3;
-use bevy::prelude::{Commands, Image};
+use bevy::prelude::{ChildBuilder, Commands, Image};
 use bevy::ui::UiImage;
 use bevy_trait_query::imports::Component;
 use serde::{Deserialize, Serialize};
@@ -33,9 +33,28 @@ pub enum GimmickTag {
     Player,
     Turn,
     Key,
-    Lock
+    Lock,
 }
 
+
+macro_rules! spawn_gimmick {
+    ($self: expr, $commands: expr, $assets: expr, $pos: expr, $page_index: expr) => {
+        match $self {
+            GimmickTag::Floor => $commands.spawn(FloorBundle::new($assets, $pos, $page_index)),
+            GimmickTag::Wall => $commands.spawn(WallBundle::new($assets.wall.clone(), $pos, $page_index)),
+            GimmickTag::WallSide => $commands.spawn(WallBundle::new($assets.wall_side.clone(), $pos, $page_index)),
+            GimmickTag::Rock => $commands.spawn(RockBundle::new($assets, $pos, $page_index)),
+            GimmickTag::Player => $commands.spawn(PlayerBundle::new($assets, $pos, $page_index)),
+            GimmickTag::NextPage => $commands.spawn(NextPageBundle::new($assets, $pos, $page_index)),
+            GimmickTag::Goal => $commands.spawn(GoalBundle::new($assets, $pos, $page_index)),
+            GimmickTag::Stop => $commands.spawn(StopBundle::new($assets, $pos, $page_index)),
+            GimmickTag::IceBox => $commands.spawn(IceBoxBundle::new($assets, $pos, $page_index)),
+            GimmickTag::Turn => $commands.spawn(TurnBundle::new($assets, $pos, $page_index)),
+            GimmickTag::Key => $commands.spawn(KeyBundle::new($assets, $pos, $page_index)),
+            GimmickTag::Lock => $commands.spawn(LockBundle::new($assets, $pos, $page_index))
+        }
+    };
+}
 
 impl GimmickTag {
     pub fn spawn<'w, 's, 'a>(
@@ -45,20 +64,18 @@ impl GimmickTag {
         pos: Vec3,
         page_index: PageIndex,
     ) -> EntityCommands<'w, 's, 'a> {
-        match self {
-            GimmickTag::Floor => commands.spawn(FloorBundle::new(assets, pos, page_index)),
-            GimmickTag::Wall => commands.spawn(WallBundle::new(assets.wall.clone(), pos, page_index)),
-            GimmickTag::WallSide => commands.spawn(WallBundle::new(assets.wall_side.clone(), pos, page_index)),
-            GimmickTag::Rock => commands.spawn(RockBundle::new(assets, pos, page_index)),
-            GimmickTag::Player => commands.spawn(PlayerBundle::new(assets, pos, page_index)),
-            GimmickTag::NextPage => commands.spawn(NextPageBundle::new(assets, pos, page_index)),
-            GimmickTag::Goal => commands.spawn(GoalBundle::new(assets, pos, page_index)),
-            GimmickTag::Stop => commands.spawn(StopBundle::new(assets, pos, page_index)),
-            GimmickTag::IceBox => commands.spawn(IceBoxBundle::new(assets, pos, page_index)),
-            GimmickTag::Turn => commands.spawn(TurnBundle::new(assets, pos, page_index)),
-            GimmickTag::Key => commands.spawn(KeyBundle::new(assets, pos, page_index)),
-            GimmickTag::Lock => commands.spawn(LockBundle::new(assets, pos, page_index))
-        }
+        spawn_gimmick!(self, commands, assets, pos, page_index)
+    }
+
+
+    pub fn spawn_with_parent(
+        &self,
+        commands: &mut ChildBuilder,
+        assets: &GimmickAssets,
+        pos: Vec3,
+        page_index: PageIndex,
+    )  {
+        spawn_gimmick!(self, commands, assets, pos, page_index);
     }
 
 

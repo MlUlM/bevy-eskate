@@ -153,7 +153,6 @@ fn collide_system(
                 collide_writers.key.send(KeyEvent(ce));
             }
             GimmickCollide::Lock => {
-
                 collide_writers.lock.send(LockEvent(ce));
             }
             GimmickCollide::IceBox => {

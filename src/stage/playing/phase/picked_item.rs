@@ -125,7 +125,7 @@ fn click_floor_system(
     let Some((entity, tag)) = pick_item.0 else { return; };
 
     for (interaction, transform) in floors.iter() {
-        if interaction.is_clicked() {
+        if interaction.just_pressed() {
             ew.send(SpawnGimmickEvent(transform.translation, entity, tag));
             return;
         }

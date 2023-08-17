@@ -23,8 +23,8 @@ pub mod key;
 pub mod lock;
 
 
-pub const GIMMICK_WIDTH: f32 = 32.;
-pub const GIMMICK_HEIGHT: f32 = 32.;
+pub const GIMMICK_WIDTH: f32 = 24.;
+pub const GIMMICK_HEIGHT: f32 = 24.;
 // pub const GIMMICK_WIDTH_PX: Val = Val::Px(GIMMICK_WIDTH);
 // pub const GIMMICK_HEIGHT_PX: Val = Val::Px(GIMMICK_HEIGHT);
 pub const GIMMICK_SIZE_VEC3: Vec3 = Vec3::new(GIMMICK_WIDTH, GIMMICK_HEIGHT, 0.);

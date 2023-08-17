@@ -7,6 +7,7 @@ use bevy::hierarchy::{BuildChildren, DespawnRecursiveExt};
 use bevy::input::Input;
 use bevy::math::{I64Vec2, Vec2};
 use bevy::prelude::{ButtonBundle, ChildBuilder, Color, Commands, Component, Condition, Entity, Event, EventReader, EventWriter, in_state, IntoSystemConfigs, JustifyContent, MouseButton, NextState, NodeBundle, Query, Res, ResMut, resource_changed, resource_exists_and_equals, TextBundle, Transform, With};
+use bevy::sprite::Sprite;
 use bevy::text::{Text, TextStyle};
 use bevy::ui::{AlignItems, BackgroundColor, Display, FlexDirection, Interaction, PositionType, Style, UiRect, Val};
 use bevy::utils::default;
@@ -16,11 +17,13 @@ use crate::assets::font::FontAssets;
 use crate::extension::InteractionCondition;
 use crate::gama_state::GameState;
 use crate::loader::{StageLoadable, StageLoader};
-use crate::loader::json::{Page, StageCell, StageJson};
+use crate::loader::json::{ItemAreaJson, ItemCell, PageJson, StageCell, StageJson};
 use crate::page::page_index::PageIndex;
 use crate::page::page_param::PageParams;
 use crate::stage::playing::gimmick::{Gimmick, GimmickItem};
 use crate::stage::playing::gimmick::tag::GimmickTag;
+use crate::stage_edit::page::item_area::ItemArea;
+use crate::stage_edit::page::Page;
 use crate::stage_edit::StageEditStatus;
 
 #[derive(Event)]
@@ -188,8 +191,10 @@ struct SaveParams<'w, 's> {
     state: ResMut<'w, NextState<GameState>>,
     despawn_writer: EventWriter<'w, SaveUiDespawnEvent>,
     page_params: PageParams<'w>,
+    pages: Query<'w, 's, (&'static Transform, &'static PageIndex), With<Page>>,
+    item_area: Query<'w, 's, (&'static Sprite, &'static PageIndex), With<ItemArea>>,
     stage_name: Query<'w, 's, &'static mut Text, With<StageNameText>>,
-    stage_items: Query<'w, 's, (&'static GimmickItem, &'static PageIndex)>,
+    stage_items: Query<'w, 's, (&'static Transform, &'static GimmickItem, &'static PageIndex)>,
     stage_cells: Query<'w, 's, (&'static Transform, &'static GimmickTag, &'static PageIndex), (With<Transform>, With<Gimmick>, With<PageIndex>)>,
 }
 
@@ -198,7 +203,7 @@ impl<'w, 's> SaveParams<'w, 's> {
     #[inline]
     fn save_stage(&mut self) {
         let stage_name = self.stage_name.single().sections[0].value.clone();
-        save_stage(stage_name, &self.page_params, &self.stage_items, &self.stage_cells);
+        save_stage(stage_name, &self.page_params, &self.pages, &self.item_area, &self.stage_items, &self.stage_cells);
 
         self.state.set(GameState::Title);
         self.despawn_writer.send(SaveUiDespawnEvent);
@@ -284,12 +289,14 @@ fn input_key(
 fn save_stage(
     stage_name: String,
     page_params: &PageParams,
-    stage_items: &Query<(&GimmickItem, &PageIndex)>,
+    pages: &Query<(&Transform, &PageIndex), With<Page>>,
+    item_area: &Query<(&Sprite, &PageIndex), With<ItemArea>>,
+    stage_items: &Query<(&Transform, &GimmickItem, &PageIndex)>,
     stage_cells: &Query<(&Transform, &GimmickTag, &PageIndex), (With<Transform>, With<Gimmick>, With<PageIndex>)>,
 ) {
     let pages = (0..page_params.page_count())
-        .map(|page_index| create_page_asset(page_index, stage_items, stage_cells))
-        .collect::<Vec<Page>>();
+        .map(|page_index| create_page_asset(page_index, pages, item_area, stage_items, stage_cells))
+        .collect::<Vec<PageJson>>();
 
     let json = StageJson {
         name: stage_name,
@@ -301,23 +308,46 @@ fn save_stage(
 
 fn create_page_asset(
     page_index: usize,
-    stage_items: &Query<(&GimmickItem, &PageIndex)>,
+    pages: &Query<(&Transform, &PageIndex), With<Page>>,
+    item_area: &Query<(&Sprite, &PageIndex), With<ItemArea>>,
+    stage_items: &Query<(&Transform, &GimmickItem, &PageIndex)>,
     stage_cells: &Query<(&Transform, &GimmickTag, &PageIndex), (With<Transform>, With<Gimmick>, With<PageIndex>)>,
-) -> Page {
+) -> PageJson {
     let mut cells = Vec::new();
 
     for (pos, tags) in cells_in_page(page_index, stage_cells) {
         cells.push(StageCell::new(Vec2::new(pos.x as f32, pos.y as f32), tags));
     }
-    let items = stage_items
-        .iter()
-        .filter(|(_, idx)| ***idx == page_index)
-        .map(|(tag, _)| tag.0)
-        .collect::<Vec<GimmickTag>>();
 
-    Page {
+    let (page_transform, _) = pages
+        .iter()
+        .find(|(_, idx)| ***idx == page_index)
+        .unwrap();
+
+    let (item_area_sprite, _) = item_area
+        .iter()
+        .find(|(_, idx)| ***idx == page_index)
+        .unwrap();
+
+    let tags = stage_items
+        .iter()
+        .filter(|(_, _, idx)| ***idx == page_index)
+        .map(|(st, tag, _)| ItemCell {
+            x: st.translation.x,
+            y: st.translation.y,
+            tag: tag.0,
+        })
+        .collect::<Vec<ItemCell>>();
+
+    PageJson {
+        x: page_transform.translation.x,
+        y: page_transform.translation.y,
         cells,
-        items,
+        item_area: ItemAreaJson {
+            width: item_area_sprite.custom_size.unwrap().x,
+            height: item_area_sprite.custom_size.unwrap().y,
+            tags,
+        },
     }
 }
 

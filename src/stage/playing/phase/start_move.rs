@@ -1,6 +1,6 @@
 use bevy::app::{App, Plugin, Update};
 use bevy::math::Vec3Swizzles;
-use bevy::prelude::{Component, Entity, Event, EventReader, EventWriter, in_state, IntoSystemConfigs, Query, Res, Transform, With, Without};
+use bevy::prelude::{Component, Entity, Event, EventReader, EventWriter, GlobalTransform, in_state, IntoSystemConfigs, Query, Res, Transform, With, Without};
 use bevy_undo2::prelude::{AppUndoEx, UndoScheduler};
 use itertools::Itertools;
 
@@ -51,25 +51,25 @@ fn start_move(
     mut scheduler: UndoScheduler<UndoPlayerEvent>,
     mut er: EventReader<StartMoveEvent>,
     mut ew: EventWriter<MoveEvent>,
-    mut collides: Query<(Entity, &mut Transform, &PageIndex), (Without<Movable>, With<PageIndex>, With<GimmickCollide>)>,
-    players: Query<&Transform, With<Movable>>,
+    mut collides: Query<(Entity,  &mut GlobalTransform, &PageIndex), (Without<Movable>, With<PageIndex>, With<GimmickCollide>)>,
+    players: Query<(&Transform, &GlobalTransform), With<Movable>>,
     page_index: Res<PageIndex>,
 ) {
     for StartMoveEvent(move_direction) in er.into_iter().copied() {
-        for player_transform in players.iter() {
+        for (pt, pgt) in players.iter() {
             if let Some((col_entity, _, _)) = collides
                 .iter_mut()
                 .filter(|(_, _, idx)| *page_index == **idx)
                 .filter(|(_, transform, _)| {
-                    filter_move_direction(player_transform, transform, &move_direction)
+                    filter_move_direction(pgt, transform, &move_direction)
                 })
                 .sorted_by(|(_, prev, _), (_, next, _)| {
-                    distance(player_transform, prev, &move_direction).partial_cmp(&distance(player_transform, next, &move_direction)).unwrap()
-                        .then(prev.translation.z.partial_cmp(&next.translation.y).unwrap())
+                    distance(pgt, prev, &move_direction).partial_cmp(&distance(pgt, next, &move_direction)).unwrap()
+                        .then(prev.translation().z.partial_cmp(&next.translation().y).unwrap())
                 })
                 .next()
             {
-                scheduler.reserve(UndoPlayerEvent(*player_transform));
+                scheduler.reserve(UndoPlayerEvent(*pt));
                 ew.send(MoveEvent::new(move_direction, col_entity));
             }
         }
@@ -113,30 +113,30 @@ fn undo_player_pos_event_system(
 
 
 fn filter_move_direction(
-    player_transform: &Transform,
-    controller_transform: &Transform,
+    player_transform: &GlobalTransform,
+    controller_transform: &GlobalTransform,
     direction: &MoveDirection,
 ) -> bool {
     match direction {
-        MoveDirection::Left => controller_transform.translation.x < player_transform.translation.x && controller_transform.translation.y == player_transform.translation.y,
-        MoveDirection::Right => player_transform.translation.x < controller_transform.translation.x && controller_transform.translation.y == player_transform.translation.y,
-        MoveDirection::Up => player_transform.translation.y < controller_transform.translation.y && controller_transform.translation.x == player_transform.translation.x,
-        MoveDirection::Down => controller_transform.translation.y < player_transform.translation.y && controller_transform.translation.x == player_transform.translation.x,
+        MoveDirection::Left => controller_transform.translation().x < player_transform.translation().x && controller_transform.translation().y == player_transform.translation().y,
+        MoveDirection::Right => player_transform.translation().x < controller_transform.translation().x && controller_transform.translation().y == player_transform.translation().y,
+        MoveDirection::Up => player_transform.translation().y < controller_transform.translation().y && controller_transform.translation().x == player_transform.translation().x,
+        MoveDirection::Down => controller_transform.translation().y < player_transform.translation().y && controller_transform.translation().x == player_transform.translation().x,
     }
 }
 
 
 fn distance(
-    player_transform: &Transform,
-    controller_transform: &Transform,
+    player_transform: &GlobalTransform,
+    controller_transform: &GlobalTransform,
     direction: &MoveDirection,
 ) -> f32 {
     match direction {
         MoveDirection::Left | MoveDirection::Right => {
-            (controller_transform.translation.x - player_transform.translation.x).abs()
+            (controller_transform.translation().x - player_transform.translation().x).abs()
         }
         MoveDirection::Up | MoveDirection::Down => {
-            (player_transform.translation.y - controller_transform.translation.y).abs()
+            (player_transform.translation().y - controller_transform.translation().y).abs()
         }
     }
 }
