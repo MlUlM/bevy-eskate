@@ -11,8 +11,6 @@ use crate::assets::stage_edit_assets::StageEditAssets;
 use crate::stage::playing::gimmick::{GIMMICK_HEIGHT, GIMMICK_SIZE, GIMMICK_WIDTH, GimmickItem};
 use crate::stage::playing::gimmick::tag::GimmickTag;
 
-pub mod item_area;
-
 
 pub fn spawn_ui(
     commands: &mut Commands,

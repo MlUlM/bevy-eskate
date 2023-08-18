@@ -41,8 +41,8 @@ macro_rules! spawn_gimmick {
     ($self: expr, $commands: expr, $assets: expr, $pos: expr, $page_index: expr) => {
         match $self {
             GimmickTag::Floor => $commands.spawn(FloorBundle::new($assets, $pos, $page_index)),
-            GimmickTag::Wall => $commands.spawn(WallBundle::new($assets.wall.clone(), $pos, $page_index)),
-            GimmickTag::WallSide => $commands.spawn(WallBundle::new($assets.wall_side.clone(), $pos, $page_index)),
+            GimmickTag::Wall => $commands.spawn(WallBundle::new($assets.wall.clone(), $pos, $page_index, GimmickTag::Wall)),
+            GimmickTag::WallSide => $commands.spawn(WallBundle::new($assets.wall_side.clone(), $pos, $page_index, GimmickTag::WallSide)),
             GimmickTag::Rock => $commands.spawn(RockBundle::new($assets, $pos, $page_index)),
             GimmickTag::Player => $commands.spawn(PlayerBundle::new($assets, $pos, $page_index)),
             GimmickTag::NextPage => $commands.spawn(NextPageBundle::new($assets, $pos, $page_index)),

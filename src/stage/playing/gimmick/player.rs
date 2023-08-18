@@ -35,7 +35,7 @@ impl PlayerBundle {
         page_index: PageIndex,
     ) -> Self {
         Self {
-            core: GimmickCoreBundle::new("Player", assets.player.clone(), pos, page_index),
+            core: GimmickCoreBundle::new("Player", assets.player.clone(), pos, page_index, GimmickTag::Player),
             movable: Movable,
             spawned: GimmickItemSpawned(GimmickTag::Player),
             player: Player,

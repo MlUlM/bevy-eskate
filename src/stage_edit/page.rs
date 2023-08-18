@@ -7,18 +7,23 @@ use itertools::Itertools;
 use crate::assets::gimmick::GimmickAssets;
 use crate::loader::json::PageJson;
 use crate::page::page_index::PageIndex;
-use crate::stage_edit::page::item_area::spawn_item_area2;
+use crate::stage_edit::page::item_area::spawn_item_area;
 
 pub mod item_area;
 
 #[derive(Component, Copy, Clone, Eq, PartialEq, Debug, Default)]
 pub struct Page;
 
+
+#[derive(Component, Copy, Clone, Eq, PartialEq, Debug, Default)]
+pub struct Field;
+
+
 pub fn spawn_page(
     commands: &mut Commands,
     page: &PageJson,
     page_index: PageIndex,
-    assets: &GimmickAssets,
+    gimmick_assets: &GimmickAssets,
 ) {
     commands
         .spawn(SpriteBundle {
@@ -31,13 +36,16 @@ pub fn spawn_page(
         })
         .insert((Page, page_index))
         .with_children(|parent| {
-            spawn_item_area2(parent, &page.item_area, page_index);
-            parent.spawn(SpriteBundle {
-                transform: Transform::from_xyz(page.item_area.width, 0., 0.),
-                ..default()
-            }).with_children(|panret| {
-                spawn_page_gimmicks(panret, page, page_index, assets);
-            });
+            spawn_item_area(parent, gimmick_assets,&page.item_area, page_index);
+            parent
+                .spawn(SpriteBundle {
+                    transform: Transform::from_xyz(page.item_area.width, 0., 0.),
+                    ..default()
+                })
+                .insert((Field, page_index))
+                .with_children(|panret| {
+                    spawn_page_gimmicks(panret, page, page_index, gimmick_assets);
+                });
         });
 }
 

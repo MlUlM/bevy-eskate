@@ -1,5 +1,6 @@
 use bevy::math::Vec3Swizzles;
 use bevy::prelude::*;
+use bevy::sprite::Anchor;
 use bevy::window::PrimaryWindow;
 use itertools::Itertools;
 
@@ -78,7 +79,10 @@ fn clicked(
         for (_, _, mut interaction) in buttons
             .iter_mut()
             .filter(|(sprite, t, _)| {
-                sprite.custom_size.is_some_and(|size| Rect::from_center_size(t.translation().xy(), size).contains(position))
+                sprite.custom_size.is_some_and(|size| match sprite.anchor {
+                    Anchor::Center => Rect::from_center_size(t.translation().xy(), size).contains(position),
+                    _ => Rect::from_center_size(t.translation().xy() - Vec2::new(0., size.y / 2.), size).contains(position)
+                })
             })
             .sorted_by(|(_, t1, _), (_, t2, _)| t1.translation().z.partial_cmp(&t2.translation().z).unwrap())
         {

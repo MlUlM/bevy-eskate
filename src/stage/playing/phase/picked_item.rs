@@ -1,7 +1,8 @@
-use bevy::app::{App, FixedUpdate, Update};
+use bevy::app::{App, Update};
+use bevy::hierarchy::BuildChildren;
 use bevy::input::Input;
 use bevy::math::Vec2;
-use bevy::prelude::{Color, Commands, default, Event, EventReader, EventWriter, in_state, IntoSystemConfigs, KeyCode, NextState, OnEnter, OnExit, Plugin, Query, Res, ResMut, Resource, Transform, Vec3, With};
+use bevy::prelude::{Color, Commands, default, Event, EventReader, EventWriter, in_state, IntoSystemConfigs, KeyCode, NextState, OnEnter, OnExit, Or, Plugin, Query, Res, ResMut, Resource, Transform, Vec3, With};
 use bevy::sprite::{Sprite, SpriteBundle};
 use bevy_trait_query::imports::{Component, Entity};
 use bevy_undo2::prelude::{AppUndoEx, UndoScheduler};
@@ -14,6 +15,7 @@ use crate::page::page_index::PageIndex;
 use crate::stage::playing::gimmick::{Floor, GimmickItem, GimmickItemDisabled, GimmickItemSpawned};
 use crate::stage::playing::gimmick::tag::GimmickTag;
 use crate::stage::state::StageState;
+use crate::stage_edit::page::Field;
 
 #[derive(Resource, Default, Copy, Clone, Eq, PartialEq, Debug)]
 pub struct PickItem(Option<(Entity, GimmickTag)>);
@@ -48,7 +50,7 @@ impl Plugin for PlayingPickedItemPlugin {
             .init_resource::<PickItem>()
             .add_systems(OnEnter(StageState::PickedItem), stage_focus_system)
             .add_systems(OnExit(StageState::PickedItem), stage_un_focus_system)
-            .add_systems(FixedUpdate, (
+            .add_systems(Update, (
                 pick_event_item_system,
                 undo_spawn_item_event_system
             ).run_if(in_state(GameState::Stage)))
@@ -74,6 +76,7 @@ fn pick_event_item_system(
     items: Query<&GimmickItem>,
 ) {
     for PickedItemEvent(item_entity) in er.iter().copied() {
+        println!("PICKED {item_entity:?}");
         let Some(GimmickItem(tag)) = items.get(item_entity).ok() else { continue; };
         pick_item.0 = Some((item_entity, *tag));
         cursor.set_cursor(tag.image(&assets));
@@ -120,7 +123,7 @@ fn stage_un_focus_system(
 fn click_floor_system(
     mut ew: EventWriter<SpawnGimmickEvent>,
     pick_item: Res<PickItem>,
-    floors: Query<(&SpriteInteraction, &Transform), With<Floor>>,
+    floors: Query<(&SpriteInteraction, &Transform), Or<(With<Floor>, With<GimmickItemSpawned>)>>,
 ) {
     let Some((entity, tag)) = pick_item.0 else { return; };
 
@@ -133,6 +136,7 @@ fn click_floor_system(
 }
 
 
+#[allow(clippy::too_many_arguments)]
 fn spawn_item_system(
     mut state: ResMut<NextState<StageState>>,
     mut commands: Commands,
@@ -141,6 +145,7 @@ fn spawn_item_system(
     mut scheduler: UndoScheduler<UndoSpawnGimmickEvent>,
     assets: Res<GimmickAssets>,
     page_index: Res<PageIndex>,
+    fields: Query<(Entity, &PageIndex), With<Field>>,
 ) {
     for SpawnGimmickEvent(spawn_pos, item_entity, tag) in er.iter().copied() {
         commands
@@ -152,6 +157,12 @@ fn spawn_item_system(
             .spawn(&mut commands, &assets, spawn_pos + Vec3::Z, *page_index)
             .insert((GimmickItemSpawned(tag), tag))
             .id();
+
+        let (field, _) = fields
+            .iter()
+            .find(|(_, idx)| *page_index == **idx)
+            .unwrap();
+        commands.entity(field).add_child(gimmick_entity);
 
         scheduler.register(UndoSpawnGimmickEvent { gimmick_entity, item_entity, tag });
         cursor.reset();

@@ -45,7 +45,7 @@ fn empty_page(
     for x in 0..page_width {
         for y in 0..page_height {
             let tag = if x == 0 || y == 0 || x == w || y == h {
-                if (x == 0 || x == w) && 0 < y { GimmickTag::WallSide } else { GimmickTag::Wall }
+                if (x == 0 || x == w) &&  y < h { GimmickTag::WallSide } else { GimmickTag::Wall }
             } else {
                 GimmickTag::Floor
             };

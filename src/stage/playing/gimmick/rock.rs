@@ -5,6 +5,7 @@ use crate::assets::gimmick::GimmickAssets;
 use crate::page::page_index::PageIndex;
 use crate::stage::playing::collide::GimmickCollide;
 use crate::stage::playing::gimmick::core::{GimmickCollideBundle, GimmickCoreBundle};
+use crate::stage::playing::gimmick::tag::GimmickTag;
 use crate::stage::playing::move_position::MoveToFront;
 
 #[derive(Bundle, Clone)]
@@ -22,7 +23,7 @@ impl RockBundle {
         page_index: PageIndex,
     ) -> Self {
         Self {
-            core: GimmickCoreBundle::new("Rock", assets.rock.clone(), pos, page_index),
+            core: GimmickCoreBundle::new("Rock", assets.rock.clone(), pos, page_index, GimmickTag::Rock),
             collide: GimmickCollideBundle::new(GimmickCollide::StopMove),
         }
     }

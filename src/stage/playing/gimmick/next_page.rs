@@ -5,6 +5,7 @@ use crate::assets::gimmick::GimmickAssets;
 use crate::page::page_index::PageIndex;
 use crate::stage::playing::collide::GimmickCollide;
 use crate::stage::playing::gimmick::core::{GimmickCollideBundle, GimmickCoreBundle};
+use crate::stage::playing::gimmick::tag::GimmickTag;
 use crate::stage::playing::move_position::MoveUp;
 
 #[derive(Default, Debug, Copy, Clone, Component)]
@@ -26,7 +27,7 @@ impl NextPageBundle {
         page_index: PageIndex,
     ) -> Self {
         Self {
-            core: GimmickCoreBundle::new("NextPage", assets.next_page.clone(), pos, page_index),
+            core: GimmickCoreBundle::new("NextPage", assets.next_page.clone(), pos, page_index, GimmickTag::NextPage),
             collide: GimmickCollideBundle::new(GimmickCollide::NextPage),
         }
     }

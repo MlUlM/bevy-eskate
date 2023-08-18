@@ -1,9 +1,7 @@
 use bevy::app::{App, Plugin, Update};
 use bevy::input::Input;
 use bevy::prelude::*;
-
-use crate::extension::InteractionCondition;
-use crate::mouse_just_pressed_left;
+use crate::button::SpriteInteraction;
 use crate::page::page_index::PageIndex;
 use crate::stage::playing::gimmick::{GimmickItem, GimmickItemDisabled};
 use crate::stage::playing::move_direction::MoveDirection;
@@ -23,7 +21,7 @@ impl Plugin for PlayingIdlePlugin {
                 (
                     update_item_colors_system,
                     input_move_system,
-                    picked_item_system.run_if(mouse_just_pressed_left)
+                    picked_item_system
                 )
                     .run_if(in_state(StageState::Idle)),
             );
@@ -55,13 +53,13 @@ fn input_move_system(
 fn picked_item_system(
     mut ew: EventWriter<PickedItemEvent>,
     page_index: Res<PageIndex>,
-    items: Query<(Entity, &Interaction, &GimmickItem, &PageIndex)>,
+    items: Query<(Entity, &SpriteInteraction, &GimmickItem, &PageIndex)>,
 ) {
     for (item_entity, interaction, GimmickItem(_), _) in items
         .iter()
         .filter(|(_, _, _, idx)| **idx == *page_index)
     {
-        if interaction.pressed() {
+        if interaction.just_pressed() {
             ew.send(PickedItemEvent(item_entity));
 
             return;
@@ -71,15 +69,15 @@ fn picked_item_system(
 
 
 fn update_item_colors_system(
-    mut active_items: Query<&mut BackgroundColor, (Added<GimmickItem>, Without<GimmickItemDisabled>)>,
-    mut deactive_items: Query<&mut BackgroundColor, (Added<GimmickItemDisabled>, Without<GimmickItem>)>,
+    mut active_items: Query<&mut Sprite, (Added<GimmickItem>, Without<GimmickItemDisabled>)>,
+    mut deactive_items: Query<&mut Sprite, (Added<GimmickItemDisabled>, Without<GimmickItem>)>,
 ) {
     for mut item in active_items.iter_mut() {
-        *item = BackgroundColor::default();
+        item.color = Color::default();
     }
 
     for mut item in deactive_items.iter_mut() {
-        *item = BackgroundColor::from(Color::GRAY);
+        item.color = Color::GRAY;
     }
 }
 
