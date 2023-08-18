@@ -1,7 +1,9 @@
 use bevy::app::{App, Plugin, Update};
 use bevy::input::Input;
 use bevy::prelude::*;
+
 use crate::button::SpriteInteraction;
+use crate::gama_state::GameState;
 use crate::page::page_index::PageIndex;
 use crate::stage::playing::gimmick::{GimmickItem, GimmickItemDisabled};
 use crate::stage::playing::move_direction::MoveDirection;
@@ -21,10 +23,21 @@ impl Plugin for PlayingIdlePlugin {
                 (
                     update_item_colors_system,
                     input_move_system,
-                    picked_item_system
+                    picked_item_system,
+                    back_scene_system
                 )
-                    .run_if(in_state(StageState::Idle)),
+                    .run_if(in_state(GameState::Stage).and_then(in_state(StageState::Idle))),
             );
+    }
+}
+
+
+fn back_scene_system(
+    mut state: ResMut<NextState<GameState>>,
+    keys: Res<Input<KeyCode>>,
+) {
+    if keys.just_pressed(KeyCode::Escape) {
+        state.set(GameState::StageSelect);
     }
 }
 
@@ -112,7 +125,7 @@ mod tests {
 
         app.update();
 
-        assert!(app.world.query::<&MoveDirection>().iter(&app.world).any(|d|*d == expect));
+        assert!(app.world.query::<&MoveDirection>().iter(&app.world).any(|d| *d == expect));
     }
 
 

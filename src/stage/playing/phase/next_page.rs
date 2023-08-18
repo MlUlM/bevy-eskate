@@ -1,5 +1,6 @@
 use bevy::app::{App, Plugin, Update};
 use bevy::hierarchy::BuildChildren;
+use bevy::log::debug;
 use bevy::prelude::{Commands, Component, Entity, Event, EventReader, NextState, OnEnter, Query, ResMut, With, Without};
 use bevy_undo2::prelude::{AppUndoEx, UndoScheduler};
 
@@ -40,7 +41,7 @@ fn next_page_system(
     items: Query<(Entity, &mut PageIndex), (With<GimmickItemSpawned>, With<PageIndex>, Without<Field>)>,
 ) {
     let next_page = page_params.next_page();
-    println!("next page");
+    debug!("next page");
     scheduler.reserve_default();
     scheduler.reserve_commit();
     update_items_page_index(commands, items, next_page, fields);
@@ -56,7 +57,7 @@ fn undo_next_page_event_system(
     items: Query<(Entity, &mut PageIndex), (With<GimmickItemSpawned>, With<PageIndex>, Without<Field>)>,
 ) {
     if er.iter().next().is_some() {
-        println!("undo: next page");
+        debug!("undo: next page");
         let previous_page = page_params.previous_page();
         update_items_page_index(commands, items, previous_page, fields);
     }

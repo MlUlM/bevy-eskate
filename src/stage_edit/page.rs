@@ -43,8 +43,8 @@ pub fn spawn_page(
                     ..default()
                 })
                 .insert((Field, page_index))
-                .with_children(|panret| {
-                    spawn_page_gimmicks(panret, page, page_index, gimmick_assets);
+                .with_children(|parent| {
+                    spawn_page_gimmicks(parent, page, page_index, gimmick_assets);
                 });
         });
 }

@@ -23,8 +23,8 @@ impl GameCursorBundle {
             image: ImageBundle {
                 style: Style {
                     position_type: PositionType::Absolute,
-                    width: Val::Px(30.),
-                    height: Val::Px(30.),
+                    width: Val::Px(24.),
+                    height: Val::Px(24.),
                     ..default()
                 },
                 image: UiImage::new(asset_server.load("game_cursor.png")),

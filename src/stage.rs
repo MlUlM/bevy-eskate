@@ -1,9 +1,10 @@
 use bevy::app::{App, Plugin, Update};
 use bevy::input::Input;
-use bevy::prelude::{Commands, Condition, in_state, IntoSystemConfigs, KeyCode, OnEnter, Res};
+use bevy::prelude::{Commands, Condition, in_state, IntoSystemConfigs, KeyCode, NextState, OnEnter, OnExit, Res, ResMut};
 use bevy_undo2::prelude::UndoRequester;
 
 use crate::assets::gimmick::GimmickAssets;
+use crate::destroy_all;
 use crate::gama_state::GameState;
 use crate::loader::json::StageJson;
 use crate::page::page_count::PageCount;
@@ -33,6 +34,10 @@ impl Plugin for StagePlugin {
             .init_resource::<PageIndex>()
             .init_resource::<PageCount>()
             .add_systems(OnEnter(GameState::Stage), setup)
+            .add_systems(OnExit(GameState::Stage), (
+                destroy_all,
+                reset_stage_state
+            ))
             .add_systems(Update, undo_if_input_keycode
                 .run_if(in_state(GameState::Stage).and_then(in_state(StageState::Idle))),
             );
@@ -52,6 +57,13 @@ fn setup(
         let page_index = PageIndex(page_index);
         spawn_page(&mut commands, page, page_index, &assets);
     }
+}
+
+
+fn reset_stage_state(
+    mut state: ResMut<NextState<StageState>>
+) {
+    state.set(StageState::Idle);
 }
 
 

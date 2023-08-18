@@ -1,7 +1,7 @@
 use bevy::app::{App, Plugin, Update};
 use bevy::core::Name;
 use bevy::hierarchy::BuildChildren;
-use bevy::prelude::{AlignItems, ButtonBundle, ChildBuilder, Color, Commands, in_state, IntoSystemConfigs, JustifyContent, NextState, NodeBundle, OnEnter, OnExit, Query, RepeatedGridTrack, Res, ResMut, Text, TextBundle, TextStyle, Val, With};
+use bevy::prelude::{AlignItems, ButtonBundle, ChildBuilder, Color, Commands, in_state, Input, IntoSystemConfigs, JustifyContent, KeyCode, NextState, NodeBundle, OnEnter, OnExit, Query, RepeatedGridTrack, Res, ResMut, Text, TextBundle, TextStyle, Val, With};
 use bevy::ui::{BackgroundColor, Display, Interaction, Style};
 use bevy::utils::default;
 use bevy_trait_query::imports::Component;
@@ -23,10 +23,10 @@ impl Plugin for StageSelectPlugin {
         app
             .add_systems(OnEnter(GameState::StageSelect), setup)
             .add_systems(OnExit(GameState::StageSelect), destroy_all)
-            .add_systems(Update, select_stage
-                .run_if(in_state(GameState::StageSelect)),
-            )
-        ;
+            .add_systems(Update, (
+                select_stage,
+                back_scene_system
+            ).run_if(in_state(GameState::StageSelect)));
     }
 }
 
@@ -127,5 +127,15 @@ fn select_stage(
             state.set(GameState::Stage);
             return;
         }
+    }
+}
+
+
+fn back_scene_system(
+    mut state: ResMut<NextState<GameState>>,
+    key: Res<Input<KeyCode>>,
+) {
+    if key.just_pressed(KeyCode::Escape) {
+        state.set(GameState::Title);
     }
 }
