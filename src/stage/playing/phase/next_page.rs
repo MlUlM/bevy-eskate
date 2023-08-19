@@ -43,7 +43,7 @@ fn next_page_system(
     let next_page = page_params.next_page();
     debug!("next page");
     scheduler.reserve_default();
-    scheduler.reserve_commit();
+    scheduler.register_all_reserved();
     update_items_page_index(commands, items, next_page, fields);
     state.set(StageState::Idle);
 }
