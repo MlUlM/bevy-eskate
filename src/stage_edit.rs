@@ -28,7 +28,7 @@ pub enum StageEditStatus {
 mod idle;
 mod pick;
 mod save;
-mod stage_name;
+pub mod stage_name;
 pub mod ui;
 mod eraser;
 pub mod page;

@@ -123,11 +123,15 @@ fn stage_un_focus_system(
 fn click_floor_system(
     mut ew: EventWriter<SpawnGimmickEvent>,
     pick_item: Res<PickItem>,
-    floors: Query<(&SpriteInteraction, &Transform), Or<(With<Floor>, With<GimmickItemSpawned>)>>,
+    page_index: Res<PageIndex>,
+    floors: Query<(&SpriteInteraction, &Transform, &PageIndex), Or<(With<Floor>, With<GimmickItemSpawned>)>>,
 ) {
     let Some((entity, tag)) = pick_item.0 else { return; };
 
-    for (interaction, transform) in floors.iter() {
+    for (interaction, transform, _) in floors
+        .iter()
+        .filter(|(_, _, idx)|**idx == *page_index)
+    {
         if interaction.just_pressed() {
             ew.send(SpawnGimmickEvent(transform.translation, entity, tag));
             return;

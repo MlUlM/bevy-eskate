@@ -51,6 +51,7 @@ fn lock_event_system(
 ) {
     for LockEvent(le) in er.iter().copied() {
         let Ok((lt, require_keys, page_index)) = locks.get(le) else { continue; };
+
         if require_keys.0 <= **key_counter {
             unlock_writer.send(UnLockEvent(le, *lt, *require_keys, *page_index));
         } else {

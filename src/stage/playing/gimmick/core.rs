@@ -3,6 +3,7 @@ use bevy::asset::Handle;
 use bevy::core::Name;
 use bevy::math::Vec3;
 use bevy::prelude::{Bundle, Component, Image, SpriteBundle};
+use crate::button::{SpriteButton, SpriteInteraction};
 
 use crate::page::page_index::PageIndex;
 use crate::stage::playing::collide::GimmickCollide;
@@ -13,6 +14,8 @@ use crate::stage::playing::move_position::MovePosition;
 #[derive(Bundle, Clone)]
 pub struct GimmickCoreBundle {
     sprite: SpriteBundle,
+    button: SpriteButton,
+    interaction: SpriteInteraction,
     name: Name,
     page_index: PageIndex,
     gimmick: Gimmick,
@@ -30,6 +33,8 @@ impl GimmickCoreBundle {
     ) -> Self {
         Self {
             sprite: new_gimmick_sprite_bundle(texture, pos),
+            button: SpriteButton,
+            interaction: SpriteInteraction::None,
             name: Name::new(name),
             page_index,
             gimmick: Gimmick,

@@ -13,6 +13,7 @@ use crate::extension::InteractionCondition;
 use crate::gama_state::GameState;
 use crate::loader::json::StageJson;
 use crate::page::page_count::PageCount;
+use crate::stage_edit::stage_name::StageName;
 use crate::window::WindowParams;
 
 #[derive(Default, Debug, PartialEq, Copy, Clone)]
@@ -91,6 +92,7 @@ fn stage_file_drop_system(
             let json = fs::read_to_string(path_buf).unwrap();
             let json = serde_json::from_str::<StageJson>(&json).unwrap();
 
+            commands.insert_resource(StageName(json.name.clone()));
             commands.insert_resource(json);
             state.set(GameState::StageEdit);
         }

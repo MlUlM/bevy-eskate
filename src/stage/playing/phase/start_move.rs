@@ -65,7 +65,7 @@ fn start_move(
                 })
                 .sorted_by(|(_, prev, _), (_, next, _)| {
                     distance(pgt, prev, &move_direction).partial_cmp(&distance(pgt, next, &move_direction)).unwrap()
-                        .then(prev.translation().z.partial_cmp(&next.translation().y).unwrap())
+                        .then(next.translation().z.partial_cmp(&prev.translation().z).unwrap())
                 })
                 .next()
             {

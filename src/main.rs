@@ -7,7 +7,6 @@ use bevy::asset::{Assets, Handle};
 use bevy::DefaultPlugins;
 use bevy::ecs::system::SystemParam;
 use bevy::input::Input;
-use bevy::log::LogPlugin;
 use bevy::prelude::{AssetServer, Camera, Camera2dBundle, Commands, Component, Entity, Image, in_state, IntoSystemConfigs, MouseButton, not, OnExit, Query, Res, ResMut, UiImage, With, Without};
 use bevy::ui::{Style, Val};
 use bevy::utils::default;
@@ -63,11 +62,11 @@ fn main() {
         ..default()
     });
 
-    #[cfg(debug_assertions)]
-        let default_plugins = default_plugins.set(LogPlugin {
-        level: bevy::log::Level::DEBUG,
-        filter: "debug,wgpu_core=warn,wgpu_hal=warn,mygame=debug".into(),
-    });
+    // #[cfg(debug_assertions)]
+    //     let default_plugins = default_plugins.set(LogPlugin {
+    //     level: bevy::log::Level::DEBUG,
+    //     filter: "debug,wgpu_core=warn,wgpu_hal=warn,mygame=debug".into(),
+    // });
 
     App::new()
         .add_plugins(default_plugins)

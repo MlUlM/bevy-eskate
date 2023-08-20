@@ -1,9 +1,9 @@
 use bevy::app::{App, Plugin, Update};
-use bevy::prelude::{Commands, Component, Condition, Entity, in_state, IntoSystemConfigs, Query, Resource, resource_exists, With};
+use bevy::prelude::{Commands, Component, Condition, Entity, in_state, IntoSystemConfigs, Query, Resource, resource_exists, With, Without};
 
 use crate::button::SpriteInteraction;
 use crate::gama_state::GameState;
-use crate::stage::playing::gimmick::GimmickItemSpawned;
+use crate::stage::playing::gimmick::{Floor, Gimmick};
 
 #[derive(Component, Resource, Copy, Clone, Default, Eq, PartialEq, Hash)]
 pub struct OnPickedEraser;
@@ -28,7 +28,7 @@ impl Plugin for StageEditEraserPlugin {
 
 fn erase_gimmick_system(
     mut commands: Commands,
-    gimmicks: Query<(Entity, &SpriteInteraction), With<GimmickItemSpawned>>,
+    gimmicks: Query<(Entity, &SpriteInteraction), (With<Gimmick>, Without<Floor>)>,
 ) {
     for (entity, interaction) in gimmicks.iter() {
         if interaction.just_pressed() {

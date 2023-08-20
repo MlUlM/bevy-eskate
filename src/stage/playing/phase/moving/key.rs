@@ -12,6 +12,7 @@ use crate::stage::playing::collide::GimmickCollide;
 use crate::stage::playing::gimmick::key::KeyBundle;
 use crate::stage::playing::gimmick::player::Player;
 use crate::stage::playing::move_direction::MoveDirection;
+use crate::stage::playing::phase::FieldParams;
 use crate::stage::playing::phase::start_move::StartMoveEvent;
 use crate::stage::state::StageState;
 
@@ -108,9 +109,11 @@ fn undo_key_event_system(
     mut er: EventReader<UndoKeyEvent>,
     mut key_counter: ResMut<KeyCounter>,
     assets: Res<GimmickAssets>,
+    field_params: FieldParams
 ) {
     for UndoKeyEvent(pos, page_index) in er.iter().copied() {
-        commands.spawn(KeyBundle::new(&assets, pos + Vec3::Z, page_index));
+        let gimmick = commands.spawn(KeyBundle::new(&assets, pos + Vec3::Z, page_index)).id();
+        field_params.add_child(&mut commands, gimmick);
         key_counter.decrement();
     }
 }

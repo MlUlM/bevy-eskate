@@ -109,7 +109,6 @@ fn move_done_system(
     col: Query<Entity, With<CollisionTarget>>,
 ) {
     for _ in er.iter().filter(|e| e.user_data == 1) {
-        println!("move done");
         let ce = col.single();
         commands.entity(ce).remove::<CollisionTarget>();
         ew.send(CollisionEvent(ce));
@@ -153,6 +152,7 @@ fn collide_system(
                 collide_writers.key.send(KeyEvent(ce));
             }
             GimmickCollide::Lock => {
+                println!("LOCK");
                 collide_writers.lock.send(LockEvent(ce));
             }
             GimmickCollide::IceBox => {
