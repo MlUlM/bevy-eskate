@@ -1,6 +1,10 @@
 use bevy::app::{App, Plugin, Update};
-use bevy::prelude::{Commands, Entity, Event, EventReader, EventWriter, in_state, IntoSystemConfigs, Query, Res, ResMut, Transform, With};
+use bevy::audio::{AudioBundle};
+use bevy::prelude::{AssetServer, Commands, Entity, Event, EventReader, EventWriter, in_state, IntoSystemConfigs, PlaybackSettings, Query, Res, ResMut, Transform, With};
+
+use bevy_trait_query::imports::Component;
 use bevy_undo2::prelude::{AppUndoEx, UndoScheduler};
+
 
 use crate::assets::gimmick::GimmickAssets;
 use crate::gama_state::GameState;
@@ -61,14 +65,23 @@ fn lock_event_system(
 }
 
 
+#[derive(Component)]
+struct UnlockAudioTarget;
+
+
 fn unlock_event_system(
     mut commands: Commands,
     mut scheduler: UndoScheduler<UndoUnLockEvent>,
     mut unlock_reader: EventReader<UnLockEvent>,
     mut start_move_down_writer: EventWriter<StartMoveDownEvent>,
     mut key_counter: ResMut<KeyCounter>,
+    asset_server: Res<AssetServer>,
 ) {
     for UnLockEvent(e, transform, require_keys, page_index) in unlock_reader.iter().copied() {
+        commands.spawn(AudioBundle {
+            source: asset_server.load("audio/unlock.ogg"),
+            settings: PlaybackSettings::REMOVE,
+        });
         *key_counter -= require_keys.0;
         start_move_down_writer.send(StartMoveDownEvent(transform.translation.z));
         commands.entity(e).despawn();

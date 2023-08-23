@@ -3,11 +3,11 @@
 extern crate core;
 
 use bevy::app::{App, PluginGroup, Update};
-use bevy::asset::{Assets, Handle};
+use bevy::asset::Handle;
 use bevy::DefaultPlugins;
 use bevy::ecs::system::SystemParam;
 use bevy::input::Input;
-use bevy::prelude::{AssetServer, Camera, Camera2dBundle, Commands, Component, Entity, Image, in_state, IntoSystemConfigs, MouseButton, not, OnExit, Query, Res, ResMut, UiImage, With, Without};
+use bevy::prelude::{AssetServer, Camera, Camera2dBundle, Commands, Component, Entity, Image, in_state, IntoSystemConfigs, MouseButton, not, OnExit, Query, Res, UiImage, With, Without};
 use bevy::ui::{Style, Val};
 use bevy::utils::default;
 use bevy::window::{Cursor, Window, WindowPlugin, WindowResolution};
@@ -55,6 +55,7 @@ fn main() {
                 visible: false,
                 ..default()
             },
+            resizable: false,
             resolution: WindowResolution::new(1400., 800.),
             title: "Eskate".to_string(),
             ..default()
@@ -71,16 +72,16 @@ fn main() {
     App::new()
         .add_plugins(default_plugins)
         .add_loading_state(
-            LoadingState::new(GameState::AssetLoading).continue_to_state(GameState::Title),
+            LoadingState::new(GameState::AssetLoading).continue_to_state(GameState::StageSelect),
         )
         .add_collection_to_loading_state::<_, GimmickAssets>(GameState::AssetLoading)
         .add_collection_to_loading_state::<_, FontAssets>(GameState::AssetLoading)
-        .add_collection_to_loading_state::<_, StageAssets>(GameState::AssetLoading)
+        // .add_collection_to_loading_state::<_, StageAssets>(GameState::AssetLoading)
         .add_collection_to_loading_state::<_, StageEditAssets>(GameState::AssetLoading)
         .add_collection_to_loading_state::<_, CursorAssets>(GameState::AssetLoading)
         .add_plugins((
-            JsonAssetPlugin::<StageJson>::new(&["stage.json"]),
-            bevy_inspector_egui::quick::WorldInspectorPlugin::new(),
+             JsonAssetPlugin::<StageJson>::new(&["stage.json"]),
+            // bevy_inspector_egui::quick::WorldInspectorPlugin::new(),
             TweeningPlugin,
             UndoPlugin,
             SpriteButtonPlugin
@@ -105,8 +106,8 @@ pub struct MainCamera;
 
 fn setup(
     mut commands: Commands,
-    stages: Res<StageAssets>,
-    stage: ResMut<Assets<StageJson>>,
+    // stages: Res<StageAssets>,
+    // stage: ResMut<Assets<StageJson>>,
     asset_server: Res<AssetServer>,
 ) {
     commands
@@ -114,14 +115,15 @@ fn setup(
         .insert(MainCamera);
 
     commands.spawn(GameCursorBundle::new(&asset_server));
+    let stages = asset_server.load_folder("assets/stages").unwrap();
+    println!("{stages:?}");
+    // let stages = stages
+    //     .stages
+    //     .iter()
+    //     .filter_map(|stage_handle| stage.get(&stage_handle.clone().typed::<StageJson>()).cloned())
+    //     .collect::<Vec<StageJson>>();
 
-    let stages = stages
-        .stages
-        .iter()
-        .filter_map(|stage_handle| stage.get(stage_handle).cloned())
-        .collect::<Vec<StageJson>>();
-
-    commands.insert_resource(BuiltInStages(stages));
+    commands.insert_resource(BuiltInStages(vec![]));
 }
 
 

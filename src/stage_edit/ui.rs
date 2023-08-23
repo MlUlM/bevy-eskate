@@ -14,7 +14,7 @@ use crate::stage::playing::gimmick::tag::GimmickTag;
 
 pub fn spawn_ui(
     commands: &mut Commands,
-    asset: &GimmickAssets,
+    gimmick_assets: &GimmickAssets,
     edit_assets: &StageEditAssets,
 ) {
     commands.spawn(NodeBundle {
@@ -39,7 +39,7 @@ pub fn spawn_ui(
                 background_color: BackgroundColor::from(Color::Rgba { red: 122. / 255., green: 111. / 255., blue: 102. / 255., alpha: 1. }),
                 ..default()
             });
-            footer(parent, asset, edit_assets);
+            footer(parent, gimmick_assets, edit_assets);
         });
 }
 

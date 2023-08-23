@@ -1,4 +1,4 @@
-use bevy::asset::Handle;
+use bevy::asset::{Handle, HandleUntyped};
 use bevy::prelude::{AssetServer, Resource};
 use bevy::reflect::TypeUuid;
 use bevy_asset_loader::prelude::AssetCollection;
@@ -6,10 +6,10 @@ use bevy_inspector_egui::__macro_exports::bevy_reflect::TypePath;
 
 use crate::loader::json::StageJson;
 
-#[derive(AssetCollection, Resource, Default)]
+#[derive(AssetCollection, Resource, Default, Debug)]
 pub struct StageAssets {
-    #[asset(path = "stages", collection(typed))]
-    pub stages: Vec<Handle<StageJson>>,
+    #[asset(path = "gimmick", collection)]
+    pub stages: Vec<HandleUntyped>,
 }
 
 

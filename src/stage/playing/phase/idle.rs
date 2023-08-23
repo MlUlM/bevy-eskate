@@ -1,7 +1,6 @@
 use bevy::app::{App, Plugin, Update};
 use bevy::input::Input;
 use bevy::prelude::*;
-
 use crate::button::SpriteInteraction;
 use crate::gama_state::GameState;
 use crate::page::page_index::PageIndex;
@@ -10,6 +9,12 @@ use crate::stage::playing::move_direction::MoveDirection;
 use crate::stage::playing::phase::picked_item::PickedItemEvent;
 use crate::stage::playing::phase::start_move::StartMoveEvent;
 use crate::stage::state::StageState;
+
+
+#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq, Event)]
+pub struct UndoPlayerIdleEvent;
+
+
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct PlayingIdlePlugin;
@@ -93,6 +98,10 @@ fn update_item_colors_system(
         item.color = Color::GRAY;
     }
 }
+
+
+
+
 
 
 #[cfg(test)]

@@ -74,7 +74,6 @@ pub fn turn_completed(
         let (pe, pt, undo_player_event) = player.single();
 
         start_move_writer.send(StartMoveEvent(MoveDirection::from_transform(pt)));
-
         commands.entity(pe).remove::<UndoPlayerEvent>();
         undo_player_writer.send(*undo_player_event);
     }

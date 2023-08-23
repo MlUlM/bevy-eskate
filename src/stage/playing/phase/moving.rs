@@ -19,11 +19,12 @@ use crate::stage::playing::phase::moving::stop_move::{stop_move_event_system, St
 use crate::stage::playing::phase::moving::turn::{turn_completed, turn_event_system, turn_pipe_system, TurnEvent};
 use crate::stage::state::StageState;
 
+
 pub mod stop_move;
 pub mod turn;
 mod next_page;
 pub mod goaled;
-mod key;
+pub mod key;
 mod lock;
 
 #[derive(Event, Copy, Clone, Eq, PartialEq)]
@@ -44,7 +45,7 @@ impl MoveEvent {
 
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq, Component)]
-pub struct CollisionTarget;
+pub struct CollisionTarget(MoveDirection);
 
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
@@ -91,7 +92,7 @@ fn move_event_system(
             let end = move_position.move_pos(ct.translation, move_direction);
 
             move_linear(&mut commands.entity(pe), &mut tween_writer, &mut pt, end, move_direction);
-            commands.entity(ce).insert(CollisionTarget);
+            commands.entity(ce).insert(CollisionTarget(move_direction));
             state.set(StageState::Moving);
         }
     }
@@ -99,19 +100,19 @@ fn move_event_system(
 
 
 #[derive(Event, Copy, Clone, Debug, Eq, PartialEq)]
-struct CollisionEvent(Entity);
+struct CollisionEvent(Entity, MoveDirection);
 
 
 fn move_done_system(
     mut commands: Commands,
     mut er: EventReader<TweenCompleted>,
     mut ew: EventWriter<CollisionEvent>,
-    col: Query<Entity, With<CollisionTarget>>,
+    col: Query<(Entity, &CollisionTarget)>,
 ) {
     for _ in er.iter().filter(|e| e.user_data == 1) {
-        let ce = col.single();
+        let Some((ce, CollisionTarget(move_direction))) = col.iter().next() else { continue; };
         commands.entity(ce).remove::<CollisionTarget>();
-        ew.send(CollisionEvent(ce));
+        ew.send(CollisionEvent(ce, *move_direction));
     }
 }
 
@@ -132,7 +133,7 @@ fn collide_system(
     mut er: EventReader<CollisionEvent>,
     cols: Query<&GimmickCollide>,
 ) {
-    for CollisionEvent(ce) in er.iter().copied() {
+    for CollisionEvent(ce, move_direction) in er.iter().copied() {
         let Some(collide) = cols.get(ce).ok() else { continue; };
 
         match collide {
@@ -149,7 +150,8 @@ fn collide_system(
                 collide_writers.goaled.send(GoaledEvent);
             }
             GimmickCollide::Key => {
-                collide_writers.key.send(KeyEvent(ce));
+                println!("Key");
+                collide_writers.key.send(KeyEvent(ce, move_direction));
             }
             GimmickCollide::Lock => {
                 println!("LOCK");

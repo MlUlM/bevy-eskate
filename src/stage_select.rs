@@ -1,9 +1,11 @@
 use bevy::app::{App, Plugin, Update};
 use bevy::core::Name;
 use bevy::hierarchy::BuildChildren;
-use bevy::prelude::{AlignItems, ButtonBundle, ChildBuilder, Color, Commands, in_state, Input, IntoSystemConfigs, JustifyContent, KeyCode, NextState, NodeBundle, OnEnter, OnExit, Query, RepeatedGridTrack, Res, ResMut, Text, TextBundle, TextStyle, Val, With};
+use bevy::prelude::{AlignItems, ButtonBundle, ChildBuilder, Color, Commands, Event, EventReader, in_state, Input, IntoSystemConfigs, JustifyContent, KeyCode, NextState, NodeBundle, OnEnter, OnExit, Query, RepeatedGridTrack, Res, ResMut, Text, TextBundle, TextStyle, Val, With};
 use bevy::ui::{BackgroundColor, Display, Interaction, Style};
 use bevy::utils::default;
+use bevy_input_sequence::AddInputSequenceEvent;
+use bevy_input_sequence::prelude::{InputSequence, Timeout};
 use bevy_trait_query::imports::Component;
 
 use crate::assets::font::FontAssets;
@@ -21,14 +23,20 @@ pub struct StageSelectPlugin;
 impl Plugin for StageSelectPlugin {
     fn build(&self, app: &mut App) {
         app
+            .add_input_sequence_event::<SecretCommandEvent>()
             .add_systems(OnEnter(GameState::StageSelect), setup)
             .add_systems(OnExit(GameState::StageSelect), destroy_all)
             .add_systems(Update, (
                 select_stage,
-                back_scene_system
+                back_scene_system,
+                before_stage_edit_system
             ).run_if(in_state(GameState::StageSelect)));
     }
 }
+
+
+#[derive(Event, Clone)]
+struct SecretCommandEvent;
 
 
 fn setup(
@@ -36,6 +44,23 @@ fn setup(
     stages: Res<BuiltInStages>,
     mut commands: Commands,
 ) {
+    commands.spawn(InputSequence::from_keycodes(
+        SecretCommandEvent,
+        Timeout::None,
+        &[
+            KeyCode::Up,
+            KeyCode::Up,
+            KeyCode::Down,
+            KeyCode::Down,
+            KeyCode::Left,
+            KeyCode::Right,
+            KeyCode::Left,
+            KeyCode::Right,
+            KeyCode::B,
+            KeyCode::A
+        ],
+    ));
+
     commands.spawn(NodeBundle {
         style: Style {
             width: Val::Percent(100.),
@@ -48,6 +73,16 @@ fn setup(
     })
         .insert(Name::new("Screen"))
         .with_children(|parent| { spawn_stage_panel(parent, &font, &stages); });
+}
+
+
+fn before_stage_edit_system(
+    mut state: ResMut<NextState<GameState>>,
+    mut er: EventReader<SecretCommandEvent>,
+) {
+    for _ in er.iter() {
+        state.set(GameState::BeforeStageEdit);
+    }
 }
 
 
@@ -80,9 +115,11 @@ fn spawn_stages(parent: &mut ChildBuilder, font: &FontAssets, stages: &BuiltInSt
             style: Style {
                 width: Val::Px(200.),
                 height: Val::Px(100.),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
                 ..default()
             },
-            background_color: BackgroundColor::from(Color::BLACK),
+            background_color: BackgroundColor::from(Color::from([80. / 255., 150. / 255., 250. / 255., 0.8])),
             ..default()
         })
             .insert((
@@ -97,7 +134,7 @@ fn spawn_stages(parent: &mut ChildBuilder, font: &FontAssets, stages: &BuiltInSt
                         TextStyle {
                             font: font.button_text.clone(),
                             font_size: 30.,
-                            color: Color::BLUE,
+                            color: Color::BLACK,
                         },
                     ),
                     style: Style {

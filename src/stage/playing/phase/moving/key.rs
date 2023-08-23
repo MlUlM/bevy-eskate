@@ -2,7 +2,7 @@ use std::ops::{AddAssign, Deref, SubAssign};
 
 use bevy::app::{App, Plugin, Update};
 use bevy::math::Vec3;
-use bevy::prelude::{Commands, Entity, Event, EventReader, EventWriter, in_state, IntoSystemConfigs, Query, Res, ResMut, Resource, Transform, With, Without};
+use bevy::prelude::{AssetServer, AudioBundle, Commands, Entity, Event, EventReader, EventWriter, in_state, IntoSystemConfigs, PlaybackSettings, PreUpdate, Query, Res, ResMut, Resource, Transform, With, Without};
 use bevy_undo2::prelude::{AppUndoEx, UndoScheduler};
 
 use crate::assets::gimmick::GimmickAssets;
@@ -17,7 +17,7 @@ use crate::stage::playing::phase::start_move::StartMoveEvent;
 use crate::stage::state::StageState;
 
 #[derive(Event, Debug, Copy, Clone, PartialEq)]
-pub struct KeyEvent(pub Entity);
+pub struct KeyEvent(pub Entity, pub MoveDirection);
 
 
 #[derive(Event, Debug, Copy, Clone, PartialEq)]
@@ -75,7 +75,7 @@ impl Plugin for MovingKeyPlugin {
             .add_event::<KeyEvent>()
             .add_undo_event::<UndoKeyEvent>()
             .init_resource::<KeyCounter>()
-            .add_systems(Update, (
+            .add_systems(PreUpdate, (
                 key_event_system
             ).run_if(in_state(StageState::Moving)))
             .add_systems(Update, (
@@ -91,15 +91,20 @@ fn key_event_system(
     mut er: EventReader<KeyEvent>,
     mut start_move_writer: EventWriter<StartMoveEvent>,
     mut key_counter: ResMut<KeyCounter>,
-    player: Query<&Transform, With<Player>>,
+    asset_server: Res<AssetServer>,
     keys: Query<(&Transform, &PageIndex), (With<GimmickCollide>, Without<Player>)>,
 ) {
-    for KeyEvent(ke) in er.iter().copied() {
+    for KeyEvent(ke, move_direction) in er.iter().copied() {
         let Ok((kt, key_page_index)) = keys.get(ke) else { continue; };
+
+        commands.spawn(AudioBundle {
+            source: asset_server.load("audio/key.ogg"),
+            settings: PlaybackSettings::REMOVE,
+        });
         key_counter.increment();
         commands.entity(ke).despawn();
         scheduler.reserve(UndoKeyEvent(kt.translation, *key_page_index));
-        start_move_writer.send(StartMoveEvent(MoveDirection::from_transform(player.single())));
+        start_move_writer.send(StartMoveEvent(move_direction));
     }
 }
 
@@ -109,7 +114,7 @@ fn undo_key_event_system(
     mut er: EventReader<UndoKeyEvent>,
     mut key_counter: ResMut<KeyCounter>,
     assets: Res<GimmickAssets>,
-    field_params: FieldParams
+    field_params: FieldParams,
 ) {
     for UndoKeyEvent(pos, page_index) in er.iter().copied() {
         let gimmick = commands.spawn(KeyBundle::new(&assets, pos + Vec3::Z, page_index)).id();

@@ -43,7 +43,6 @@ impl Plugin for StageEditPlugin {
         app
             .add_systems(OnEnter(GameState::StageEdit), setup)
             .add_systems(OnExit(GameState::StageEdit), (destroy_all, reset_game_cursor))
-            // .add_systems(Update, change_visible_gimmicks.run_if(in_state(GameState::StageEdit).and_then(resource_changed::<PageIndex>())))
             .add_plugins((
                 StageEditIdlePlugin,
                 StageEditPickedPlugin,

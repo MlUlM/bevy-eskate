@@ -58,7 +58,7 @@ pub(crate) fn move_linear(
     move_direction: MoveDirection,
 ) {
     player_transform.rotation = move_direction.quat();
-    if player_transform.translation.xy().abs_diff_eq(end.xy(), 0.1) {
+    if player_transform.translation.xy().abs_diff_eq(end.xy(), 1.0) {
         tween_writer.send(TweenCompleted {
             entity: commands.id(),
             user_data: 1,

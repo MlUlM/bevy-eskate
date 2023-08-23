@@ -51,7 +51,7 @@ fn start_move(
     mut scheduler: UndoScheduler<UndoPlayerEvent>,
     mut er: EventReader<StartMoveEvent>,
     mut ew: EventWriter<MoveEvent>,
-    mut collides: Query<(Entity,  &mut GlobalTransform, &PageIndex), (Without<Movable>, With<PageIndex>, With<GimmickCollide>)>,
+    mut collides: Query<(Entity, &mut GlobalTransform, &PageIndex), (Without<Movable>, With<PageIndex>, With<GimmickCollide>)>,
     players: Query<(&Transform, &GlobalTransform), With<Movable>>,
     page_index: Res<PageIndex>,
 ) {
