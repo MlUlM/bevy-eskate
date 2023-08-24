@@ -92,7 +92,6 @@ impl MoveDirection {
     #[inline]
     pub fn from_transform(transform: &Transform) -> Self {
         let (_, angle) = transform.rotation.to_axis_angle();
-        println!("{:?}", angle);
         Self::from_angle(angle)
     }
 }

@@ -21,24 +21,13 @@ pub fn spawn_ui(
         style: Style {
             width: Val::Percent(100.),
             height: Val::Percent(100.),
-            flex_direction: FlexDirection::Column,
+            justify_content: JustifyContent::FlexEnd,
             ..default()
         },
         ..default()
     })
         .with_children(|parent| {
-            parent.spawn(NodeBundle {
-                style: Style {
-                    height: Val::Percent(100.),
-                    width: Val::Px(100.),
-                    justify_content: JustifyContent::Center,
-                    padding: UiRect::all(Val::Px(8.)),
-                    align_self: AlignSelf::FlexEnd,
-                    ..default()
-                },
-                background_color: BackgroundColor::from(Color::Rgba { red: 122. / 255., green: 111. / 255., blue: 102. / 255., alpha: 1. }),
-                ..default()
-            });
+
             footer(parent, gimmick_assets, edit_assets);
         });
 }
@@ -57,10 +46,11 @@ macro_rules! spawn_footer_items {
 fn footer(parent: &mut ChildBuilder, asset: &GimmickAssets, edit_assets: &StageEditAssets) {
     parent.spawn(NodeBundle {
         style: Style {
-            height: Val::Percent(10.),
-            width: Val::Percent(100.),
+            height: Val::Percent(100.),
+            width: Val::Px(40.),
+            flex_direction: FlexDirection::Column,
             align_items: AlignItems::Center,
-            column_gap: Val::Px(10.),
+            row_gap: Val::Px(10.),
             ..default()
         },
         background_color: BackgroundColor(Color::BLACK),

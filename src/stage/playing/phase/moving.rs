@@ -150,11 +150,9 @@ fn collide_system(
                 collide_writers.goaled.send(GoaledEvent);
             }
             GimmickCollide::Key => {
-                println!("Key");
                 collide_writers.key.send(KeyEvent(ce, move_direction));
             }
             GimmickCollide::Lock => {
-                println!("LOCK");
                 collide_writers.lock.send(LockEvent(ce));
             }
             GimmickCollide::IceBox => {

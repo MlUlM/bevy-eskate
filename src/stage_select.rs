@@ -1,7 +1,8 @@
 use bevy::app::{App, Plugin, Update};
+use bevy::asset::AssetServer;
 use bevy::core::Name;
 use bevy::hierarchy::BuildChildren;
-use bevy::prelude::{AlignItems, ButtonBundle, ChildBuilder, Color, Commands, Event, EventReader, in_state, Input, IntoSystemConfigs, JustifyContent, KeyCode, NextState, NodeBundle, OnEnter, OnExit, Query, RepeatedGridTrack, Res, ResMut, Text, TextBundle, TextStyle, Val, With};
+use bevy::prelude::{AlignItems, AudioBundle, ButtonBundle, ChildBuilder, Color, Commands, Event, EventReader, in_state, Input, IntoSystemConfigs, JustifyContent, KeyCode, NextState, NodeBundle, OnEnter, OnExit, PlaybackSettings, Query, RepeatedGridTrack, Res, ResMut, Text, TextBundle, TextStyle, Val, With};
 use bevy::ui::{BackgroundColor, Display, Interaction, Style};
 use bevy::utils::default;
 use bevy_input_sequence::AddInputSequenceEvent;
@@ -40,10 +41,16 @@ struct SecretCommandEvent;
 
 
 fn setup(
+    mut commands: Commands,
     font: Res<FontAssets>,
     stages: Res<BuiltInStages>,
-    mut commands: Commands,
+    asset_server: Res<AssetServer>,
 ) {
+    commands.spawn(AudioBundle {
+        source: asset_server.load("audio/stage_select_bgm.ogg"),
+        settings: PlaybackSettings::LOOP,
+    });
+
     commands.spawn(InputSequence::from_keycodes(
         SecretCommandEvent,
         Timeout::None,

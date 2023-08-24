@@ -17,7 +17,5 @@ pub fn stop_move_event_system(
         scheduler.reserve(UndoPlayerIdleEvent);
         scheduler.register_all_reserved();
         state.set(StageState::Idle);
-
-        println!("stop move");
     }
 }

@@ -97,7 +97,6 @@ fn undo_unlock_event_system(
     assets: Res<GimmickAssets>,
 ) {
     for UndoUnLockEvent(transform, require_keys, page_index) in er.iter().copied() {
-        // println!("undo: unlock {transform:?}");
         *key_counter += require_keys.0;
 
         commands.spawn(LockBundle::new(&assets, transform.translation, page_index));

@@ -7,7 +7,7 @@ use bevy::asset::Handle;
 use bevy::DefaultPlugins;
 use bevy::ecs::system::SystemParam;
 use bevy::input::Input;
-use bevy::prelude::{AssetServer, Camera, Camera2dBundle, Commands, Component, Entity, Image, in_state, IntoSystemConfigs, MouseButton, not, OnExit, Query, Res, UiImage, With, Without};
+use bevy::prelude::{Assets, AssetServer, Camera, Camera2dBundle, Commands, Component, Entity, Image, in_state, IntoSystemConfigs, MouseButton, not, OnExit, Query, Res, ResMut, UiImage, With, Without};
 use bevy::ui::{Style, Val};
 use bevy::utils::default;
 use bevy::window::{Cursor, Window, WindowPlugin, WindowResolution};
@@ -51,13 +51,9 @@ mod window;
 fn main() {
     let default_plugins = DefaultPlugins.set(WindowPlugin {
         primary_window: Some(Window {
-            cursor: Cursor {
-                visible: false,
-                ..default()
-            },
             resizable: false,
-            resolution: WindowResolution::new(1400., 800.),
-            title: "Eskate".to_string(),
+            resolution: WindowResolution::new(1200., 800.),
+            title: "eskate".to_string(),
             ..default()
         }),
         ..default()
@@ -76,11 +72,11 @@ fn main() {
         )
         .add_collection_to_loading_state::<_, GimmickAssets>(GameState::AssetLoading)
         .add_collection_to_loading_state::<_, FontAssets>(GameState::AssetLoading)
-        // .add_collection_to_loading_state::<_, StageAssets>(GameState::AssetLoading)
+        .add_collection_to_loading_state::<_, StageAssets>(GameState::AssetLoading)
         .add_collection_to_loading_state::<_, StageEditAssets>(GameState::AssetLoading)
         .add_collection_to_loading_state::<_, CursorAssets>(GameState::AssetLoading)
         .add_plugins((
-             JsonAssetPlugin::<StageJson>::new(&["stage.json"]),
+            JsonAssetPlugin::<StageJson>::new(&["stage.json"]),
             // bevy_inspector_egui::quick::WorldInspectorPlugin::new(),
             TweeningPlugin,
             UndoPlugin,
@@ -106,8 +102,8 @@ pub struct MainCamera;
 
 fn setup(
     mut commands: Commands,
-    // stages: Res<StageAssets>,
-    // stage: ResMut<Assets<StageJson>>,
+    mut stage: ResMut<Assets<StageJson>>,
+    stages: Res<StageAssets>,
     asset_server: Res<AssetServer>,
 ) {
     commands
@@ -115,20 +111,12 @@ fn setup(
         .insert(MainCamera);
 
     commands.spawn(GameCursorBundle::new(&asset_server));
-    let stages = asset_server.load_folder("assets/stages").unwrap();
-    println!("{stages:?}");
-    // let stages = stages
-    //     .stages
-    //     .iter()
-    //     .filter_map(|stage_handle| stage.get(&stage_handle.clone().typed::<StageJson>()).cloned())
-    //     .collect::<Vec<StageJson>>();
-
-    commands.insert_resource(BuiltInStages(vec![]));
+    commands.insert_resource(BuiltInStages(stages.stages(&mut stage)));
 }
 
 
 fn move_cursor(window: Query<&Window>, mut cursor: Query<&mut Style, With<GameCursor>>) {
-    let window: &Window = window.single();
+    let window = window.single();
     if let Some(position) = window.cursor_position() {
         let mut img_style = cursor.single_mut();
         img_style.left = Val::Px(position.x - 15.);
@@ -139,7 +127,6 @@ fn move_cursor(window: Query<&Window>, mut cursor: Query<&mut Style, With<GameCu
 
 #[derive(SystemParam)]
 pub(crate) struct GameCursorParams<'w, 's> {
-    assets: Res<'w, CursorAssets>,
     cursor: Query<'w, 's, &'static mut UiImage, With<GameCursor>>,
 }
 
@@ -148,7 +135,7 @@ impl<'w, 's> GameCursorParams<'w, 's> {
     #[inline]
     pub fn reset(&mut self) {
         let Some(mut cursor) = self.cursor.iter_mut().next() else { return; };
-        cursor.texture = self.assets.game_cursor.clone();
+        cursor.texture = Handle::default();
     }
 
 
@@ -169,7 +156,11 @@ pub(crate) fn reset_game_cursor(
 }
 
 
-pub(crate) fn destroy_all(mut commands: Commands, entities: Query<Entity, (Without<Camera>, Without<Window>, Without<GameCursor>)>) {
+pub(crate) fn destroy_all(mut commands: Commands, entities: Query<Entity, (
+    Without<Camera>,
+    Without<Window>,
+    Without<GameCursor>
+)>) {
     for entity in &entities {
         commands.entity(entity).despawn();
     }

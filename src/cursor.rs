@@ -1,4 +1,4 @@
-use bevy::asset::AssetServer;
+use bevy::asset::{AssetServer, Handle};
 use bevy::core::Name;
 use bevy::prelude::{Bundle, Component, ImageBundle, PositionType, UiImage};
 use bevy::ui::{Style, Val, ZIndex};
@@ -27,7 +27,7 @@ impl GameCursorBundle {
                     height: Val::Px(24.),
                     ..default()
                 },
-                image: UiImage::new(asset_server.load("game_cursor.png")),
+                image: UiImage::new(Handle::default()),
                 z_index: ZIndex::Global(15),
                 ..default()
             },

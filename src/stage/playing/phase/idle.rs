@@ -1,6 +1,7 @@
 use bevy::app::{App, Plugin, Update};
 use bevy::input::Input;
 use bevy::prelude::*;
+use bevy_egui::egui::ImageData::Color;
 use crate::button::SpriteInteraction;
 use crate::gama_state::GameState;
 use crate::page::page_index::PageIndex;
@@ -18,6 +19,7 @@ pub struct UndoPlayerIdleEvent;
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct PlayingIdlePlugin;
+
 
 
 impl Plugin for PlayingIdlePlugin {
@@ -52,7 +54,6 @@ fn input_move_system(
     keys: Res<Input<KeyCode>>,
 ) {
     let mut emit = |direction: MoveDirection| {
-        println!("send -> {:?}", StartMoveEvent(direction));
         ew.send(StartMoveEvent(direction));
     };
 

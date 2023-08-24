@@ -76,7 +76,6 @@ fn pick_event_item_system(
     items: Query<&GimmickItem>,
 ) {
     for PickedItemEvent(item_entity) in er.iter().copied() {
-        println!("PICKED {item_entity:?}");
         let Some(GimmickItem(tag)) = items.get(item_entity).ok() else { continue; };
         pick_item.0 = Some((item_entity, *tag));
         cursor.set_cursor(tag.image(&assets));
@@ -180,7 +179,6 @@ fn undo_spawn_item_event_system(
     mut er: EventReader<UndoSpawnGimmickEvent>,
 ) {
     for UndoSpawnGimmickEvent { gimmick_entity, item_entity, tag } in er.iter().copied() {
-        println!("undo: undo_spawn_item_event_system");
         commands
             .entity(gimmick_entity)
             .despawn();

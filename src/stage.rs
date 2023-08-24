@@ -1,6 +1,7 @@
 use bevy::app::{App, Plugin, PreUpdate, Update};
+use bevy::audio::AudioBundle;
 use bevy::input::Input;
-use bevy::prelude::{Commands, Condition, Event, EventReader, in_state, IntoSystemConfigs, KeyCode, NextState, OnEnter, OnExit, Query, Res, ResMut, resource_exists_and_changed, With};
+use bevy::prelude::{AssetServer, Commands, Condition, EventReader, in_state, IntoSystemConfigs, KeyCode, NextState, OnEnter, OnExit, PlaybackSettings, Query, Res, ResMut, resource_exists_and_changed, With};
 use bevy::text::Text;
 use bevy_trait_query::imports::Component;
 use bevy_undo2::prelude::{AppUndoEx, UndoRequester};
@@ -66,7 +67,12 @@ fn setup(
     assets: Res<GimmickAssets>,
     stage: Res<StageJson>,
     fonts: Res<FontAssets>,
+    asset_server: Res<AssetServer>
 ) {
+    commands.spawn(AudioBundle{
+        source: asset_server.load("audio/stage_bgm.ogg"),
+        settings: PlaybackSettings::LOOP
+    });
     commands.insert_resource(PageIndex::new(0));
     commands.insert_resource(PageCount::new(stage.pages.len()));
 
